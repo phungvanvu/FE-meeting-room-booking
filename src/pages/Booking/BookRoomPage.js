@@ -1,7 +1,7 @@
 import { useState } from "react";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import { Search, X, ChevronLeft, ChevronRight } from "lucide-react";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
+import { Search, X, ChevronLeft, ChevronRight, MapPinned, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
 
@@ -76,7 +76,7 @@ const roomsData = [
     location: "Mumbai Andheri",
     status: "Available",
     facilities: ["Audio", "White Board"],
-    image: "room/room8.jpg",
+    image: "room/room6.jpg",
   },
   {
     id: 9,
@@ -85,7 +85,7 @@ const roomsData = [
     location: "Delhi Connaught Place",
     status: "Available",
     facilities: ["Audio", "Video", "White Board", "HDMI", "Projector", "Microphone"],
-    image: "room/room9.jpg",
+    image: "room/room5.jpg",
   },
   {
     id: 10,
@@ -94,7 +94,7 @@ const roomsData = [
     location: "Chennai T Nagar",
     status: "Available",
     facilities: ["Audio", "Video", "HDMI", "Microphone", "Projector"],
-    image: "room/room10.jpg",
+    image: "room/room3.jpg",
   },
   {
     id: 11,
@@ -103,7 +103,7 @@ const roomsData = [
     location: "Pune Baner",
     status: "Not Available",
     facilities: ["Audio", "White Board", "Projector"],
-    image: "room/room11.jpg",
+    image: "room/room1.jpg",
   },
   {
     id: 12,
@@ -112,7 +112,7 @@ const roomsData = [
     location: "Hyderabad HITEC City",
     status: "Available",
     facilities: ["Audio", "HDMI", "Projector", "White Board"],
-    image: "room/room12.jpg",
+    image: "room/room2.jpg",
   },
   {
     id: 13,
@@ -121,7 +121,7 @@ const roomsData = [
     location: "Mumbai Bandra",
     status: "Available",
     facilities: ["Audio", "Video", "HDMI", "Projector", "Microphone"],
-    image: "room/room13.jpg",
+    image: "room/room3.jpg",
   },
   {
     id: 14,
@@ -130,7 +130,7 @@ const roomsData = [
     location: "Kolkata Salt Lake",
     status: "Available",
     facilities: ["Audio", "White Board", "Projector"],
-    image: "room/room14.jpg",
+    image: "room/room4.jpg",
   },
   {
     id: 15,
@@ -139,7 +139,7 @@ const roomsData = [
     location: "Delhi Nehru Place",
     status: "Available",
     facilities: ["Audio", "Video", "HDMI"],
-    image: "room/room15.jpg",
+    image: "room/room5.jpg",
   },
 ];
 
@@ -155,7 +155,6 @@ export default function BookRoomPage() {
   const [selectedDevices, setSelectedDevices] = useState([]); 
   const [currentPage, setCurrentPage] = useState(1);
   const [handleSearch, handleResetFilters] = useState(""); 
-
 
   // Xử lý tìm kiếm
   const filteredRooms = roomsData.filter(
@@ -402,10 +401,12 @@ export default function BookRoomPage() {
               {/* Địa điểm + Sức chứa */}
               <div className="mt-2 space-y-1 text-gray-600">
                 <p>
-                  📍 Địa điểm: <span className="font-medium">{room.location}</span>
+                  <MapPinned className="w-5 h-5"/>
+                  <span className="font-medium">Địa điểm: {room.location}</span>
                 </p>
                 <p>
-                  👥 Sức chứa: <span className="font-medium">{room.capacity}</span>
+                  <Users className="w-5 h-5/>"/>
+                  <span className="font-medium">Sức chứa: {room.capacity}</span>
                 </p>
               </div>
 

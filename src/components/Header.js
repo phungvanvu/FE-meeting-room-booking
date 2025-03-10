@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Bell, ChevronDown, UserCircle } from "lucide-react";
+import { Bell, ChevronDown, UserCircle, ChartNoAxesCombined } from "lucide-react";
 
 export default function Header() {
   const navigate = useNavigate();
@@ -16,9 +16,7 @@ export default function Header() {
     <div className="bg-teal-600 text-white flex justify-between items-center px-6 py-4 shadow-md">
       {/* Logo */}
       <Link to="/Home">
-        <img
-          src="/Header/Logo.png"
-          alt="Logo"
+        <ChartNoAxesCombined
           className="h-10 cursor-pointer"
         />
       </Link>

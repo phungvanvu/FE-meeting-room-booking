@@ -16,6 +16,7 @@ input::-ms-clear,
 input::-ms-reveal {
   display: none !important;
 }
+
 body {
   font-family: 'Arial', sans-serif;
   background-color: #f9fafb;

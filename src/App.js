@@ -1,18 +1,18 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Login from "./pages/LoginPage";
-import Home from "./pages/HomePage";
-import BookRoom from "./pages/BookRoomPage";
-import CalendarPage from "./pages/CalenderPage";
+import LoginPage from "./pages/LoginPage";
+import HomePage from "./pages/HomePage";
+import BookRoomPage from "./pages/Booking/BookRoomPage";
+import CalendarPage from "./pages/Booking/CalenderPage";
 
 export default function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/Login" element={<Login />} />
-        <Route path="/Home" element={<Home />} />
-        <Route path="/BookRoom" element={<BookRoom />} />
+        <Route path="/Login" element={<LoginPage />} />
+        <Route path="/Home" element={<HomePage />} />
+        <Route path="/BookRoom" element={<BookRoomPage />} />
         <Route path="/Calendar/:roomId" element={<CalendarPage />} />
-        <Route path="*" element={<Login />} />
+        <Route path="*" element={<LoginPage />} />
       </Routes>
     </Router>
   );
