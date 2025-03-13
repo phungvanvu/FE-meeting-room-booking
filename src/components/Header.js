@@ -17,7 +17,7 @@ export default function Header() {
       {/* Logo */}
       <Link to="/Home">
         <img
-          src="/Header/Logo.png"
+          src="/logo.jpg"
           alt="Logo"
           className="h-10 cursor-pointer"
         />
