@@ -4,7 +4,6 @@ import Footer from "../../components/Footer";
 import { Search, X, ChevronLeft, ChevronRight, MapPinned, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
-
 const roomsData = [
   {
     id: 1,
