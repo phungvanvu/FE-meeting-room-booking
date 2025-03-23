@@ -1,152 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect  } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { Search, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 
-const roomsData = [
-  {
-    id: 1,
-    name: "BHAGIRATHI",
-    capacity: 8,
-    location: "Pune Hinjewadi",
-    status: "Available",
-    facilities: ["Audio", "Video", "White Board", "HDMI", "Projector"],
-    image: "room/room1.jpg",
-  },
-  {
-    id: 2,
-    name: "GHATAPRABHA",
-    capacity: 12,
-    location: "Pune Hinjewadi",
-    status: "Available",
-    facilities: ["Audio", "Video", "White Board", "HDMI", "Projector"],
-    image: "room/room2.jpg",
-  },
-  {
-    id: 3,
-    name: "BHIMA",
-    capacity: 6,
-    location: "Pune Hinjewadi",
-    status: "Available",
-    facilities: ["Audio", "Video", "White Board", "HDMI", "Projector"],
-    image: "room/room3.jpg",
-  },
-  {
-    id: 4,
-    name: "TUNGBHADRA",
-    capacity: 5,
-    location: "Pune Hinjewadi",
-    status: "Available",
-    facilities: ["Audio", "Video", "White Board", "HDMI", "Projector"],
-    image: "room/room4.jpg",
-  },
-  {
-    id: 5,
-    name: "KRISHNA",
-    capacity: 5,
-    location: "Pune Hinjewadi",
-    status: "Available",
-    facilities: ["Audio", "White Board"],
-    image: "room/room5.jpg",
-  },
-  {
-    id: 6,
-    name: "GODAVARI",
-    capacity: 6,
-    location: "Pune Hinjewadi",
-    status: "Available",
-    facilities: ["Audio", "Video", "HDMI"],
-    image: "room/room6.jpg",
-  },
-  {
-    id: 7,
-    name: "KAVERI",
-    capacity: 8,
-    location: "Bangalore Whitefield",
-    status: "Available",
-    facilities: ["Audio", "Video", "White Board", "Projector"],
-    image: "room/room7.jpg",
-  },
-  {
-    id: 8,
-    name: "NARMADA",
-    capacity: 5,
-    location: "Mumbai Andheri",
-    status: "Available",
-    facilities: ["Audio", "White Board"],
-    image: "room/room8.jpg",
-  },
-  {
-    id: 9,
-    name: "GANGA",
-    capacity: 15,
-    location: "Delhi Connaught Place",
-    status: "Available",
-    facilities: ["Audio", "Video", "White Board", "HDMI", "Projector", "Microphone"],
-    image: "room/room9.jpg",
-  },
-  {
-    id: 10,
-    name: "YAMUNA",
-    capacity: 20,
-    location: "Chennai T Nagar",
-    status: "Available",
-    facilities: ["Audio", "Video", "HDMI", "Microphone", "Projector"],
-    image: "room/room10.jpg",
-  },
-  {
-    id: 11,
-    name: "SARASWATI",
-    capacity: 8,
-    location: "Pune Baner",
-    status: "Not Available",
-    facilities: ["Audio", "White Board", "Projector"],
-    image: "room/room11.jpg",
-  },
-  {
-    id: 12,
-    name: "INDUS",
-    capacity: 10,
-    location: "Hyderabad HITEC City",
-    status: "Available",
-    facilities: ["Audio", "HDMI", "Projector", "White Board"],
-    image: "room/room12.jpg",
-  },
-  {
-    id: 13,
-    name: "BRAMHAPUTRA",
-    capacity: 25,
-    location: "Mumbai Bandra",
-    status: "Available",
-    facilities: ["Audio", "Video", "HDMI", "Projector", "Microphone"],
-    image: "room/room13.jpg",
-  },
-  {
-    id: 14,
-    name: "MAHANADI",
-    capacity: 10,
-    location: "Kolkata Salt Lake",
-    status: "Available",
-    facilities: ["Audio", "White Board", "Projector"],
-    image: "room/room14.jpg",
-  },
-  {
-    id: 15,
-    name: "TAPTI",
-    capacity: 6,
-    location: "Delhi Nehru Place",
-    status: "Available",
-    facilities: ["Audio", "Video", "HDMI"],
-    image: "room/room15.jpg",
-  },
-];
-
-
 const ITEMS_PER_PAGE = 6;
 
 export default function BookRoomPage() {
+  const [roomsData, setRoomsData] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [capacityFilter, setCapacityFilter] = useState("");
@@ -154,14 +16,50 @@ export default function BookRoomPage() {
   const [roomCode, setRoomCode] = useState(""); 
   const [selectedDevices, setSelectedDevices] = useState([]); 
   const [currentPage, setCurrentPage] = useState(1);
-  const [handleSearch, handleResetFilters] = useState(""); 
 
+  useEffect(() => {
+    fetchRooms();
+  }, []);
 
+  const fetchRooms = async () => {
+    const accessToken = localStorage.getItem('accessToken');
+  
+    try {
+      const response = await fetch('http://localhost:8080/MeetingRoomBooking/room', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+  
+      const result = await response.json();
+      if (result.success) {
+        // Chuyển đổi dữ liệu về đúng định dạng cần thiết
+        const formattedRooms = result.data.map((room) => ({
+          id: room.roomName, // Dùng roomName làm key
+          name: room.roomName,
+          location: room.location,
+          capacity: room.capacity,
+          status: room.available ? "Available" : "Booked",
+          facilities: room.equipments || [],
+          image: `http://localhost:8080/MeetingRoomBooking${room.imageUrl}` // Đường dẫn đầy đủ cho ảnh
+        }));
+        setRoomsData(formattedRooms);
+      } else {
+        console.error('Error:', result.error.message);
+      }
+    } catch (error) {
+      console.error('Fetch error:', error);
+    }
+  };
+  
+  
   // Xử lý tìm kiếm
   const filteredRooms = roomsData.filter(
     (room) =>
-      room.name.toLowerCase().includes(search.toLowerCase()) ||
-      room.status.toLowerCase().includes(search.toLowerCase())
+      room.name?.toLowerCase().includes(search.toLowerCase()) ||
+      room.status?.toLowerCase().includes(search.toLowerCase())
   );
   
   // Tính tổng số trang
@@ -183,12 +81,25 @@ export default function BookRoomPage() {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
 
+  const handleSearch = () => {
+    setCurrentPage(1);
+  };
+  
+  const handleResetFilters = () => {
+    setSearch("");
+    setStatusFilter("");
+    setCapacityFilter("");
+    setLocationFilter("");
+    setRoomCode("");
+    setSelectedDevices([]);
+  };
+
   return (
 <div className="min-h-screen flex flex-col">
 
   <Header />
 
-  <div className="container mx-auto mt-10 flex gap-6 mb-10">
+  <div className="container flex-grow mx-auto mt-10 flex gap-6 mb-10">
     {/* lọc */}
     <div className="w-1/4 bg-white p-6 rounded-2xl shadow-md border border-gray-200 max-h-[650px] flex-shrink-0 flex flex-col">
       <h2 className="text-xl font-semibold mb-5 text-gray-800">Filter</h2>
