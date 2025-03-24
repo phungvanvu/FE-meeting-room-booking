@@ -1,8 +1,9 @@
-import { useState, useEffect  } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { Search, X, ChevronLeft, ChevronRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ChevronLeft, ChevronRight, MapPin, Users } from "lucide-react";
+import { isAccessTokenValid } from "../components/utils/auth";
 
 
 const ITEMS_PER_PAGE = 6;
@@ -10,20 +11,32 @@ const ITEMS_PER_PAGE = 6;
 export default function BookRoomPage() {
   const [roomsData, setRoomsData] = useState([]);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [capacityFilter, setCapacityFilter] = useState("");
-  const [locationFilter, setLocationFilter] = useState(""); 
-  const [roomCode, setRoomCode] = useState(""); 
-  const [selectedDevices, setSelectedDevices] = useState([]); 
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedCapacity, setSelectedCapacity] = useState("");
+  const [searchLocation, setSearchLocation] = useState("");
+  const [selectedDevices, setSelectedDevices] = useState([]);
+  const [filteredRooms, setFilteredRooms] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchRooms();
-  }, []);
+    const initPage = async () => {
+      const isValid = await isAccessTokenValid();
+      if (!isValid) {
+        navigate("/Login");
+        return;
+      }
+      fetchRooms();
+    };
+
+    initPage();
+  }, [navigate]);
+
 
   const fetchRooms = async () => {
-    const accessToken = localStorage.getItem('accessToken');
-  
+    const accessToken = sessionStorage.getItem("accessToken");
+
     try {
       const response = await fetch('http://localhost:8080/MeetingRoomBooking/room', {
         method: 'GET',
@@ -32,264 +45,239 @@ export default function BookRoomPage() {
           'Authorization': `Bearer ${accessToken}`,
         },
       });
-  
+
       const result = await response.json();
-      if (result.success) {
-        // Chuyển đổi dữ liệu về đúng định dạng cần thiết
+
+      if (result.success && Array.isArray(result.data)) {
         const formattedRooms = result.data.map((room) => ({
-          id: room.roomName, // Dùng roomName làm key
-          name: room.roomName,
-          location: room.location,
-          note: room.note,
-          capacity: room.capacity,
-          status: room.available ? "Available" : "Booked",
+          id: room.roomName || "",
+          name: room.roomName || "No name",
+          location: room.location || "Unknown location",
+          note: room.note || "",
+          capacity: room.capacity || 0,
+          status: room.available ? "Available" : "Unavailable",
           facilities: room.equipments || [],
-          image: `http://localhost:8080/MeetingRoomBooking${room.imageUrl}`
+          image: room.imageUrl ? `http://localhost:8080/MeetingRoomBooking${room.imageUrl}` : ""
         }));
+
         setRoomsData(formattedRooms);
+        setFilteredRooms(formattedRooms);
       } else {
-        console.error('Error:', result.error.message);
+        console.error("Error fetching rooms:", result.error?.message);
       }
     } catch (error) {
-      console.error('Fetch error:', error);
+      console.error("Fetch error:", error);
     }
   };
-  
-  
   // Xử lý tìm kiếm
-  const filteredRooms = roomsData.filter(
-    (room) =>
-      room.name?.toLowerCase().includes(search.toLowerCase()) ||
-      room.status?.toLowerCase().includes(search.toLowerCase())
-  );
-  
-  // Tính tổng số trang
-  const totalPages = Math.ceil(filteredRooms.length / ITEMS_PER_PAGE);
-
-  // Lọc các phòng theo trang hiện tại
-  const currentRooms = filteredRooms.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
-
-  // Chuyển đến trang trước
-  const handlePreviousPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
-  };
-
-  // Chuyển đến trang sau
-  const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-  };
-
   const handleSearch = () => {
+    const result = roomsData.filter((room) => {
+      const matchesSearch = search === "" || room.name.toLowerCase().includes(search.toLowerCase());
+      const matchesLocation = searchLocation === "" || room.location.toLowerCase().includes(searchLocation.toLowerCase());
+      const matchesDevices = selectedDevices.length === 0 || selectedDevices.every(device => room.facilities.includes(device));
+      const matchesStatus = selectedStatus === "" || room.status === selectedStatus;
+      const matchesCapacity = selectedCapacity === "" || room.capacity === parseInt(selectedCapacity);
+      return matchesSearch && matchesLocation && matchesDevices && matchesStatus && matchesCapacity;
+    });
+
+    setFilteredRooms(result);
     setCurrentPage(1);
   };
-  
-  const handleResetFilters = () => {
+
+  const handleReset = () => {
     setSearch("");
-    setStatusFilter("");
-    setCapacityFilter("");
-    setLocationFilter("");
-    setRoomCode("");
+    setSearchLocation("");
     setSelectedDevices([]);
+    setSelectedStatus("");
+    setSelectedCapacity("");
+    setFilteredRooms(roomsData);
+    setCurrentPage(1);
   };
 
+  // Xử lý phân trang
+  const totalPages = Math.ceil(filteredRooms.length / ITEMS_PER_PAGE);
+  const currentRooms = filteredRooms.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  const handlePreviousPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
+  const handleNextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
+
   return (
-<div className="min-h-screen flex flex-col">
+  <div className="min-h-screen flex flex-col">
 
   <Header />
 
   <div className="container flex-grow mx-auto mt-10 flex gap-6 mb-10">
-    {/* lọc */}
-    <div className="w-1/4 bg-white p-6 rounded-2xl shadow-md border border-gray-200 max-h-[650px] flex-shrink-0 flex flex-col">
-      <h2 className="text-xl font-semibold mb-5 text-gray-800">Filter</h2>
+  {/* Bộ lọc */}
+  <div className="w-1/4 bg-white p-6 rounded-2xl shadow-md border border-gray-200 max-h-[650px] flex-shrink-0 flex flex-col">
+    <h2 className="text-xl font-semibold mb-5 text-gray-800">Filter</h2>
 
-      {/*trạng thái */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="
-            w-full 
-            border border-gray-300 
-            rounded-lg 
-            py-2 px-3 
-            focus:ring-2 
-            focus:ring-blue-500 
-            focus:outline-none 
-            bg-gray-50 
-            hover:bg-gray-100 
-            transition-all
-          "
-        >
-          <option value="">Trạng thái</option>
-          <option value="Available">Available</option>
-          <option value="Booked">Booked</option>
-        </select>
-      </div>
+    {/* Tên phòng */}
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-1">Tên phòng</label>
+      <input
+        value={search}
+        onChange={(e) => setSearch(e.target.value)} 
+        type="text"
+        className="
+          w-full 
+          border border-gray-300 
+          rounded-lg 
+          py-2 px-3 
+          focus:ring-2 
+          focus:ring-blue-500 
+          focus:outline-none 
+          bg-gray-50 
+          hover:bg-gray-100 
+          transition-all
+        "
+        placeholder="Nhập tên phòng"
+      />
+    </div>
 
-      {/* sức chứa */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Sức chứa</label>
-        <select
-          value={capacityFilter}
-          onChange={(e) => setCapacityFilter(e.target.value)}
-          className="
-            w-full 
-            border border-gray-300 
-            rounded-lg 
-            py-2 px-3 
-            focus:ring-2 
-            focus:ring-blue-500 
-            focus:outline-none 
-            bg-gray-50 
-            hover:bg-gray-100 
-            transition-all
-          "
-        >
-          <option value="">Sức chứa</option>
-          {[4, 6, 8, 10].map((capacity) => (
-            <option key={capacity} value={capacity}>
-              {capacity} người
-            </option>
-          ))}
-        </select>
-      </div>
+    {/* Trạng thái */}
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+      <select
+        value={selectedStatus}
+        onChange={(e) => setSelectedStatus(e.target.value)}
+        className="
+          w-full 
+          border border-gray-300 
+          rounded-lg 
+          py-2 px-3 
+          focus:ring-2 
+          focus:ring-blue-500 
+          focus:outline-none 
+          bg-gray-50 
+          hover:bg-gray-100 
+          transition-all
+        "
+      >
+        <option value="">Trạng thái</option>
+        <option value="Available">Available</option>
+        <option value="Unavailable">Unavailable</option>
+      </select>
+    </div>
 
-      {/* vị trí phòng */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Vị trí phòng</label>
-        <select
-          value={locationFilter}
-          onChange={(e) => setLocationFilter(e.target.value)}
-          className="
-            w-full 
-            border border-gray-300 
-            rounded-lg 
-            py-2 px-3 
-            focus:ring-2 
-            focus:ring-blue-500 
-            focus:outline-none 
-            bg-gray-50 
-            hover:bg-gray-100 
-            transition-all
-          "
-        >
-          <option value="">Vị trí</option>
-          <option value="Tầng 1">Tầng 1</option>
-          <option value="Tầng 2">Tầng 2</option>
-          <option value="Tầng 3">Tầng 3</option>
-        </select>
-      </div>
+    {/* Sức chứa */}
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-1">Sức chứa</label>
+      <select
+        value={selectedCapacity}
+        onChange={(e) => setSelectedCapacity(e.target.value)}
+        className="
+          w-full 
+          border border-gray-300 
+          rounded-lg 
+          py-2 px-3 
+          focus:ring-2 
+          focus:ring-blue-500 
+          focus:outline-none 
+          bg-gray-50 
+          hover:bg-gray-100 
+          transition-all
+        "
+      >
+        <option value="">Sức chứa</option>
+        {[4, 6, 8, 10, 12].map((capacity) => (
+          <option key={capacity} value={capacity}>
+            {capacity} người
+          </option>
+        ))}
+      </select>
+    </div>
 
-      {/* mã phòng */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Mã phòng</label>
-        <input
-          type="text"
-          value={roomCode}
-          onChange={(e) => setRoomCode(e.target.value)}
-          placeholder="Nhập mã phòng: "
-          className="
-            w-full 
-            border border-gray-300 
-            rounded-lg 
-            py-2 px-3 
-            focus:ring-2 
-            focus:ring-blue-500 
-            focus:outline-none 
-            bg-gray-50 
-            hover:bg-gray-100 
-            transition-all
-          "
-        />
-      </div>
+    {/* Địa điểm phòng */}
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        Địa điểm phòng
+      </label>
+      <input
+        value={searchLocation}
+        onChange={(e) => setSearchLocation(e.target.value)} 
+        type="text"
+        className="
+          w-full 
+          border border-gray-300 
+          rounded-lg 
+          py-2 px-3 
+          focus:ring-2 
+          focus:ring-blue-500 
+          focus:outline-none 
+          bg-gray-50 
+          hover:bg-gray-100 
+          transition-all
+        "
+        placeholder="Nhập địa điểm"
+      />
+    </div>
 
-      {/* thiết bị */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Thiết bị</label>
-        <div className="flex flex-wrap gap-2">
-          {["Audio", "Video", "White Board", "HDMI", "Projector", "Speaker Phone"].map((device) => (
-            <button
-              key={device}
-              onClick={() =>
-                setSelectedDevices((prev) =>
-                  prev.includes(device) ? prev.filter((d) => d !== device) : [...prev, device]
-                )
-              }
-              className={`px-3 py-1 rounded-full text-sm border transition-all ${
-                selectedDevices.includes(device)
-                  ? "bg-blue-500 text-white border-blue-500"
-                  : "border-gray-300 text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              {device}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Nút */}
-      <div className="flex justify-between mt-auto pt-4 border-t border-gray-200">
-        <button
-          onClick={handleResetFilters}
-          className="
-            w-1/2 
-            mr-2 
-            py-2 
-            bg-gray-100 
-            text-gray-600 
-            border border-gray-300 
-            rounded-lg 
-            hover:bg-gray-200 
-            transition-all
-          "
-        >
-          Đặt lại
-        </button>
-        <button
-          onClick={handleSearch}
-          className="
-            w-1/2 
-            ml-2 
-            py-2 
-            bg-blue-500 
-            text-white 
-            rounded-lg 
-            hover:bg-blue-600 
-            transition-all
-          "
-        >
-          Tìm kiếm
-        </button>
+    {/* Thiết bị */}
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-1">Thiết bị</label>
+      <div className="flex flex-wrap gap-2">
+        {["Audio", "White Board", "HDMI", "Projector", "Speaker"].map((device) => (
+          <button
+            key={device}
+            onClick={() =>
+              setSelectedDevices((prev) =>
+                prev.includes(device) ? prev.filter((d) => d !== device) : [...prev, device]
+              )
+            }
+            className={`px-3 py-1 rounded-full text-sm border transition-all ${
+              selectedDevices.includes(device)
+                ? "bg-blue-500 text-white border-blue-500"
+                : "border-gray-300 text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            {device}
+          </button>
+        ))}
       </div>
     </div>
 
+    {/* Nút */}
+    <div className="flex justify-between mt-auto pt-4 border-t border-gray-200">
+      <button
+        onClick={handleReset}
+        className="
+          w-1/2 
+          mr-2 
+          py-2 
+          bg-gray-100 
+          text-gray-600 
+          border border-gray-300 
+          rounded-lg 
+          hover:bg-gray-200 
+          transition-all
+        "
+      >
+        Đặt lại
+      </button>
+
+      <button
+        onClick={handleSearch}
+        className="
+          w-1/2 
+          ml-2 
+          py-2 
+          bg-blue-500 
+          text-white 
+          rounded-lg 
+          hover:bg-blue-600 
+          transition-all
+        "
+      >
+        Tìm kiếm
+      </button>
+    </div>
+  </div>
 
 
     {/* Danh sách phòng họp*/}
     <div className="w3/4 flex-grow bg-gray-50 p-6 rounded-2xl shadow-md border border-gray-200">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Đặt phòng họp</h2>
-        <div className="relative w-80">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm kiếm phòng họp..."
-            className="pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 w-full transition-all"
-          />
-          <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
-          {search && (
-            <X
-              className="absolute right-3 top-2.5 text-gray-400 cursor-pointer"
-              size={20}
-              onClick={() => setSearch("")}
-            />
-          )}
-        </div>
       </div>
 
       {/* Danh sách phòng họp */}
@@ -313,11 +301,13 @@ export default function BookRoomPage() {
               
               {/* Địa điểm + Sức chứa */}
               <div className="mt-2 space-y-1 text-gray-600">
-                <p>
-                  📍 Địa điểm: <span className="font-medium">{room.location}</span>
+                <p className="flex items-center">
+                  <MapPin size={18} className="mr-2 text-blue-500" /> {/* Icon Địa điểm */}
+                  Địa điểm: <span className="font-medium ml-1">{room.location}</span>
                 </p>
-                <p>
-                  👥 Sức chứa: <span className="font-medium">{room.capacity}</span>
+                <p className="flex items-center">
+                  <Users size={18} className="mr-2 text-red-500" /> {/* Icon Sức chứa */}
+                  Sức chứa: <span className="font-medium ml-1">{room.capacity}</span>
                 </p>
               </div>
 

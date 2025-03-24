@@ -12,9 +12,8 @@ export default function Day({ day, rowIdx }) {
   } = useContext(GlobalContext);
 
   useEffect(() => {
-    const events = filteredEvents.filter(
-      (evt) =>
-        dayjs(evt.day).format("DD-MM-YY") === day.format("DD-MM-YY")
+    const events = filteredEvents.filter((evt) =>
+      dayjs(evt.startTime).isSame(day, "day")
     );
     setDayEvents(events);
   }, [filteredEvents, day]);
@@ -24,17 +23,14 @@ export default function Day({ day, rowIdx }) {
       ? "bg-blue-600 text-white rounded-full w-7"
       : "";
   }
+
   return (
     <div className="border border-gray-200 flex flex-col">
       <header className="flex flex-col items-center">
         {rowIdx === 0 && (
-          <p className="text-sm mt-1">
-            {day.format("ddd").toUpperCase()}
-          </p>
+          <p className="text-sm mt-1">{day.format("ddd").toUpperCase()}</p>
         )}
-        <p
-          className={`text-sm p-1 my-1 text-center  ${getCurrentDayClass()}`}
-        >
+        <p className={`text-sm p-1 my-1 text-center ${getCurrentDayClass()}`}>
           {day.format("DD")}
         </p>
       </header>
@@ -49,9 +45,9 @@ export default function Day({ day, rowIdx }) {
           <div
             key={idx}
             onClick={() => setSelectedEvent(evt)}
-            className={`bg-${evt.label}-200 p-1 mr-3 text-gray-600 text-sm rounded mb-1 truncate`}
+            className={`bg-green-200 p-1 mr-3 text-gray-600 text-sm rounded mb-1 truncate`}
           >
-            {evt.title}
+            {evt.title} ({dayjs(evt.startTime).format("HH:mm")} - {dayjs(evt.endTime).format("HH:mm")})
           </div>
         ))}
       </div>
