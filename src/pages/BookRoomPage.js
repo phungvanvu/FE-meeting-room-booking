@@ -40,10 +40,11 @@ export default function BookRoomPage() {
           id: room.roomName, // Dùng roomName làm key
           name: room.roomName,
           location: room.location,
+          note: room.note,
           capacity: room.capacity,
           status: room.available ? "Available" : "Booked",
           facilities: room.equipments || [],
-          image: `http://localhost:8080/MeetingRoomBooking${room.imageUrl}` // Đường dẫn đầy đủ cho ảnh
+          image: `http://localhost:8080/MeetingRoomBooking${room.imageUrl}`
         }));
         setRoomsData(formattedRooms);
       } else {
@@ -331,6 +332,10 @@ export default function BookRoomPage() {
                 }`}
               >
                 {room.status}
+              </p>
+
+              <p>
+                <span className="font-medium text-sm">{room.note}</span>
               </p>
 
               {/* Danh sách tiện ích */}

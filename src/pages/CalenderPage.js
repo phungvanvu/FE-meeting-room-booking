@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import "../App.css";
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -10,8 +10,8 @@ import GlobalContext from "../context/GlobalContext";
 import EventModal from "../components/EventModal";
 
 export default function CalendarPage() {
-  const [currenMonth, setCurrentMonth] = useState(getMonth());
-  const { monthIndex, showEventModal } = useContext(GlobalContext);
+  const [currenMonth] = useState(getMonth());
+  const {showEventModal } = useContext(GlobalContext);
 
   return (
     <>
