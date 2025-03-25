@@ -33,24 +33,34 @@ export default function RoomCalendar({ roomName }) {
 
         if (Array.isArray(data)) {
           const formattedBookings = data.map((booking) => ({
-            id: booking.requestId,
-            title: `${booking.purpose} (${formatTime(booking.startTime)} - ${formatTime(booking.endTime)})`,
+            id: booking.bookingId,
+            title: `${booking.purpose}`, 
             start: booking.startTime,
             end: booking.endTime,
-            backgroundColor: getEventColor(booking.status) || '#9E9E9E', // Thêm màu mặc định nếu null
+            backgroundColor: getEventColor(booking.status) || '#9E9E9E',
             borderColor: getEventColor(booking.status) || '#9E9E9E',
-            textColor: '#FFFFFF', // Màu chữ
+            textColor: '#FFFFFF',
             extendedProps: {
               status: booking.status,
               note: booking.note,
               startTime: booking.startTime,
               endTime: booking.endTime,
+              roomId: booking.roomId,
+              roomName: booking.roomName,
+              userEmail: booking.userEmail, 
+              bookedById: booking.bookedById,
+              userName: booking.userName,
             },
           }));
-           
+          
 
-          setEvents(formattedBookings);
-          setFilteredEvents(formattedBookings);
+          // Sắp xếp theo thời gian bắt đầu
+          const sortedBookings = formattedBookings.sort(
+            (a, b) => new Date(a.start) - new Date(b.start)
+          );
+
+          setEvents(sortedBookings);
+          setFilteredEvents(sortedBookings);
         } else {
           console.error("Invalid data format:", data);
           setEvents([]);
@@ -63,12 +73,12 @@ export default function RoomCalendar({ roomName }) {
     fetchRoomBookings();
   }, [roomName, setFilteredEvents]);
 
-  // Hàm định dạng giờ phút (ví dụ: 09:30)
+  // Định dạng giờ phút (ví dụ: 09:30)
   const formatTime = (time) => {
     return new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Đặt màu cho trạng thái
+  // Đặt màu cho trạng thái sự kiện
   const getEventColor = (status) => {
     switch (status) {
       case 'CONFIRMED':
@@ -86,7 +96,7 @@ export default function RoomCalendar({ roomName }) {
     <div className="calendar-container">
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-        initialView="timeGridWeek"
+        initialView="dayGridMonth"
         headerToolbar={{
           left: 'prev,next today',
           center: 'title',
@@ -118,7 +128,7 @@ export default function RoomCalendar({ roomName }) {
             tooltip.remove();
           });
         }}
-        height="800px" 
+        height="800px"
         eventContent={(info) => (
           <div className="custom-event">
             <div className="event-title">{info.event.title}</div>

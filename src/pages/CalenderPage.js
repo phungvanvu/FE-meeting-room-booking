@@ -1,4 +1,5 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
+import { useParams } from 'react-router-dom';
 import "../App.css";
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -9,7 +10,7 @@ import GlobalContext from "../context/GlobalContext";
 
 export default function CalendarPage() {
   const { showEventModal } = useContext(GlobalContext);
-  const [roomName] = useState("Room 1");
+  const { roomName } = useParams();
 
   return (
     <>

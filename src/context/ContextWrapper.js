@@ -17,7 +17,6 @@ export const ContextWrapper = ({ children }) => {
     note: "",
   });
 
-  // Hàm cập nhật tháng nhỏ (small calendar)
   const setSmallCalendarMonth = (index) => {
     setMonthIndex(index);
   };

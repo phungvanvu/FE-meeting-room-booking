@@ -352,7 +352,7 @@ export default function BookRoomPage() {
                   className="w-full bg-gray-300 text-gray-600 font-medium py-2 rounded-xl mt-5 cursor-not-allowed"
                   disabled
                 >
-                  Đã đặt
+                  Đặt phòng
                 </button>
               )}
             </div>
