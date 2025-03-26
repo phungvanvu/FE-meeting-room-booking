@@ -21,10 +21,10 @@ const Header = () => {
           // Nếu không phải trang chủ -> Hiện thanh điều hướng
           <div className="flex flex-1 justify-end mr-7 space-x-8 text-lg"> {/* Thêm mr-4 để tạo khoảng cách bên phải */}
             <NavLink to="/room-management" className="hover:text-gray-300 text-lg">
-              Quản lý phòng
+              Phòng
             </NavLink>
             <NavLink to="/user-management" className="hover:text-gray-300 text-lg">
-              Quản lý người dùng
+              Người dùng
             </NavLink>
             <NavLink to="/statistics" className="hover:text-gray-300 text-lg">
               Thống kê

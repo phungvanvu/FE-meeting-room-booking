@@ -30,11 +30,11 @@ const RoomManagement = () => {
     { id: "R001", name: "Interview 1", capacity: 4, status: "Sử dụng", location: "Tầng 8 - Tòa nhà 789", devices: ["Audio", "HDMI"], image: "/room/room1.jpg" },
     { id: "R002", name: "Interview 2", capacity: 6, status: "Tạm dừng", location: "Thành Công Building", devices: ["Video", "White Board"], image: "/room/room2.jpg" },
     { id: "R003", name: "Creative", capacity: 10, status: "Sử dụng", location: "The West Building", devices: ["Sound System", "Audio"], image: "/room/room3.jpg" },
-    { id: "R004", name: "Brain Stomming", capacity: 6, status: "Sử dụng", location: "Tầng 15 - Tòa nhà 789", devices: ["White Board", "Video"], image: "/room/room4.jpg" },
+    { id: "R004", name: "Brain Stomming", capacity: 6, status: "Sử dụng", location: "Tầng 8 - Tòa nhà 789", devices: ["White Board", "Video"], image: "/room/room4.jpg" },
     { id: "R005", name: "Training 1", capacity: 10, status: "Tạm dừng", location: "Thành Công Building", devices: ["HDMI", "Audio"], image: "/room/room5.jpg" },
     { id: "R006", name: "Training 2", capacity: 6, status: "Sử dụng", location: "The West Building", devices: ["Video", "Sound System"], image: "/room/room6.jpg" },
-    { id: "R007", name: "Break Room 1", capacity: 4, status: "Sử dụng", location: "Tầng 8 - Tòa nhà 789", devices: ["Audio", "HDMI"], image: "/room/room7.jpg" },
-    { id: "R008", name: "Break Room 2", capacity: 4, status: "Sử dụng", location: "Tầng 15 - Tòa nhà 789", devices: ["Sound System", "Video"], image: "/room/room4.jpg" },
+    { id: "R007", name: "Break Room 1", capacity: 4, status: "Sử dụng", location: "CMC Corporation", devices: ["Audio", "HDMI"], image: "/room/room7.jpg" },
+    { id: "R008", name: "Break Room 2", capacity: 4, status: "Sử dụng", location: "Tầng 8 - Tòa nhà 789", devices: ["Sound System", "Video"], image: "/room/room4.jpg" },
   ];
 
   const handleAddRoom = () => {
@@ -226,7 +226,7 @@ const RoomManagement = () => {
               <option value="Tầng 8 - Tòa nhà 789">Tầng 8 - Tòa nhà 789</option>
               <option value="Thành Công Building">Thành Công Building</option>
               <option value="The West Building">The West Building</option>
-              <option value="Tầng 15 - Tòa nhà 789">Tầng 15 - Tòa nhà 789</option>
+              
             </select>
             <label className="font-semibold">Trạng thái:</label>
             <select name="status" value={formData.status} onChange={handleChange} className="border rounded p-2 w-full">
