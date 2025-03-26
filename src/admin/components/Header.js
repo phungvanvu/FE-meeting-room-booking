@@ -15,18 +15,18 @@ const Header = () => {
         {/* Nếu đang ở trang chủ -> Hiện tiêu đề căn giữa */}
         {location.pathname === "/" ? (
           <h1 className="text-xl font-semibold flex-1 text-center">
-            Hệ thống booking phòng họp
+            CMC MEETING ROOM
           </h1>
         ) : (
           // Nếu không phải trang chủ -> Hiện thanh điều hướng
-          <div className="flex flex-1 justify-center space-x-8 text-lg">
-            <NavLink to="/room-management" className="hover:text-gray-300">
+          <div className="flex flex-1 justify-end mr-7 space-x-8 text-lg"> {/* Thêm mr-4 để tạo khoảng cách bên phải */}
+            <NavLink to="/room-management" className="hover:text-gray-300 text-lg">
               Quản lý phòng
             </NavLink>
-            <NavLink to="/user-management" className="hover:text-gray-300">
+            <NavLink to="/user-management" className="hover:text-gray-300 text-lg">
               Quản lý người dùng
             </NavLink>
-            <NavLink to="/statistics" className="hover:text-gray-300">
+            <NavLink to="/statistics" className="hover:text-gray-300 text-lg">
               Thống kê
             </NavLink>
           </div>
@@ -35,8 +35,8 @@ const Header = () => {
         {/* Tài khoản admin & Đăng xuất */}
         <div className="flex items-center space-x-4">
           <FaUser className="text-xl" />
-          <span>Admin</span>
-          <button className="bg-blue-700 px-3 py-1 rounded hover:bg-red-600">
+          <span className="ml-2 text-lg">Admin</span>
+          <button className="bg-blue-700 px-3 py-1 rounded hover:bg-red-600 text-lg">
             Đăng xuất
           </button>
         </div>

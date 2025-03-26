@@ -7,6 +7,7 @@ const RoomManagement = () => {
   const [selectedCapacity, setSelectedCapacity] = useState("");
   const [isAddFormVisible, setIsAddFormVisible] = useState(false);
   const [isEditFormVisible, setIsEditFormVisible] = useState(false);
+  const [isBookingFormVisible, setIsBookingFormVisible] = useState(false);
   const [newRoom, setNewRoom] = useState({
     id: "",
     name: "",
@@ -20,6 +21,10 @@ const RoomManagement = () => {
   const [editRoom, setEditRoom] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [roomToDelete, setRoomToDelete] = useState(null);
+  const [bookings, setBookings] = useState([]);
+  const [searchBooking, setSearchBooking] = useState("");
+  const [bookingToDelete, setBookingToDelete] = useState(null);
+  const [confirmBookingDelete, setConfirmBookingDelete] = useState(false);
 
   const rooms = [
     { id: "R001", name: "Interview 1", capacity: 4, status: "Sử dụng", location: "Tầng 8 - Tòa nhà 789", devices: ["Audio", "HDMI"], image: "/room/room1.jpg" },
@@ -51,24 +56,15 @@ const RoomManagement = () => {
     setIsAddFormVisible(false);
   };
 
-  const handleCancel = () => {
-    setIsAddFormVisible(false);
-  };
-
   const handleEditRoom = (room) => {
     setIsEditFormVisible(true);
     setEditRoom(room);
   };
-
-  const handleSaveEditRoom = () => {
-    // Logic lưu phòng đã sửa ở đây
+  const handleCancel = () => {
+    setIsAddFormVisible(false);
     setIsEditFormVisible(false);
+    setIsBookingFormVisible(false);
   };
-
-  const handleCancelEdit = () => {
-    setIsEditFormVisible(false);
-  };
-
   const handleDeleteRoom = (room) => {
     setConfirmDelete(true);
     setRoomToDelete(room);
@@ -83,6 +79,98 @@ const RoomManagement = () => {
   const cancelDeleteRoom = () => {
     setConfirmDelete(false);
     setRoomToDelete(null);
+  };
+
+  const handleBooking = (room) => {
+    setIsBookingFormVisible(true);
+    // Logic lấy đơn đặt phòng cho phòng này (có thể thêm dữ liệu mẫu ở đây)
+    setBookings([
+      { startTime: "10:00 AM", endTime: "11:00 AM", bookingDate: "24/10/2023", bookedBy: "Nguyễn Văn A" },
+      { startTime: "01:00 PM", endTime: "02:00 PM", bookingDate: "24/10/2023", bookedBy: "Trần Thị B" }
+    ]);
+  };
+
+  const closeBookingForm = () => {
+    setIsBookingFormVisible(false);
+  };
+
+  const handleDeleteBooking = (booking) => {
+    setConfirmBookingDelete(true);
+    setBookingToDelete(booking);
+  };
+
+  const confirmDeleteBooking = () => {
+    // Logic xóa booking ở đây
+    if (bookingToDelete) {
+      const updatedBookings = bookings.filter(booking => booking !== bookingToDelete);
+      setBookings(updatedBookings);
+    }
+    setConfirmBookingDelete(false);
+    setBookingToDelete(null);
+  };
+
+  const cancelDeleteBooking = () => {
+    setConfirmBookingDelete(false);
+    setBookingToDelete(null);
+  };
+
+  const BookingForm = () => {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+        <div className="bg-white shadow-lg p-6 rounded-lg w-[800px]">
+          <div className="flex justify-between mb-4">
+            <h3 className="text-xl font-semibold text-blue-700 text-center flex-1">Danh sách đặt phòng</h3>
+            <button onClick={closeBookingForm} className="text-red-500">X</button>
+          </div>
+          <div className="flex mb-4">
+            <input
+              type="text"
+              placeholder="Tìm kiếm..."
+              value={searchBooking}
+              onChange={(e) => setSearchBooking(e.target.value)}
+              className="border rounded p-2 flex-1"
+            />
+            <button className="ml-2 p-2 bg-blue-500 text-white rounded hover:bg-blue-700">Download</button>
+          </div>
+          <table className="min-w-full border-collapse border border-gray-300">
+            <thead>
+              <tr>
+                <th className="border border-gray-300 p-2">Thời gian bắt đầu</th>
+                <th className="border border-gray-300 p-2">Thời gian kết thúc</th>
+                <th className="border border-gray-300 p-2">Thời gian đặt phòng</th>
+                <th className="border border-gray-300 p-2">Người đặt</th>
+                <th className="border border-gray-300 p-2">Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bookings.map((booking, index) => (
+                <tr key={index}>
+                  <td className="border border-gray-300 p-2">{booking.startTime}</td>
+                  <td className="border border-gray-300 p-2">{booking.endTime}</td>
+                  <td className="border border-gray-300 p-2">{booking.bookingDate}</td>
+                  <td className="border border-gray-300 p-2">{booking.bookedBy}</td>
+                  <td className="border border-gray-300 p-2 text-center">
+                  <button onClick={() => handleDeleteBooking(booking)} className="text-red-500 text-xl"> &#10006; {/* Ký tự Unicode cho hình thập tự */} </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {confirmBookingDelete && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+            <div className="bg-white shadow-lg p-6 rounded-lg">
+              <h3 className="text-lg font-semibold text-center">Bạn có chắc chắn muốn xóa booking này?</h3>
+              <div className="flex justify-center gap-4 mt-4">
+                <button onClick={confirmDeleteBooking} className="p-2 border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white">Xóa</button>
+                <button onClick={cancelDeleteBooking} className="p-2 border border-gray-500 text-gray-500 rounded hover:bg-gray-500 hover:text-white">Hủy</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   const RoomForm = ({ room, isEdit, onSave, onCancel }) => {
@@ -149,8 +237,11 @@ const RoomManagement = () => {
             <textarea name="notes" value={formData.notes} onChange={handleChange} className="border rounded p-2 w-full"></textarea>
           </div>
           <div className="flex gap-2 mt-4">
-            <button onClick={() => onSave(formData)} className="flex-1 p-2 bg-blue-500 text-white rounded hover:bg-blue-700">Lưu</button>
-            <button onClick={onCancel} className="flex-1 p-2 bg-red-500 text-white rounded hover:bg-red-700">Hủy</button>
+          <button onClick={() => onSave(formData)} className="flex-1 p-2 bg-white border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white"> Lưu
+</button>
+<button onClick={onCancel} className="flex-1 p-2 bg-white border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white">
+  Hủy
+</button>
           </div>
         </div>
       </div>
@@ -160,7 +251,7 @@ const RoomManagement = () => {
   return (
     <div className="flex flex-col md:flex-row p-4 gap-6">
       <div className="md:w-1/4 bg-gray-100 shadow-lg rounded-lg p-5 sticky top-4 h-fit">
-        <h2 className="text-xl font-bold text-gray-700 mb-4">Bộ lọc tìm kiếm</h2>
+        <h2 className="text-xl font-bold text-gray-700 mb-4">Tìm kiếm</h2>
         <div className="mb-3">
           <label className="block font-semibold">Nhập tên phòng</label>
           <input type="text" value={searchText} onChange={(e) => setSearchText(e.target.value)}
@@ -226,8 +317,9 @@ const RoomManagement = () => {
                 <span className="font-semibold">Thiết bị:</span> <span>{room.devices.join(", ")}</span>
               </div>
               <div className="flex gap-2 mt-4">
-                <button onClick={() => handleEditRoom(room)} className="flex-1 p-2 bg-yellow-500 text-white rounded hover:bg-yellow-700">Sửa</button>
-                <button onClick={() => handleDeleteRoom(room)} className="flex-1 p-2 bg-red-500 text-white rounded hover:bg-red-700">Xóa</button>
+              <button onClick={() => handleEditRoom(room)} className="flex-1 p-2 bg-white border border-blue-700 text-blue-700 rounded hover:bg-blue-700 hover:text-white">Sửa</button>
+<button onClick={() => handleDeleteRoom(room)} className="flex-1 p-2 bg-white border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white">Xóa</button>
+<button onClick={() => handleBooking(room)} className="flex-1 p-2 bg-white border border-blue-700 text-blue-700 rounded hover:bg-blue-700 hover:text-white">Booking</button>
               </div>
             </div>
           ))}
@@ -237,16 +329,21 @@ const RoomManagement = () => {
         <RoomForm room={newRoom} isEdit={false} onSave={handleSaveRoom} onCancel={handleCancel} />
       )}
       {isEditFormVisible && (
-        <RoomForm room={editRoom} isEdit={true} onSave={handleSaveEditRoom} onCancel={handleCancelEdit} />
+        <RoomForm room={editRoom} isEdit={true} onSave={handleSaveRoom} onCancel={handleCancel} />
       )}
+      {isBookingFormVisible && <BookingForm />}
       {confirmDelete && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
           <div className="bg-white shadow-lg p-6 rounded-lg">
             <h3 className="text-lg font-semibold text-center">Bạn có chắc chắn muốn xóa phòng {roomToDelete?.name}?</h3>
             <div className="flex justify-center gap-4 mt-4">
-              <button onClick={confirmDeleteRoom} className="p-2 bg-red-500 text-white rounded hover:bg-red-700">Xóa</button>
-              <button onClick={cancelDeleteRoom} className="p-2 bg-gray-500 text-white rounded hover:bg-gray-700">Hủy</button>
-            </div>
+  <button onClick={confirmDeleteRoom} className="p-2 bg-white border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white">
+    Xóa
+  </button>
+  <button onClick={cancelDeleteRoom} className="p-2 bg-white border border-gray-500 text-gray-500 rounded hover:bg-gray-500 hover:text-white">
+    Hủy
+  </button>
+</div>
           </div>
         </div>
       )}
