@@ -1,0 +1,257 @@
+import { useState } from "react";
+
+const RoomManagement = () => {
+  const [searchText, setSearchText] = useState("");
+  const [selectedRooms, setSelectedRooms] = useState([]);
+  const [selectedLocations, setSelectedLocations] = useState([]);
+  const [selectedCapacity, setSelectedCapacity] = useState("");
+  const [isAddFormVisible, setIsAddFormVisible] = useState(false);
+  const [isEditFormVisible, setIsEditFormVisible] = useState(false);
+  const [newRoom, setNewRoom] = useState({
+    id: "",
+    name: "",
+    image: "",
+    capacity: "",
+    devices: [],
+    location: "",
+    status: "",
+    notes: ""
+  });
+  const [editRoom, setEditRoom] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [roomToDelete, setRoomToDelete] = useState(null);
+
+  const rooms = [
+    { id: "R001", name: "Interview 1", capacity: 4, status: "Sử dụng", location: "Tầng 8 - Tòa nhà 789", devices: ["Audio", "HDMI"], image: "/room/room1.jpg" },
+    { id: "R002", name: "Interview 2", capacity: 6, status: "Tạm dừng", location: "Thành Công Building", devices: ["Video", "White Board"], image: "/room/room2.jpg" },
+    { id: "R003", name: "Creative", capacity: 10, status: "Sử dụng", location: "The West Building", devices: ["Sound System", "Audio"], image: "/room/room3.jpg" },
+    { id: "R004", name: "Brain Stomming", capacity: 6, status: "Sử dụng", location: "Tầng 15 - Tòa nhà 789", devices: ["White Board", "Video"], image: "/room/room4.jpg" },
+    { id: "R005", name: "Training 1", capacity: 10, status: "Tạm dừng", location: "Thành Công Building", devices: ["HDMI", "Audio"], image: "/room/room5.jpg" },
+    { id: "R006", name: "Training 2", capacity: 6, status: "Sử dụng", location: "The West Building", devices: ["Video", "Sound System"], image: "/room/room6.jpg" },
+    { id: "R007", name: "Break Room 1", capacity: 4, status: "Sử dụng", location: "Tầng 8 - Tòa nhà 789", devices: ["Audio", "HDMI"], image: "/room/room7.jpg" },
+    { id: "R008", name: "Break Room 2", capacity: 4, status: "Sử dụng", location: "Tầng 15 - Tòa nhà 789", devices: ["Sound System", "Video"], image: "/room/room4.jpg" },
+  ];
+
+  const handleAddRoom = () => {
+    setIsAddFormVisible(true);
+    setNewRoom({
+      id: `R${rooms.length + 1}`,
+      name: "",
+      image: "",
+      capacity: "",
+      devices: [],
+      location: "",
+      status: "",
+      notes: ""
+    });
+  };
+
+  const handleSaveRoom = () => {
+    // Logic lưu phòng mới ở đây
+    setIsAddFormVisible(false);
+  };
+
+  const handleCancel = () => {
+    setIsAddFormVisible(false);
+  };
+
+  const handleEditRoom = (room) => {
+    setIsEditFormVisible(true);
+    setEditRoom(room);
+  };
+
+  const handleSaveEditRoom = () => {
+    // Logic lưu phòng đã sửa ở đây
+    setIsEditFormVisible(false);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditFormVisible(false);
+  };
+
+  const handleDeleteRoom = (room) => {
+    setConfirmDelete(true);
+    setRoomToDelete(room);
+  };
+
+  const confirmDeleteRoom = () => {
+    // Logic xóa phòng ở đây
+    setConfirmDelete(false);
+    setRoomToDelete(null);
+  };
+
+  const cancelDeleteRoom = () => {
+    setConfirmDelete(false);
+    setRoomToDelete(null);
+  };
+
+  const RoomForm = ({ room, isEdit, onSave, onCancel }) => {
+    const [formData, setFormData] = useState(room);
+
+    const handleChange = (e) => {
+      const { name, value } = e.target;
+      setFormData({ ...formData, [name]: value });
+    };
+
+    const handleDeviceChange = (e) => {
+      const { value } = e.target;
+      setFormData(prev => {
+        const devices = prev.devices.includes(value)
+          ? prev.devices.filter(device => device !== value)
+          : [...prev.devices, value];
+        return { ...prev, devices };
+      });
+    };
+
+    return (
+      <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+        <div className="bg-white shadow-lg p-6 rounded-lg w-[600px]">
+          <h3 className="text-xl font-semibold text-blue-700 mb-4 text-center">{isEdit ? "Sửa phòng" : "Thêm phòng mới"}</h3>
+          <div className="grid gap-0.5 text-gray-700">
+            <div className="flex justify-between">
+              <div className="w-35">
+                <label className="font-semibold">Tên phòng:</label>
+                <input type="text" name="name" value={formData.name} onChange={handleChange} className="border rounded p-2 w-full" />
+              </div>
+              <div className="ml-4 w-3/4">
+                <label className="font-semibold">Chọn ảnh:</label>
+                <input type="file" name="image" onChange={(e) => setFormData({ ...formData, image: e.target.files[0] })} className="border rounded p-2 w-full" />
+              </div>
+            </div>
+            <label className="font-semibold">Sức chứa:</label>
+            <div className="flex justify-center gap-4">
+              <label><input type="radio" name="capacity" value="4" checked={formData.capacity === "4"} onChange={handleChange} /> 4 người</label>
+              <label><input type="radio" name="capacity" value="6" checked={formData.capacity === "6"} onChange={handleChange} /> 6 người</label>
+              <label><input type="radio" name="capacity" value="10" checked={formData.capacity === "10"} onChange={handleChange} /> 10 người</label>
+            </div>
+            <label className="font-semibold">Thiết bị:</label>
+            <div className="grid grid-cols-2 gap-2">
+              {["Audio", "HDMI", "Video", "White Board", "Sound System"].map(device => (
+                <label key={device} className="flex items-center">
+                  <input type="checkbox" value={device} checked={formData.devices.includes(device)} onChange={handleDeviceChange} />
+                  <span className="ml-2">{device}</span>
+                </label>
+              ))}
+            </div>
+            <label className="font-semibold">Vị trí:</label>
+            <select name="location" value={formData.location} onChange={handleChange} className="border rounded p-2 w-full">
+              <option value="Tầng 8 - Tòa nhà 789">Tầng 8 - Tòa nhà 789</option>
+              <option value="Thành Công Building">Thành Công Building</option>
+              <option value="The West Building">The West Building</option>
+              <option value="Tầng 15 - Tòa nhà 789">Tầng 15 - Tòa nhà 789</option>
+            </select>
+            <label className="font-semibold">Trạng thái:</label>
+            <select name="status" value={formData.status} onChange={handleChange} className="border rounded p-2 w-full">
+              <option value="Sử dụng">Sử dụng</option>
+              <option value="Tạm dừng">Tạm dừng</option>
+            </select>
+            <label className="font-semibold">Ghi chú:</label>
+            <textarea name="notes" value={formData.notes} onChange={handleChange} className="border rounded p-2 w-full"></textarea>
+          </div>
+          <div className="flex gap-2 mt-4">
+            <button onClick={() => onSave(formData)} className="flex-1 p-2 bg-blue-500 text-white rounded hover:bg-blue-700">Lưu</button>
+            <button onClick={onCancel} className="flex-1 p-2 bg-red-500 text-white rounded hover:bg-red-700">Hủy</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="flex flex-col md:flex-row p-4 gap-6">
+      <div className="md:w-1/4 bg-gray-100 shadow-lg rounded-lg p-5 sticky top-4 h-fit">
+        <h2 className="text-xl font-bold text-gray-700 mb-4">Bộ lọc tìm kiếm</h2>
+        <div className="mb-3">
+          <label className="block font-semibold">Nhập tên phòng</label>
+          <input type="text" value={searchText} onChange={(e) => setSearchText(e.target.value)}
+            className="w-full p-2 border rounded mt-1" placeholder="Nhập tên phòng..." />
+        </div>
+        <div className="mb-3">
+          <label className="block font-semibold">Filter phòng</label>
+          {rooms.map(room => (
+            <div key={room.id} className="ml-3">
+              <input type="checkbox" checked={selectedRooms.includes(room.name)}
+                onChange={() =>
+                  setSelectedRooms(prev =>
+                    prev.includes(room.name) ? prev.filter(r => r !== room.name) : [...prev, room.name]
+                  )}
+              />
+              <span className="ml-2">{room.name}</span>
+            </div>
+          ))}
+        </div>
+        <div className="mb-3">
+          <label className="block font-semibold">Chọn vị trí</label>
+          {[...new Set(rooms.map(r => r.location))].map(location => (
+            <div key={location} className="ml-3">
+              <input type="checkbox" checked={selectedLocations.includes(location)}
+                onChange={() =>
+                  setSelectedLocations(prev =>
+                    prev.includes(location) ? prev.filter(l => l !== location) : [...prev, location]
+              )}
+              />
+              <span className="ml-2">{location}</span>
+            </div>
+          ))}
+        </div>
+        <div className="mb-3">
+          <label className="block font-semibold">Chọn sức chứa</label>
+          {[...new Set(rooms.map(r => r.capacity))].map(capacity => (
+            <div key={capacity} className="ml-3">
+              <input type="radio" name="capacity" checked={selectedCapacity === capacity}
+                onChange={() => setSelectedCapacity(capacity)}
+              />
+              <span className="ml-2">{capacity} người</span>
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-2 mt-4">
+          <button onClick={() => {/* logic tìm kiếm */}} className="flex-1 p-2 bg-blue-500 text-white rounded hover:bg-blue-700">Tìm kiếm</button>
+          <button onClick={handleAddRoom} className="flex-1 p-2 bg-green-500 text-white rounded hover:bg-green-700">Thêm</button>
+        </div>
+      </div>
+      <div className="flex-1">
+        <h2 className="text-2xl font-bold text-center mb-6">Danh sách phòng</h2>
+        <div className="grid md:grid-cols-3 gap-6">
+          {rooms.map(room => (
+            <div key={room.id} className="bg-white shadow-lg p-4 rounded-lg flex flex-col">
+              <img src={room.image} alt={room.name} className="w-full h-40 object-cover rounded-md mb-3" />
+              <div className="grid grid-cols-2 gap-1 text-gray-700">
+                <span className="font-semibold">Tên:</span> <span>{room.name}</span>
+                <span className="font-semibold">Mã phòng:</span> <span>{room.id}</span>
+                <span className="font-semibold">Sức chứa:</span> <span>{room.capacity} người</span>
+                <span className="font-semibold">Vị trí:</span> <span>{room.location}</span>
+                <span className="font-semibold">Trạng thái:</span>
+                <span className={room.status === "Sử dụng" ? "text-green-500 font-bold" : "text-red-500 font-bold"}>{room.status}</span>
+                <span className="font-semibold">Thiết bị:</span> <span>{room.devices.join(", ")}</span>
+              </div>
+              <div className="flex gap-2 mt-4">
+                <button onClick={() => handleEditRoom(room)} className="flex-1 p-2 bg-yellow-500 text-white rounded hover:bg-yellow-700">Sửa</button>
+                <button onClick={() => handleDeleteRoom(room)} className="flex-1 p-2 bg-red-500 text-white rounded hover:bg-red-700">Xóa</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {isAddFormVisible && (
+        <RoomForm room={newRoom} isEdit={false} onSave={handleSaveRoom} onCancel={handleCancel} />
+      )}
+      {isEditFormVisible && (
+        <RoomForm room={editRoom} isEdit={true} onSave={handleSaveEditRoom} onCancel={handleCancelEdit} />
+      )}
+      {confirmDelete && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white shadow-lg p-6 rounded-lg">
+            <h3 className="text-lg font-semibold text-center">Bạn có chắc chắn muốn xóa phòng {roomToDelete?.name}?</h3>
+            <div className="flex justify-center gap-4 mt-4">
+              <button onClick={confirmDeleteRoom} className="p-2 bg-red-500 text-white rounded hover:bg-red-700">Xóa</button>
+              <button onClick={cancelDeleteRoom} className="p-2 bg-gray-500 text-white rounded hover:bg-gray-700">Hủy</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default RoomManagement;

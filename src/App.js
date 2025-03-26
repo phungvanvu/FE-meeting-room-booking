@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./admin/pages/Home";
-import AvailableRooms from "./admin/pages/AvailableRooms";
-import BookedRooms from "./admin/pages/BookedRooms";
+import RoomManagement from "./admin/pages/RoomManagement";  // Sửa lại tên
 import UserManagement from "./admin/pages/UserManagement";
 import Statistics from "./admin/pages/Statistics";
 import Header from "./admin/components/Header";
@@ -13,8 +12,7 @@ function App() {
       <Header />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/available-rooms" element={<AvailableRooms />} />
-        <Route path="/booked-rooms" element={<BookedRooms />} />
+        <Route path="/room-management" element={<RoomManagement />} />
         <Route path="/user-management" element={<UserManagement />} />
         <Route path="/statistics" element={<Statistics />} />
       </Routes>
