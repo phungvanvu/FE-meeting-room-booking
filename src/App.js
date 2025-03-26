@@ -1,10 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { isAccessTokenValid } from "./components/utils/auth";
-import Login from "./pages/LoginPage";
-import Home from "./pages/HomePage";
-import BookRoom from "./pages/BookRoomPage";
-import CalenderPage from "./pages/CalenderPage";
+import Login from "./pages/Auth/LoginPage";
+import Home from "./pages/User/HomePage";
+import BookRoom from "./pages/User/BookRoomPage";
+import CalenderPage from "./pages/User/CalenderPage";
 
 function App() {
   const navigate = useNavigate();

@@ -4,7 +4,7 @@ export default function Footer() {
   return (
     <footer className="bg-teal-600 text-white py-4">
       <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
-        {/* Logo + Tên thương hiệu */}
+        {/* Logo*/}
         <h2 className="text-lg font-semibold">#####</h2>
 
         {/* Mạng xã hội */}

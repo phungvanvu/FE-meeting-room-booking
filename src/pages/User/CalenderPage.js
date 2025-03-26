@@ -1,12 +1,12 @@
 import React, { useContext } from 'react';
 import { useParams } from 'react-router-dom';
-import "../App.css";
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import Sidebar from "../components/Sidebar";
-import RoomCalendar from "../components/RoomCalendar";
-import EventModal from "../components/EventModal";
-import GlobalContext from "../context/GlobalContext";
+import "../../App.css";
+import Header from '../../components/Header';
+import Footer from '../../components/Footer';
+import Sidebar from "../../components/Calendar/Sidebar";
+import RoomCalendar from "../../components/Calendar/RoomCalendar";
+import EventModal from "../../components/Calendar/EventModal";
+import GlobalContext from "../../context/GlobalContext";
 
 export default function CalendarPage() {
   const { showEventModal } = useContext(GlobalContext);

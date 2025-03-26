@@ -3,8 +3,8 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import GlobalContext from "../context/GlobalContext";
-import '../App.css';
+import GlobalContext from "../../context/GlobalContext";
+import '../../App.css';
 
 export default function RoomCalendar({ roomName }) {
   const { setFilteredEvents } = useContext(GlobalContext);

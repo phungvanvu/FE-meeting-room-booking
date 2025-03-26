@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
 import { ChevronLeft, ChevronRight, MapPin, Users } from "lucide-react";
-import { isAccessTokenValid } from "../components/utils/auth";
+import { isAccessTokenValid } from "../../components/utils/auth";
 
 
 const ITEMS_PER_PAGE = 6;
@@ -179,7 +179,7 @@ export default function BookRoomPage() {
         "
       >
         <option value="">Sức chứa</option>
-        {[4, 6, 8, 10, 12].map((capacity) => (
+        {[6, 8, 10, 12].map((capacity) => (
           <option key={capacity} value={capacity}>
             {capacity} người
           </option>
@@ -216,7 +216,7 @@ export default function BookRoomPage() {
     <div className="mb-4">
       <label className="block text-sm font-medium text-gray-700 mb-1">Thiết bị</label>
       <div className="flex flex-wrap gap-2">
-        {["Audio", "White Board", "HDMI", "Projector", "Speaker"].map((device) => (
+        {["Projector", "Monitor", "HDMI", "Whiteboard", "Microphone", "Speaker"].map((device) => (
           <button
             key={device}
             onClick={() =>

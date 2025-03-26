@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Bell, ChevronDown, UserCircle } from "lucide-react";
+import { Bell, ChevronDown, Cookie, UserCircle } from "lucide-react";
 
 export default function Header() {
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
+    sessionStorage.removeItem("accessToken");
+    Cookie.removeItem("refreshToken");
     navigate("/Login");
   };
 
@@ -17,8 +17,7 @@ export default function Header() {
       {/* Logo */}
       <Link to="/Home">
         <img
-          src="/Header/Logo.png"
-          alt="Logo"
+          src="/Header/Logo.png" alt="Logo"
           className="h-10 cursor-pointer"
         />
       </Link>
@@ -53,7 +52,7 @@ export default function Header() {
           >
             {/*biểu tượng UserCircle */}
             <UserCircle className="h-8 w-8" />
-            <span>Phùng Văn Vũ</span>
+            <span>User</span>
             <ChevronDown className="h-5 w-5" />
           </div>
 
@@ -64,13 +63,13 @@ export default function Header() {
                 to="/Profile"
                 className="block px-4 py-2 hover:bg-gray-100"
               >
-                Hồ sơ
+                Profile
               </Link>
               <button
                 onClick={handleLogout}
                 className="block w-full text-left px-4 py-2 hover:bg-gray-100"
               >
-                Đăng xuất
+                Logout
               </button>
             </div>
           )}
