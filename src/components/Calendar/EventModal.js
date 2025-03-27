@@ -1,16 +1,24 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import GlobalContext from "../../context/GlobalContext";
+import API_BASE_URL from "../../config";
 
-export default function EventModal() {
-  const { setShowEventModal, eventData, setEventData } = useContext(GlobalContext);
+export default function EventModal({ onBookingSuccess }) {
+  const { setShowEventModal, eventData, setEventData } =
+    useContext(GlobalContext);
   const { roomName } = useParams();
   const accessToken = sessionStorage.getItem("accessToken");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchRoomId = async () => {
+      setLoading(true);
+      setError("");
       try {
-        const response = await fetch(`http://localhost:8080/MeetingRoomBooking/room/name/${roomName}`, {
+        const response = await fetch(`${API_BASE_URL}/room/name/${roomName}`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -22,7 +30,7 @@ export default function EventModal() {
           if (roomData?.data?.roomId) {
             setEventData((prev) => ({
               ...prev,
-              roomId: roomData.data.roomId, // Lấy roomId từ API
+              roomId: roomData.data.roomId,
             }));
           } else {
             console.error("Room ID not found in response");
@@ -31,17 +39,19 @@ export default function EventModal() {
           console.error("Failed to fetch room ID");
         }
       } catch (error) {
-        console.error("Error fetching room ID:", error);
+        console.error(error);
       }
     };
-  
+    setLoading(false);
     if (roomName) fetchRoomId();
   }, [roomName, setEventData]);
-  
+
   useEffect(() => {
     const fetchUserInfo = async () => {
+      setLoading(true);
+      setError("");
       try {
-        const response = await fetch("http://localhost:8080/MeetingRoomBooking/user/my-info", {
+        const response = await fetch(`${API_BASE_URL}/user/my-info`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -49,11 +59,11 @@ export default function EventModal() {
         });
         if (response.ok) {
           const userData = await response.json();
-          console.log("User Data:", userData); // Kiểm tra dữ liệu trả về từ server
+          console.log("User Data:", userData);
           if (userData?.data?.userId) {
             setEventData((prev) => ({
               ...prev,
-              bookedById: userData.data.userId, // Lấy userId từ API
+              bookedById: userData.data.userId,
             }));
           } else {
             console.error("User ID not found in response");
@@ -62,13 +72,13 @@ export default function EventModal() {
           console.error("Failed to fetch user info");
         }
       } catch (error) {
-        console.error("Failed to fetch user info:", error);
+        console.error(error);
       }
+      setLoading(false);
     };
-  
+
     fetchUserInfo();
   }, [setEventData]);
-  
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -80,27 +90,45 @@ export default function EventModal() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
-    console.log("eventData:", eventData); // Kiểm tra giá trị thực tế
-  
-    // Đảm bảo dữ liệu đầy đủ
-    if (!eventData.roomId || !eventData.bookedById || !eventData.startTime || !eventData.endTime || !eventData.purpose || !eventData.status) {
-      alert("Vui lòng điền đầy đủ thông tin!");
+
+    console.log("eventData:", eventData);
+    if (
+      !eventData.roomId ||
+      !eventData.bookedById ||
+      !eventData.startTime ||
+      !eventData.endTime ||
+      !eventData.purpose
+    ) {
+      alert("Please fill in all information!");
       return;
     }
-  
+
+    if (new Date(eventData.startTime) >= new Date(eventData.endTime)) {
+      alert("Start time must be before end time!");
+      return;
+    }
+
+    // Cộng thêm 7 giờ để chuyển về UTC+0
+    const startTime = new Date(eventData.startTime);
+    startTime.setHours(
+      startTime.getHours() - startTime.getTimezoneOffset() / 60
+    );
+
+    const endTime = new Date(eventData.endTime);
+    endTime.setHours(endTime.getHours() - endTime.getTimezoneOffset() / 60);
+
     const formattedData = {
       roomId: eventData.roomId || null,
       bookedById: eventData.bookedById || null,
-      startTime: new Date(eventData.startTime).toISOString().slice(0, 19),
-      endTime: new Date(eventData.endTime).toISOString().slice(0, 19),
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
       purpose: eventData.purpose,
-      status: eventData.status,
-      note: eventData.note || ""
-    };    
-  
+      description: eventData.description || "",
+    };
+
     try {
-      const response = await fetch("http://localhost:8080/MeetingRoomBooking/roombooking", {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/roombooking`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -108,126 +136,133 @@ export default function EventModal() {
         },
         body: JSON.stringify(formattedData),
       });
-  
-      if (response.ok) {
-        alert("Booking created successfully!");
-        setShowEventModal(false);
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSuccessMessage(`Đặt phòng thành công!`);
+        onBookingSuccess();
+        setTimeout(() => {
+          setShowEventModal(false);
+          setSuccessMessage("");
+        }, 3000);
       } else {
-        const errorData = await response.json();
-        alert(`Failed to create booking: ${errorData.message || "Unknown error"}`);
+        const errorMessage = result.error?.message || "Lỗi không xác định";
+        setError(`${errorMessage}`);
       }
     } catch (error) {
       console.error("Error during booking:", error);
-      alert("Failed to create booking. Please check your network connection and try again.");
+      setError("Lỗi mạng, vui lòng thử lại sau!");
+    } finally {
+      setLoading(false);
     }
   };
-  
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'
       onClick={() => setShowEventModal(false)}
     >
       <div
-        className="bg-white w-full max-w-md rounded-xl shadow-lg p-6 relative"
+        className='bg-white w-full max-w-md rounded-xl shadow-lg p-6 relative'
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Đặt Phòng</h2>
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <input
-              type="hidden"
-              name="roomId"
-              value={eventData.roomId || ""}
-            />
+        <h2 className='text-xl font-bold text-gray-800 mb-4'>Book a Room</h2>
+
+        {/* Hiển thị lỗi */}
+        {error && <p className='text-red-500 text-sm mb-2'>{error}</p>}
+        {successMessage && (
+          <p className='text-green-500 text-sm mb-2'>{successMessage}</p>
+        )}
+
+        {/* Hiển thị khi đang tải */}
+        {loading && <p className='text-blue-500 text-sm mb-2'>Đang xử lý...</p>}
+
+        <form className='space-y-4' onSubmit={handleSubmit}>
+          <input type='hidden' name='roomId' value={eventData.roomId || ""} />
 
           {/* Purpose */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Mục đích</label>
+            <label className='block text-sm font-medium text-gray-700'>
+              Title
+            </label>
             <select
-              name="purpose"
+              name='purpose'
               value={eventData.purpose || ""}
               onChange={handleChange}
               required
-              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className='mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400'
             >
-              <option value="">-- Choose purpose --</option>
-              <option value="INTERVIEW">Interview</option>
-              <option value="MEETING">Meeting</option>
-              <option value="TRAINING">Training</option>
-              <option value="CLIENT_MEETING">Meet customers/partners</option>
+              <option value=''>Choose Title</option>
+              <option value='INTERVIEW'>Interview</option>
+              <option value='MEETING'>Meeting</option>
+              <option value='TRAINING'>Training</option>
+              <option value='CLIENT_MEETING'>Meet customers/partners</option>
             </select>
           </div>
 
-
           {/* Start Time */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Thời gian bắt đầu</label>
+            <label className='block text-sm font-medium text-gray-700'>
+              Start Time
+            </label>
             <input
-              type="datetime-local"
-              name="startTime"
+              type='datetime-local'
+              name='startTime'
               value={eventData.startTime || ""}
               onChange={handleChange}
               required
-              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className='mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400'
             />
           </div>
 
           {/* End Time */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Thời gian kết thúc</label>
+            <label className='block text-sm font-medium text-gray-700'>
+              End Time
+            </label>
             <input
-              type="datetime-local"
-              name="endTime"
+              type='datetime-local'
+              name='endTime'
               value={eventData.endTime || ""}
               onChange={handleChange}
               required
-              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className='mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400'
             />
           </div>
 
-          {/* Status */}
+          {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Trạng thái</label>
-            <select
-              name="status"
-              value={eventData.status || ""}
-              onChange={handleChange}
-              required
-              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-            >
-              <option value="">-- Chọn trạng thái --</option>
-              <option value="CONFIRMED">CONFIRMED</option>
-              <option value="PENDING">PENDING</option>
-              <option value="CANCELLED">CANCELLED</option>
-            </select>
-          </div>
-
-          {/* Note */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Ghi chú</label>
+            <label className='block text-sm font-medium text-gray-700'>
+              Description
+            </label>
             <textarea
-              name="note"
-              value={eventData.note || ""}
+              name='description'
+              value={eventData.description || ""}
               onChange={handleChange}
-              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-              rows="3"
+              className='mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400'
+              rows='3'
             ></textarea>
           </div>
 
           {/* Buttons */}
-          <div className="flex justify-end gap-3 mt-4">
+          <div className='flex justify-end gap-3 mt-4'>
+            {/* Submit Button */}
             <button
-              type="submit"
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+              type='submit'
+              disabled={loading}
+              className={`w-full py-2 text-white rounded-lg ${
+                loading ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"
+              }`}
             >
-              Đặt phòng
+              {loading ? "Đang xử lý..." : "Đặt Phòng"}
             </button>
             <button
-              type="button"
+              type='button'
               onClick={() => setShowEventModal(false)}
-              className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition"
+              className='bg-gray-300 text-gray-700 px-4 py-2 rounded-lg'
             >
-              Hủy
+              Cancel
             </button>
           </div>
         </form>

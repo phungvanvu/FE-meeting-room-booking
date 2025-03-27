@@ -4,20 +4,14 @@ import GlobalContext from "../../context/GlobalContext";
 import { getMonth } from "../utils/util";
 
 export default function SmallCalendar() {
-  const [currentMonthIdx, setCurrentMonthIdx] = useState(
-    dayjs().month()
-  );
+  const [currentMonthIdx, setCurrentMonthIdx] = useState(dayjs().month());
   const [currentMonth, setCurrentMonth] = useState(getMonth());
   useEffect(() => {
     setCurrentMonth(getMonth(currentMonthIdx));
   }, [currentMonthIdx]);
 
-  const {
-    monthIndex,
-    setSmallCalendarMonth,
-    setDaySelected,
-    daySelected,
-  } = useContext(GlobalContext);
+  const { monthIndex, setSmallCalendarMonth, setDaySelected, daySelected } =
+    useContext(GlobalContext);
 
   useEffect(() => {
     setCurrentMonthIdx(monthIndex);
@@ -43,29 +37,27 @@ export default function SmallCalendar() {
     }
   }
   return (
-    <div className="mt-9">
-      <header className="flex justify-between">
-        <p className="text-gray-500 font-bold">
-          {dayjs(new Date(dayjs().year(), currentMonthIdx)).format(
-            "MMMM YYYY"
-          )}
+    <div className='mt-9'>
+      <header className='flex justify-between'>
+        <p className='text-gray-500 font-bold'>
+          {dayjs(new Date(dayjs().year(), currentMonthIdx)).format("MMMM YYYY")}
         </p>
         <div>
           <button onClick={handlePrevMonth}>
-            <span className="material-icons-outlined cursor-pointer text-gray-600 mx-2">
+            <span className='material-icons-outlined cursor-pointer text-gray-600 mx-2'>
               chevron_left
             </span>
           </button>
           <button onClick={handleNextMonth}>
-            <span className="material-icons-outlined cursor-pointer text-gray-600 mx-2">
+            <span className='material-icons-outlined cursor-pointer text-gray-600 mx-2'>
               chevron_right
             </span>
           </button>
         </div>
       </header>
-      <div className="grid grid-cols-7 grid-rows-6">
+      <div className='grid grid-cols-7 grid-rows-6'>
         {currentMonth[0].map((day, i) => (
-          <span key={i} className="text-sm py-1 text-center">
+          <span key={i} className='text-sm py-1 text-center'>
             {day.format("dd").charAt(0)}
           </span>
         ))}
@@ -82,7 +74,7 @@ export default function SmallCalendar() {
                 }}
                 className={`py-1 w-full ${getDayClass(day)}`}
               >
-                <span className="text-sm">{day.format("D")}</span>
+                <span className='text-sm'>{day.format("D")}</span>
               </button>
             ))}
           </React.Fragment>
