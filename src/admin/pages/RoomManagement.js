@@ -2,9 +2,9 @@ import { useState } from "react";
 
 const RoomManagement = () => {
   const [searchText, setSearchText] = useState("");
-  const [selectedRooms, setSelectedRooms] = useState([]);
   const [selectedLocations, setSelectedLocations] = useState([]);
-  const [selectedCapacity, setSelectedCapacity] = useState("");
+  const [selectedCapacities, setSelectedCapacities] = useState([]);
+  const [selectedStatus, setSelectedStatus] = useState([]);
   const [isAddFormVisible, setIsAddFormVisible] = useState(false);
   const [isEditFormVisible, setIsEditFormVisible] = useState(false);
   const [isBookingFormVisible, setIsBookingFormVisible] = useState(false);
@@ -37,6 +37,9 @@ const RoomManagement = () => {
     { id: "R008", name: "Break Room 2", capacity: 4, status: "Sử dụng", location: "Tầng 8 - Tòa nhà 789", devices: ["Sound System", "Video"], image: "/room/room4.jpg" },
   ];
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const roomsPerPage = 6;
+
   const handleAddRoom = () => {
     setIsAddFormVisible(true);
     setNewRoom({
@@ -60,11 +63,13 @@ const RoomManagement = () => {
     setIsEditFormVisible(true);
     setEditRoom(room);
   };
+
   const handleCancel = () => {
     setIsAddFormVisible(false);
     setIsEditFormVisible(false);
     setIsBookingFormVisible(false);
   };
+
   const handleDeleteRoom = (room) => {
     setConfirmDelete(true);
     setRoomToDelete(room);
@@ -150,7 +155,7 @@ const RoomManagement = () => {
                   <td className="border border-gray-300 p-2">{booking.bookingDate}</td>
                   <td className="border border-gray-300 p-2">{booking.bookedBy}</td>
                   <td className="border border-gray-300 p-2 text-center">
-                  <button onClick={() => handleDeleteBooking(booking)} className="text-red-500 text-xl"> &#10006; {/* Ký tự Unicode cho hình thập tự */} </button>
+                    <button onClick={() => handleDeleteBooking(booking)} className="text-red-500 text-xl"> &#10006; {/* Ký tự Unicode cho hình thập tự */} </button>
                   </td>
                 </tr>
               ))}
@@ -226,7 +231,6 @@ const RoomManagement = () => {
               <option value="Tầng 8 - Tòa nhà 789">Tầng 8 - Tòa nhà 789</option>
               <option value="Thành Công Building">Thành Công Building</option>
               <option value="The West Building">The West Building</option>
-              
             </select>
             <label className="font-semibold">Trạng thái:</label>
             <select name="status" value={formData.status} onChange={handleChange} className="border rounded p-2 w-full">
@@ -237,15 +241,38 @@ const RoomManagement = () => {
             <textarea name="notes" value={formData.notes} onChange={handleChange} className="border rounded p-2 w-full"></textarea>
           </div>
           <div className="flex gap-2 mt-4">
-          <button onClick={() => onSave(formData)} className="flex-1 p-2 bg-white border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white"> Lưu
-</button>
-<button onClick={onCancel} className="flex-1 p-2 bg-white border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white">
-  Hủy
-</button>
+            <button onClick={() => onSave(formData)} className="flex-1 p-2 bg-white border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white"> Lưu
+            </button>
+            <button onClick={onCancel} className="flex-1 p-2 bg-white border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white">
+              Hủy
+            </button>
           </div>
         </div>
       </div>
     );
+  };
+
+  const handleSearch = () => {
+    const result = rooms.filter((room) => {
+      const matchesSearch = searchText === "" || room.name.toLowerCase().includes(searchText.toLowerCase());
+      const matchesLocation = selectedLocations.length === 0 || selectedLocations.includes(room.location);
+      const matchesCapacity = selectedCapacities.length === 0 || selectedCapacities.includes(room.capacity.toString());
+      const matchesStatus = selectedStatus.length === 0 || selectedStatus.includes(room.status);
+      return matchesSearch && matchesLocation && matchesCapacity && matchesStatus;
+    });
+
+    return result; // Trả về danh sách đã lọc
+  };
+
+  // Phân trang
+  const filteredRooms = handleSearch(); // Danh sách phòng đã lọc
+  const totalRooms = filteredRooms.length; // Tổng số phòng đã lọc
+  const totalPages = Math.ceil(totalRooms / roomsPerPage); // Tổng số trang
+  const startIndex = (currentPage - 1) * roomsPerPage; // Chỉ số bắt đầu
+  const currentRooms = filteredRooms.slice(startIndex, startIndex + roomsPerPage); // Danh sách phòng hiện tại cho trang
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
   };
 
   return (
@@ -258,20 +285,6 @@ const RoomManagement = () => {
             className="w-full p-2 border rounded mt-1" placeholder="Nhập tên phòng..." />
         </div>
         <div className="mb-3">
-          <label className="block font-semibold">Filter phòng</label>
-          {rooms.map(room => (
-            <div key={room.id} className="ml-3">
-              <input type="checkbox" checked={selectedRooms.includes(room.name)}
-                onChange={() =>
-                  setSelectedRooms(prev =>
-                    prev.includes(room.name) ? prev.filter(r => r !== room.name) : [...prev, room.name]
-                  )}
-              />
-              <span className="ml-2">{room.name}</span>
-            </div>
-          ))}
-        </div>
-        <div className="mb-3">
           <label className="block font-semibold">Chọn vị trí</label>
           {[...new Set(rooms.map(r => r.location))].map(location => (
             <div key={location} className="ml-3">
@@ -279,7 +292,7 @@ const RoomManagement = () => {
                 onChange={() =>
                   setSelectedLocations(prev =>
                     prev.includes(location) ? prev.filter(l => l !== location) : [...prev, location]
-              )}
+                  )}
               />
               <span className="ml-2">{location}</span>
             </div>
@@ -289,22 +302,39 @@ const RoomManagement = () => {
           <label className="block font-semibold">Chọn sức chứa</label>
           {[...new Set(rooms.map(r => r.capacity))].map(capacity => (
             <div key={capacity} className="ml-3">
-              <input type="radio" name="capacity" checked={selectedCapacity === capacity}
-                onChange={() => setSelectedCapacity(capacity)}
+              <input type="checkbox" checked={selectedCapacities.includes(capacity.toString())}
+                onChange={() =>
+                  setSelectedCapacities(prev =>
+                    prev.includes(capacity.toString()) ? prev.filter(c => c !== capacity.toString()) : [...prev, capacity.toString()]
+                  )}
               />
               <span className="ml-2">{capacity} người</span>
             </div>
           ))}
         </div>
+        <div className="mb-3">
+          <label className="block font-semibold">Chọn trạng thái</label>
+          {["Sử dụng", "Tạm dừng"].map(status => (
+            <div key={status} className="ml-3">
+              <input type="checkbox" checked={selectedStatus.includes(status)}
+                onChange={() =>
+                  setSelectedStatus(prev =>
+                    prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
+                  )}
+              />
+              <span className="ml-2">{status}</span>
+            </div>
+          ))}
+        </div>
         <div className="flex gap-2 mt-4">
-          <button onClick={() => {/* logic tìm kiếm */}} className="flex-1 p-2 bg-blue-500 text-white rounded hover:bg-blue-700">Tìm kiếm</button>
+          <button onClick={handleSearch} className="flex-1 p-2 bg-blue-500 text-white rounded hover:bg-blue-700">Tìm kiếm</button>
           <button onClick={handleAddRoom} className="flex-1 p-2 bg-green-500 text-white rounded hover:bg-green-700">Thêm</button>
         </div>
       </div>
       <div className="flex-1">
         <h2 className="text-2xl font-bold text-center mb-6">Danh sách phòng</h2>
         <div className="grid md:grid-cols-3 gap-6">
-          {rooms.map(room => (
+          {currentRooms.map(room => (
             <div key={room.id} className="bg-white shadow-lg p-4 rounded-lg flex flex-col">
               <img src={room.image} alt={room.name} className="w-full h-40 object-cover rounded-md mb-3" />
               <div className="grid grid-cols-2 gap-1 text-gray-700">
@@ -317,11 +347,24 @@ const RoomManagement = () => {
                 <span className="font-semibold">Thiết bị:</span> <span>{room.devices.join(", ")}</span>
               </div>
               <div className="flex gap-2 mt-4">
-              <button onClick={() => handleEditRoom(room)} className="flex-1 p-2 bg-white border border-blue-700 text-blue-700 rounded hover:bg-blue-700 hover:text-white">Sửa</button>
-<button onClick={() => handleDeleteRoom(room)} className="flex-1 p-2 bg-white border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white">Xóa</button>
-<button onClick={() => handleBooking(room)} className="flex-1 p-2 bg-white border border-blue-700 text-blue-700 rounded hover:bg-blue-700 hover:text-white">Booking</button>
+                <button onClick={() => handleEditRoom(room)} className="flex-1 p-2 bg-white border border-blue-700 text-blue-700 rounded hover:bg-blue-700 hover:text-white">Sửa</button>
+                <button onClick={() => handleDeleteRoom(room)} className="flex-1 p-2 bg-white border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white">Xóa</button>
+                <button onClick={() => handleBooking(room)} className="flex-1 p-2 bg-white border border-blue-700 text-blue-700 rounded hover:bg-blue-700 hover:text-white">Booking</button>
               </div>
             </div>
+          ))}
+        </div>
+        
+        {/* Phân trang */}
+        <div className="flex justify-center mt-4">
+          {Array.from({ length: totalPages }, (_, index) => (
+            <button
+              key={index}
+              onClick={() => handlePageChange(index + 1)}
+              className={`mx-1 p-2 border rounded ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 border-blue-500'}`}
+            >
+              {index + 1}
+            </button>
           ))}
         </div>
       </div>
@@ -337,13 +380,13 @@ const RoomManagement = () => {
           <div className="bg-white shadow-lg p-6 rounded-lg">
             <h3 className="text-lg font-semibold text-center">Bạn có chắc chắn muốn xóa phòng {roomToDelete?.name}?</h3>
             <div className="flex justify-center gap-4 mt-4">
-  <button onClick={confirmDeleteRoom} className="p-2 bg-white border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white">
-    Xóa
-  </button>
-  <button onClick={cancelDeleteRoom} className="p-2 bg-white border border-gray-500 text-gray-500 rounded hover:bg-gray-500 hover:text-white">
-    Hủy
-  </button>
-</div>
+              <button onClick={confirmDeleteRoom} className="p-2 bg-white border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white">
+                Xóa
+              </button>
+              <button onClick={cancelDeleteRoom} className="p-2 bg-white border border-gray-500 text-gray-500 rounded hover:bg-gray-500 hover:text-white">
+                Hủy
+              </button>
+            </div>
           </div>
         </div>
       )}
