@@ -35,6 +35,10 @@ export default function Header() {
         <Link to="/Home" className="cursor-pointer hover:underline">
           Trang Chủ
         </Link>
+
+        <Link to="/BookingList" className="cursor-pointer hover:underline"> 
+          Booking List
+        </Link>
         
 
         {/* Icon thông báo */}
