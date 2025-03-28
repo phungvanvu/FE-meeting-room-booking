@@ -10,6 +10,8 @@ import { isAccessTokenValid } from './components/utils/auth';
 import Login from './pages/Auth/LoginPage';
 import HomeUser from './pages/User/HomePage';
 import BookRoom from './pages/User/BookRoomPage';
+import History from './pages/User/History';
+import MyRooms from './pages/User/MyRooms';
 import CalenderPage from './pages/User/CalenderPage';
 import RoomManagement from './pages/Admin/RoomManagementPage';
 import UserManagement from './pages/Admin/UserManagementPage';
@@ -40,6 +42,8 @@ function App() {
       <Route path='/Login' element={<Login />} />
       <Route path='/Home' element={<HomeUser />} />
       <Route path='/BookRoom' element={<BookRoom />} />
+      <Route path='/History' element={<History />} />
+      <Route path='/MyRooms' element={<MyRooms />} />
       <Route path='/Calendar/:roomName' element={<CalenderPage />} />
       <Route path='/Home' element={<HomeAdmin />} />
       <Route path='/room-management' element={<RoomManagement />} />

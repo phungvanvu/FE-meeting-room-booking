@@ -63,9 +63,12 @@ export default function Header() {
           Đặt Phòng
         </Link>
 
-        {/* Home */}
-        <Link to='/Home' className='cursor-pointer hover:underline'>
-          Trang Chủ
+        <Link to='/History' className='cursor-pointer hover:underline'>
+          Lịch sử
+        </Link>
+
+        <Link to='/MyRooms' className='cursor-pointer hover:underline'>
+          Phòng của tôi
         </Link>
 
         {/* Icon thông báo */}
