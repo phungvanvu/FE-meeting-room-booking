@@ -11,6 +11,10 @@ const UserManagement = () => {
   const [showForm, setShowForm] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  
+  // Thêm các trạng thái cho phân trang
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 10; // Số người dùng trên mỗi trang
 
   const groups = ["DU3.1", "DKR1", "DJ2"];
   const departments = ["IT", "HR", "Kế toán"];
@@ -38,6 +42,7 @@ const UserManagement = () => {
       return matchesSearchTerm && matchesGroup && matchesDepartment && matchesRole;
     });
     setFilteredUsers(filtered);
+    setCurrentPage(1); // Reset to first page on new search
   }, [searchTerm, selectedGroups, selectedDepartments, selectedRoles, users]);
 
   const resetFilters = () => {
@@ -46,6 +51,7 @@ const UserManagement = () => {
     setSelectedDepartments([]);
     setSelectedRoles([]);
     setFilteredUsers(users);
+    setCurrentPage(1); // Reset to first page
   };
 
   const navigateToGroupManagement = () => {
@@ -88,6 +94,12 @@ const UserManagement = () => {
   useEffect(() => {
     handleSearch();
   }, [handleSearch]);
+
+
+// Tính toán số trang
+const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+const startIndex = (currentPage - 1) * usersPerPage;
+const currentUsers = filteredUsers.slice(startIndex, startIndex + usersPerPage);
 
   return (
     <div className="flex flex-col min-h-screen p-6 max-w-1xl mx-auto space-y-6">
@@ -224,9 +236,9 @@ const UserManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.map((user, index) => (
+              {currentUsers.map((user, index) => (
                 <tr key={index} className="border-b hover:bg-gray-100 transition">
-                  <td className="py-2 px-4 border">{index + 1}</td>
+                  <td className="py-2 px-4 border">{startIndex + index + 1}</td>
                   <td className="py-2 px-4 border">{user.name}</td>
                   <td className="py-2 px-4 border">{user.username}</td>
                   <td className="py-2 px-4 border">{user.email}</td>
@@ -246,79 +258,109 @@ const UserManagement = () => {
               ))}
             </tbody>
           </table>
+
+       
+{/* Phân trang */}
+<div className="flex justify-center items-center mt-4">
+  <button 
+    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+    disabled={currentPage === 1}
+    className="border border-gray-300 text-gray-700 rounded py-2 px-4 hover:bg-gray-200 transition"
+  >
+    &laquo; {/* Mũi tên lùi */}
+  </button>
+
+  {/* Hiển thị các nút trang */}
+  {[...Array(totalPages)].map((_, index) => (
+    <button 
+      key={index} 
+      onClick={() => setCurrentPage(index + 1)} 
+      className={`border border-gray-300 text-gray-700 py-2 px-4 transition mx-1 ${currentPage === index + 1 ? 'bg-blue-700 text-white' : 'hover:bg-gray-200'}`}
+    >
+      {index + 1}
+    </button>
+  ))}
+
+  <button 
+    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+    disabled={currentPage === totalPages}
+    className="border border-gray-300 text-gray-700 rounded py-2 px-4 hover:bg-gray-200 transition"
+  >
+    &raquo; {/* Mũi tên tiến */}
+  </button>
+</div>
         </div>
       </div>
 
       {/* Form thêm/sửa người dùng */}
-{showForm && (
-  <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-30">
-    <div className="bg-white p-6 rounded-lg shadow-lg" style={{ width: '600px' }}>
-      <h2 className="text-xl font-bold mb-4">{currentUser ? "Sửa người dùng" : "Thêm người dùng"}</h2>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="mb-0">
-          <label className="block mb-1">Tên:</label>
-          <input type="text" defaultValue={currentUser ? currentUser.name : ""} className="border rounded w-full p-2" />
+      {showForm && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-30">
+          <div className="bg-white p-6 rounded-lg shadow-lg" style={{ width: '600px' }}>
+            <h2 className="text-xl font-bold mb-4">{currentUser ? "Sửa người dùng" : "Thêm người dùng"}</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="mb-0">
+                <label className="block mb-1">Tên:</label>
+                <input type="text" defaultValue={currentUser ? currentUser.name : ""} className="border rounded w-full p-2" />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-1">Username:</label>
+                <input type="text" defaultValue={currentUser ? currentUser.username : ""} className="border rounded w-full p-2" />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-1">Email:</label>
+                <input type="email" defaultValue={currentUser ? currentUser.email : ""} className="border rounded w-full p-2" />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-1">SĐT:</label>
+                <input type="text" defaultValue={currentUser ? currentUser.phone : ""} className="border rounded w-full p-2" />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-1 flex items-center justify-between">
+                  Nhóm
+                  <button onClick={() => navigate("/group-management")} className="text-blue-500">
+                    Edit
+                  </button>
+                </label>
+                <select className="border rounded w-full p-2">
+                  {groups.map(group => (
+                    <option key={group} value={group}>{group}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="mb-4">
+                <label className="block mb-1 flex items-center justify-between">
+                  Phòng ban
+                </label>
+                <select className="border rounded w-full p-2">
+                  {departments.map(department => (
+                    <option key={department} value={department}>{department}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="mb-4">
+                <label className="block mb-1">Vai trò:</label>
+                <select className="border rounded w-full p-2">
+                  {roles.map(role => (
+                    <option key={role} value={role}>{role}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end mt-4">
+              <button 
+                onClick={saveUser} 
+                className="border border-blue-700 text-blue-700 rounded py-2 px-4 hover:bg-blue-700 hover:text-white transition mr-2">
+                Lưu
+              </button>
+              <button 
+                onClick={() => setShowForm(false)} 
+                className="border border-gray-300 text-black rounded py-2 px-4 hover:bg-gray-200 transition">
+                Hủy
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="mb-4">
-          <label className="block mb-1">Username:</label>
-          <input type="text" defaultValue={currentUser ? currentUser.username : ""} className="border rounded w-full p-2" />
-        </div>
-        <div className="mb-4">
-          <label className="block mb-1">Email:</label>
-          <input type="email" defaultValue={currentUser ? currentUser.email : ""} className="border rounded w-full p-2" />
-        </div>
-        <div className="mb-4">
-          <label className="block mb-1">SĐT:</label>
-          <input type="text" defaultValue={currentUser ? currentUser.phone : ""} className="border rounded w-full p-2" />
-        </div>
-        <div className="mb-4">
-          <label className="block mb-1 flex items-center justify-between">
-            Nhóm
-            <button onClick={() => navigate("/group-management")} className="text-blue-500">
-              Edit
-            </button>
-          </label>
-          <select className="border rounded w-full p-2">
-            {groups.map(group => (
-              <option key={group} value={group}>{group}</option>
-            ))}
-          </select>
-        </div>
-        <div className="mb-4">
-          <label className="block mb-1 flex items-center justify-between">
-            Phòng ban
-            
-          </label>
-          <select className="border rounded w-full p-2">
-            {departments.map(department => (
-              <option key={department} value={department}>{department}</option>
-            ))}
-          </select>
-        </div>
-        <div className="mb-4">
-          <label className="block mb-1">Vai trò:</label>
-          <select className="border rounded w-full p-2">
-            {roles.map(role => (
-              <option key={role} value={role}>{role}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-      <div className="flex justify-end mt-4">
-        <button 
-          onClick={saveUser} 
-          className="border border-blue-700 text-blue-700 rounded py-2 px-4 hover:bg-blue-700 hover:text-white transition mr-2">
-          Lưu
-        </button>
-        <button 
-          onClick={() => setShowForm(false)} 
-          className="border border-gray-300 text-black rounded py-2 px-4 hover:bg-gray-200 transition">
-          Hủy
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+      )}
 
       {/* Confirm delete dialog */}
       {showConfirmDelete && (
@@ -327,11 +369,11 @@ const UserManagement = () => {
             <h2 className="text-lg font-bold mb-4">Xác nhận xóa</h2>
             <p>Bạn có chắc chắn muốn xóa người dùng này?</p>
             <div className="flex justify-end mt-4">
-            <button 
-              onClick={confirmDelete} 
-              className="border border-red-500 text-red-500 rounded py-2 px-4 hover:bg-red-500 hover:text-white transition mr-2">
-              Xóa
-            </button>
+              <button 
+                onClick={confirmDelete} 
+                className="border border-red-500 text-red-500 rounded py-2 px-4 hover:bg-red-500 hover:text-white transition mr-2">
+                Xóa
+              </button>
               <button 
                 onClick={cancelDelete} 
                 className="border border-gray-300 text-black rounded py-2 px-4 hover:bg-gray-200 transition">
@@ -341,8 +383,6 @@ const UserManagement = () => {
           </div>
         </div>
       )}
-
-    
     </div>
   );
 };

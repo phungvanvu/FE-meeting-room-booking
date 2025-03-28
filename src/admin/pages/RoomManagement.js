@@ -356,17 +356,34 @@ const RoomManagement = () => {
         </div>
         
         {/* Phân trang */}
-        <div className="flex justify-center mt-4">
-          {Array.from({ length: totalPages }, (_, index) => (
-            <button
-              key={index}
-              onClick={() => handlePageChange(index + 1)}
-              className={`mx-1 p-2 border rounded ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 border-blue-500'}`}
-            >
-              {index + 1}
-            </button>
-          ))}
-        </div>
+<div className="flex justify-center items-center mt-4">
+  <button 
+    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+    disabled={currentPage === 1}
+    className="border border-gray-300 text-gray-700 rounded py-2 px-4 hover:bg-gray-200 transition"
+  >
+    &laquo; {/* Mũi tên lùi */}
+  </button>
+
+  {/* Hiển thị các nút trang */}
+  {[...Array(totalPages)].map((_, index) => (
+    <button 
+      key={index} 
+      onClick={() => setCurrentPage(index + 1)} 
+      className={`border border-gray-300 text-gray-700 py-2 px-4 transition mx-1 ${currentPage === index + 1 ? 'bg-blue-700 text-white' : 'hover:bg-gray-200'}`}
+    >
+      {index + 1}
+    </button>
+  ))}
+
+  <button 
+    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+    disabled={currentPage === totalPages}
+    className="border border-gray-300 text-gray-700 rounded py-2 px-4 hover:bg-gray-200 transition"
+  >
+    &raquo; {/* Mũi tên tiến */}
+  </button>
+</div>
       </div>
       {isAddFormVisible && (
         <RoomForm room={newRoom} isEdit={false} onSave={handleSaveRoom} onCancel={handleCancel} />
