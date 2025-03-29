@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { setRefreshToken } from '../../components/utils/auth';
+import { jwtDecode } from 'jwt-decode';
 import API_BASE_URL from '../../config';
 
 export default function Login() {
@@ -44,7 +45,13 @@ export default function Login() {
       if (result.success) {
         sessionStorage.setItem('accessToken', result.data.accessToken);
         setRefreshToken(result.data.refreshToken);
-        navigate('/home');
+
+        const decoded = jwtDecode(result.data.accessToken);
+        if (decoded.scope.includes('ROLE_USER')) {
+          navigate('/BookRoom');
+        } else if (decoded.scope.includes('ROLE_ADMIN')) {
+          navigate('/ManageRoom');
+        }
       }
     } catch (err) {
       console.error('Login error:', err);

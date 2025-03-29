@@ -1,31 +1,31 @@
-import React, { useEffect, useState, useContext } from "react";
-import FullCalendar from "@fullcalendar/react";
-import dayGridPlugin from "@fullcalendar/daygrid";
-import timeGridPlugin from "@fullcalendar/timegrid";
-import interactionPlugin from "@fullcalendar/interaction";
-import GlobalContext from "../../context/GlobalContext";
-import API_BASE_URL from "../../config";
-import "../../App.css";
+import React, { useEffect, useState, useContext } from 'react';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import GlobalContext from '../../context/GlobalContext';
+import API_BASE_URL from '../../config';
+import '../../App.css';
 
 export default function RoomCalendar({ roomName, refreshCalendar }) {
   const { setFilteredEvents } = useContext(GlobalContext);
   const [events, setEvents] = useState([]);
-  const accessToken = sessionStorage.getItem("accessToken");
+  const accessToken = sessionStorage.getItem('accessToken');
 
   useEffect(() => {
     const fetchRoomBookings = async () => {
       try {
         const response = await fetch(
           `${API_BASE_URL}/roombooking/by-room-name?roomName=${encodeURIComponent(
-            roomName
+            roomName,
           )}`,
           {
-            method: "GET",
+            method: 'GET',
             headers: {
-              "Content-Type": "application/json",
+              'Content-Type': 'application/json',
               Authorization: `Bearer ${accessToken}`,
             },
-          }
+          },
         );
 
         if (!response.ok) {
@@ -40,9 +40,9 @@ export default function RoomCalendar({ roomName, refreshCalendar }) {
             title: `${booking.purpose}`,
             start: booking.startTime,
             end: booking.endTime,
-            backgroundColor: getEventColor(booking.status) || "#9E9E9E",
-            borderColor: getEventColor(booking.status) || "#9E9E9E",
-            textColor: "#FFFFFF",
+            backgroundColor: getEventColor(booking.status) || '#9E9E9E',
+            borderColor: getEventColor(booking.status) || '#9E9E9E',
+            textColor: '#FFFFFF',
             extendedProps: {
               status: booking.status,
               note: booking.note,
@@ -58,17 +58,17 @@ export default function RoomCalendar({ roomName, refreshCalendar }) {
 
           // Sắp xếp theo thời gian bắt đầu
           const sortedBookings = formattedBookings.sort(
-            (a, b) => new Date(a.start) - new Date(b.start)
+            (a, b) => new Date(a.start) - new Date(b.start),
           );
 
           setEvents(sortedBookings);
           setFilteredEvents(sortedBookings);
         } else {
-          console.error("Invalid data format:", data);
+          console.error('Invalid data format:', data);
           setEvents([]);
         }
       } catch (error) {
-        console.error("Failed to fetch bookings:", error);
+        console.error('Failed to fetch bookings:', error);
       }
     };
 
@@ -78,22 +78,22 @@ export default function RoomCalendar({ roomName, refreshCalendar }) {
   // Định dạng giờ phút (ví dụ: 09:30)
   const formatTime = (time) => {
     return new Date(time).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
+      hour: '2-digit',
+      minute: '2-digit',
     });
   };
 
   // Đặt màu cho trạng thái sự kiện
   const getEventColor = (status) => {
     switch (status) {
-      case "CONFIRMED":
-        return "#4CAF50"; // Xanh lá
-      case "PENDING":
-        return "#FFC107"; // Vàng
-      case "CANCELLED":
-        return "#F44336"; // Đỏ
+      case 'CONFIRMED':
+        return '#4CAF50'; // Xanh lá
+      case 'PENDING':
+        return '#FFC107'; // Vàng
+      case 'CANCELLED':
+        return '#F44336'; // Đỏ
       default:
-        return "#9E9E9E"; // Xám
+        return '#9E9E9E'; // Xám
     }
   };
 
@@ -103,37 +103,37 @@ export default function RoomCalendar({ roomName, refreshCalendar }) {
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView='dayGridMonth'
         headerToolbar={{
-          left: "prev,next today",
-          center: "title",
-          right: "dayGridMonth,timeGridWeek,timeGridDay",
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay',
         }}
         events={events}
         eventClick={(info) => {
           alert(
-            `Sự kiện: ${info.event.title}\nTrạng thái: ${info.event.extendedProps.status}\nGhi chú: ${info.event.extendedProps.note}`
+            `Sự kiện: ${info.event.title}\nTrạng thái: ${info.event.extendedProps.status}\nGhi chú: ${info.event.extendedProps.note}`,
           );
         }}
         eventMouseEnter={(info) => {
-          const tooltip = document.createElement("div");
+          const tooltip = document.createElement('div');
           tooltip.innerHTML = `
             <strong>${info.event.title}</strong><br />
             <em>${formatTime(info.event.start)} - ${formatTime(
-            info.event.end
+            info.event.end,
           )}</em><br />
             <span style="color: ${getEventColor(
-              info.event.extendedProps.status
+              info.event.extendedProps.status,
             )};">
               BookingStatus: ${info.event.extendedProps.status}
             </span><br />
-            Note: ${info.event.extendedProps.note || "Không có"}
+            Note: ${info.event.extendedProps.note || 'Không có'}
           `;
-          tooltip.className = "custom-tooltip";
+          tooltip.className = 'custom-tooltip';
           document.body.appendChild(tooltip);
 
           tooltip.style.left = `${info.jsEvent.clientX + 10}px`;
           tooltip.style.top = `${info.jsEvent.clientY + 10}px`;
 
-          info.el.addEventListener("mouseleave", () => {
+          info.el.addEventListener('mouseleave', () => {
             tooltip.remove();
           });
         }}

@@ -1,17 +1,48 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, ChevronDown, Cookie, UserCircle } from 'lucide-react';
+import { Bell, ChevronDown, UserCircle } from 'lucide-react';
 import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
 
 export default function Header() {
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [userInfo, setUserInfo] = useState(null); // lưu thông tin người dùng
+
+  // Lấy accessToken và giải mã để lấy quyền (scope)
+  const token = sessionStorage.getItem('accessToken');
+  let roles = [];
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+      roles = decoded.scope || [];
+    } catch (error) {
+      console.error('Invalid token', error);
+    }
+  }
+
+  // Gọi API để lấy thông tin người dùng (my-info)
+  useEffect(() => {
+    if (token) {
+      fetch('http://localhost:8080/MeetingRoomBooking/user/my-info', {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token ? `Bearer ${token}` : '',
+        },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            setUserInfo(data.data);
+          } else {
+            console.error('Error fetching my info:', data.error);
+          }
+        })
+        .catch((err) => console.error('Error fetching my info:', err));
+    }
+  }, [token]);
 
   const handleLogout = async () => {
-    // Lấy accessToken từ sessionStorage
-    const token = sessionStorage.getItem('accessToken');
-
-    // Kiểm tra xem token có tồn tại không trước khi gửi yêu cầu
     if (token) {
       try {
         const response = await fetch(
@@ -21,17 +52,13 @@ export default function Header() {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-              token: token, // Gửi token trong yêu cầu
-            }),
+            body: JSON.stringify({ token: token }),
           },
         );
 
         if (response.ok) {
-          // Xóa accessToken và refreshToken sau khi logout thành công
           sessionStorage.removeItem('accessToken');
           Cookies.remove('refreshToken');
-          // Chuyển hướng về trang đăng nhập
           navigate('/Login');
         } else {
           const errorData = await response.json();
@@ -56,17 +83,45 @@ export default function Header() {
         />
       </Link>
 
-      {/* Navigation và Thông tin người dùng */}
+      {/* Navigation */}
       <div className='flex items-center space-x-6'>
-        {/* BookRoom */}
-        <Link to='/BookRoom' className='cursor-pointer hover:underline'>
-          Đặt Phòng
-        </Link>
+        {/* Render link dựa theo quyền */}
+        {roles.includes('ROLE_USER') && (
+          <>
+            <Link to='/BookRoom' className='cursor-pointer hover:underline'>
+              Book Room
+            </Link>
+            <Link to='/Home' className='cursor-pointer hover:underline'>
+              Home
+            </Link>
+          </>
+        )}
 
-        {/* Home */}
-        <Link to='/Home' className='cursor-pointer hover:underline'>
-          Trang Chủ
-        </Link>
+        {roles.includes('ROLE_ADMIN') && (
+          <>
+            <Link to='/ManageRoom' className='cursor-pointer hover:underline'>
+              Room Management
+            </Link>
+            <Link to='/Dashboard' className='cursor-pointer hover:underline'>
+              Dashboard
+            </Link>
+            <Link to='/ManageUser' className='cursor-pointer hover:underline'>
+              User Management
+            </Link>
+            <Link to='/BookRoom' className='cursor-pointer hover:underline'>
+              Book Room
+            </Link>
+            <Link to='/MyBookings' className='cursor-pointer hover:underline'>
+              My Bookings
+            </Link>
+            <Link to='/History' className='cursor-pointer hover:underline'>
+              History
+            </Link>
+            <Link to='/Home' className='cursor-pointer hover:underline'>
+              Home
+            </Link>
+          </>
+        )}
 
         {/* Icon thông báo */}
         <div className='relative cursor-pointer'>
@@ -82,13 +137,10 @@ export default function Header() {
             className='flex items-center space-x-2 cursor-pointer'
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           >
-            {/*biểu tượng UserCircle */}
             <UserCircle className='h-8 w-8' />
-            <span>User</span>
+            <span>{userInfo ? userInfo.fullName : 'User'}</span>
             <ChevronDown className='h-5 w-5' />
           </div>
-
-          {/* Dropdown */}
           {isDropdownOpen && (
             <div className='absolute right-0 mt-2 w-40 bg-white text-black shadow-md rounded-lg overflow-hidden z-50'>
               <Link to='/Profile' className='block px-4 py-2 hover:bg-gray-100'>

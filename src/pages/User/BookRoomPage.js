@@ -10,16 +10,14 @@ const ITEMS_PER_PAGE = 6;
 
 export default function BookRoomPage() {
   const [roomsData, setRoomsData] = useState([]);
-  const [setSearch] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
-  const [selectedCapacity, setSelectedCapacity] = useState('');
+  const [selectedCapacities, setSelectedCapacities] = useState([]);
   const [setSearchLocation] = useState('');
   const [selectedDevices, setSelectedDevices] = useState([]);
   const [filteredRooms, setFilteredRooms] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedRooms, setSelectedRooms] = useState([]);
   const [selectedLocations, setSelectedLocations] = useState([]);
-
+  const [searchRoomName, setSearchRoomName] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -71,15 +69,6 @@ export default function BookRoomPage() {
     }
   };
 
-  // Xử lý chọn/bỏ chọn checkbox
-  const handleCheckboxChange = (roomId) => {
-    setSelectedRooms((prev) =>
-      prev.includes(roomId)
-        ? prev.filter((id) => id !== roomId)
-        : [...prev, roomId],
-    );
-  };
-
   const handleLocationCheckboxChange = (location) => {
     setSelectedLocations(
       (prev) =>
@@ -89,23 +78,33 @@ export default function BookRoomPage() {
     );
   };
 
+  // Xử lý chọn/deselect cho sức chứa
+  const handleCapacityCheckboxChange = (capacity) => {
+    setSelectedCapacities((prev) =>
+      prev.includes(capacity)
+        ? prev.filter((cap) => cap !== capacity)
+        : [...prev, capacity],
+    );
+  };
   const handleSearch = () => {
     const result = roomsData.filter((room) => {
-      const matchesRoom =
-        selectedRooms.length === 0 || selectedRooms.includes(room.id);
+      const matchesName =
+        searchRoomName === '' ||
+        room.name.toLowerCase().includes(searchRoomName.toLowerCase());
       const matchesLocation =
         selectedLocations.length === 0 ||
         selectedLocations.includes(room.location);
       const matchesStatus =
         selectedStatus === '' || room.status === selectedStatus;
       const matchesCapacity =
-        selectedCapacity === '' || room.capacity === parseInt(selectedCapacity);
+        selectedCapacities.length === 0 ||
+        selectedCapacities.includes(room.capacity);
       const matchesDevices =
         selectedDevices.length === 0 ||
         selectedDevices.every((device) => room.facilities.includes(device));
 
       return (
-        matchesRoom &&
+        matchesName &&
         matchesLocation &&
         matchesStatus &&
         matchesCapacity &&
@@ -117,11 +116,10 @@ export default function BookRoomPage() {
   };
 
   const handleReset = () => {
-    setSearch('');
-    setSearchLocation('');
+    setSearchRoomName('');
     setSelectedDevices([]);
     setSelectedStatus('');
-    setSelectedCapacity('');
+    setSelectedCapacities([]);
     setFilteredRooms(roomsData);
     setCurrentPage(1);
   };
@@ -147,34 +145,24 @@ export default function BookRoomPage() {
         <div className='w-1/4 bg-white p-6 rounded-2xl shadow-md border border-gray-200 h-full flex-shrink-0 flex flex-col'>
           <h2 className='text-xl font-semibold mb-5 text-gray-800'>Filter</h2>
 
-          {/* Chọn tên phòng */}
+          {/* Tìm kiếm theo tên phòng */}
           <div className='mb-4'>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
-              Chọn tên phòng
+            <label className='block text-sm font-bold text-black-700 mb-2'>
+              Search for room name
             </label>
-            <div className='border border-gray-300 rounded-lg p-2 bg-gray-50 hover:bg-gray-100 transition-all'>
-              {/* Danh sách checkbox */}
-              {roomsData.map((room) => (
-                <label
-                  key={room.id}
-                  className='flex items-center space-x-2 py-1 cursor-pointer'
-                >
-                  <input
-                    type='checkbox'
-                    checked={selectedRooms.includes(room.id)}
-                    onChange={() => handleCheckboxChange(room.id)}
-                    className='h-4 w-4 border-gray-300 rounded text-blue-500 focus:ring-blue-400'
-                  />
-                  <span className='text-sm text-gray-700'>{room.name}</span>
-                </label>
-              ))}
-            </div>
+            <input
+              type='text'
+              placeholder='Enter the room name...'
+              value={searchRoomName}
+              onChange={(e) => setSearchRoomName(e.target.value)}
+              className='w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none bg-gray-50 hover:bg-gray-100 transition-all shadow-sm'
+            />
           </div>
 
           {/* Chọn địa điểm phòng */}
           <div className='mb-4'>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
-              Chọn địa điểm phòng
+            <label className='block text-sm font-bold text-black-700 mb-2'>
+              Select room location
             </label>
             <div className='border border-gray-300 rounded-lg p-2 bg-gray-50 hover:bg-gray-100 transition-all'>
               {/* Danh sách checkbox */}
@@ -196,8 +184,8 @@ export default function BookRoomPage() {
           </div>
 
           <div className='mb-4'>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
-              Trạng thái
+            <label className='block text-sm font-bold text-black-700 mb-2'>
+              Status
             </label>
             <select
               value={selectedStatus}
@@ -206,7 +194,7 @@ export default function BookRoomPage() {
               focus:ring-blue-400 focus:outline-none bg-gray-50  hover:bg-gray-100 transition-all shadow-sm'
             >
               <option value='' className='text-gray-400'>
-                Trạng thái
+                Select status
               </option>
               <option value='Available' className='text-gray-700'>
                 Available
@@ -217,35 +205,35 @@ export default function BookRoomPage() {
             </select>
           </div>
 
+          {/* Lọc theo sức chứa (checkbox cho nhiều lựa chọn) */}
           <div className='mb-4'>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
-              Sức chứa
+            <label className='block text-sm font-bold text-black-700 mb-2'>
+              Capacity
             </label>
-            <select
-              value={selectedCapacity}
-              onChange={(e) => setSelectedCapacity(e.target.value)}
-              className='w-full  border border-gray-300 rounded-xl py-2 px-3 text-sm focus:ring-2
-              focus:ring-blue-400 focus:outline-none bg-gray-50 hover:bg-gray-100 transition-all shadow-sm'
-            >
-              <option value='' className='text-gray-400'>
-                Sức chứa
-              </option>
+            <div className='flex flex-wrap gap-2'>
               {[6, 8, 10, 12].map((capacity) => (
-                <option
+                <label
                   key={capacity}
-                  value={capacity}
-                  className='text-gray-700'
+                  className='flex items-center space-x-1 cursor-pointer'
                 >
-                  {capacity} người
-                </option>
+                  <input
+                    type='checkbox'
+                    checked={selectedCapacities.includes(capacity)}
+                    onChange={() => handleCapacityCheckboxChange(capacity)}
+                    className='h-4 w-4 border-gray-300 rounded text-blue-500 focus:ring-blue-400'
+                  />
+                  <span className='text-sm text-gray-700'>
+                    {capacity} person
+                  </span>
+                </label>
               ))}
-            </select>
+            </div>
           </div>
 
           {/* Thiết bị */}
           <div className='mb-4'>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
-              Thiết bị
+            <label className='block text-sm font-bold text-black-700 mb-2'>
+              Device
             </label>
             <div className='flex flex-wrap gap-2'>
               {[
@@ -284,13 +272,13 @@ export default function BookRoomPage() {
               className='w-1/2 mr-2 py-2 bg-gray-100 text-gray-600 border
              border-gray-300 rounded-lg hover:bg-gray-200 transition-all'
             >
-              Đặt lại
+              Reset
             </button>
             <button
               onClick={handleSearch}
               className='w-1/2 ml-2 py-2  bg-blue-500  text-white rounded-lg  hover:bg-blue-600 transition-all'
             >
-              Tìm kiếm
+              Search
             </button>
           </div>
         </div>
@@ -298,7 +286,7 @@ export default function BookRoomPage() {
         {/* Danh sách phòng họp*/}
         <div className='w3/4 flex-grow bg-gray-50 p-6 rounded-2xl shadow-md border border-gray-200'>
           <div className='flex justify-between items-center mb-6'>
-            <h2 className='text-2xl font-bold'>Đặt phòng họp</h2>
+            <h2 className='text-2xl font-bold'>Book a Meeting Room</h2>
           </div>
 
           {/* Danh sách phòng họp */}
@@ -369,7 +357,7 @@ export default function BookRoomPage() {
                   {room.status === 'Available' ? (
                     <Link to={`/Calendar/${room.id}`}>
                       <button className='w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 rounded-xl mt-5 transition-all'>
-                        Đặt phòng
+                        Book Room
                       </button>
                     </Link>
                   ) : (
@@ -377,7 +365,7 @@ export default function BookRoomPage() {
                       className='w-full bg-gray-300 text-gray-600 font-medium py-2 rounded-xl mt-5 cursor-not-allowed'
                       disabled
                     >
-                      Đặt phòng
+                      Book Room
                     </button>
                   )}
                 </div>
