@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Bell, ChevronDown, UserCircle } from 'lucide-react';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
+import API_BASE_URL from '../config';
 
 export default function Header() {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ export default function Header() {
 
   useEffect(() => {
     if (token) {
-      fetch('http://localhost:8080/MeetingRoomBooking/user/my-info', {
+      fetch(`${API_BASE_URL}/user/my-info`, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: token ? `Bearer ${token}` : '',
@@ -44,16 +45,13 @@ export default function Header() {
   const handleLogout = async () => {
     if (token) {
       try {
-        const response = await fetch(
-          'http://localhost:8080/MeetingRoomBooking/auth/logout',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ token: token }),
+        const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-        );
+          body: JSON.stringify({ token: token }),
+        });
         if (response.ok) {
           sessionStorage.removeItem('accessToken');
           Cookies.remove('refreshToken');
@@ -70,7 +68,6 @@ export default function Header() {
     }
   };
 
-  // Dummy notifications data (empty array for no notifications)
   const notifications = [];
 
   return (
@@ -86,19 +83,19 @@ export default function Header() {
         {/* Navigation Links */}
         <nav className='hidden md:flex space-x-6'>
           <Link to='/Home' className='hover:underline hover:text-gray-200'>
-            Trang chủ
+            Home
           </Link>
           <Link to='/BookRoom' className='hover:underline hover:text-gray-200'>
-            Đặt phòng
+            Book a Room
           </Link>
           <Link
             to='/MyBookings'
             className='hover:underline hover:text-gray-200'
           >
-            Đặt của tôi
+            My Bookings
           </Link>
           <Link to='/History' className='hover:underline hover:text-gray-200'>
-            Lịch sử
+            History
           </Link>
           {roles.includes('ROLE_ADMIN') && (
             <>
@@ -112,13 +109,13 @@ export default function Header() {
                 to='/ManageRoom'
                 className='hover:underline hover:text-gray-200'
               >
-                Quản lý phòng
+                Manage Rooms
               </Link>
               <Link
                 to='/ManageUser'
                 className='hover:underline hover:text-gray-200'
               >
-                Quản lý người dùng
+                Manage Users
               </Link>
             </>
           )}
@@ -177,13 +174,13 @@ export default function Header() {
                   to='/Profile'
                   className='block px-4 py-2 hover:bg-gray-100'
                 >
-                  Hồ sơ
+                  Profile
                 </Link>
                 <button
                   onClick={handleLogout}
                   className='block w-full text-left px-4 py-2 hover:bg-gray-100'
                 >
-                  Đăng xuất
+                  Logout
                 </button>
               </div>
             )}

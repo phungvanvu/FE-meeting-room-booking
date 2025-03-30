@@ -171,9 +171,9 @@ const Dashboard = () => {
   const quarterlyChartData = formatChartData(quarterlyBookings, 'Quý');
 
   return (
-    <div className='min-h-screen bg-gray-100'>
+    <div className='min-h-screen flex flex-col'>
       <Header />
-      <main className='container mx-auto p-6'>
+      <main className='container mx-auto flex-1 p-6'>
         <h1 className='text-4xl font-extrabold text-center text-gray-800 mb-10'>
           Dashboard
         </h1>

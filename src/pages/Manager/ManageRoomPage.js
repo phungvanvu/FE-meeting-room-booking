@@ -15,7 +15,7 @@ import { isAccessTokenValid } from '../../components/utils/auth';
 import API_BASE_URL from '../../config';
 import RoomForm from '../../components/Room/RoomForm';
 import RoomBookingsModal from '../../components/Room/RoomBookingsModal';
-import DeleteConfirmModal from '../../components/DeleteConfirmModal';
+import DeleteConfirmModal from '../../components/Room/DeleteConfirmModal';
 
 const ITEMS_PER_PAGE = 6;
 
@@ -36,10 +36,6 @@ export default function ManageRoomPage() {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteRoomId, setDeleteRoomId] = useState(null);
-
-  // New state for error message from modal form
-  // (Assume that ManageRoomPage passes error states to RoomForm internally)
-  // const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     const initPage = async () => {
@@ -200,7 +196,6 @@ export default function ManageRoomPage() {
     }
   };
 
-  // Updated addRoom and updateRoom to return result
   const addRoom = async (payload) => {
     const accessToken = sessionStorage.getItem('accessToken');
     try {
@@ -286,7 +281,6 @@ export default function ManageRoomPage() {
     }
   };
 
-  // Delete confirmation modal functions
   const openDeleteModal = (roomId) => {
     setDeleteRoomId(roomId);
     setShowDeleteModal(true);
@@ -299,7 +293,6 @@ export default function ManageRoomPage() {
     }
   };
 
-  // Function to download file (Excel export)
   const downloadFile = (urlSuffix, fileName) => {
     const accessToken = sessionStorage.getItem('accessToken');
     fetch(`${API_BASE_URL}/${urlSuffix}`, {
