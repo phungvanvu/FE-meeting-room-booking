@@ -11,7 +11,7 @@ const Spinner = () => (
   </div>
 );
 
-const NoData = ({ message = 'Không có dữ liệu' }) => (
+const NoData = ({ message = 'No data available' }) => (
   <div className='text-center text-gray-500 py-8'>{message}</div>
 );
 
@@ -22,34 +22,6 @@ const StatsCard = ({ title, value, color }) => (
     <p className='text-3xl font-bold'>{value}</p>
     <p className='mt-2 text-gray-600'>{title}</p>
   </div>
-);
-
-const ExportSection = ({ downloadFile }) => (
-  <section className='mb-12'>
-    <h2 className='text-2xl font-semibold text-gray-800 mb-4'>
-      Xuất dữ liệu Excel
-    </h2>
-    <div className='flex flex-wrap gap-4'>
-      <button
-        onClick={() => downloadFile('export-bookings-excel', 'bookings.xlsx')}
-        className='bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg shadow transition'
-      >
-        Xuất Bookings
-      </button>
-      <button
-        onClick={() => downloadFile('export-rooms-excel', 'rooms.xlsx')}
-        className='bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg shadow transition'
-      >
-        Xuất Rooms
-      </button>
-      <button
-        onClick={() => downloadFile('export-user-excel', 'users.xlsx')}
-        className='bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg shadow transition'
-      >
-        Xuất Users
-      </button>
-    </div>
-  </section>
 );
 
 const TableSection = ({ title, columns, data, rowKey }) => (
@@ -89,7 +61,6 @@ const TableSection = ({ title, columns, data, rowKey }) => (
   </section>
 );
 
-// Component bao bọc biểu đồ với giao diện cải tiến
 const ChartCard = ({ title, data, ChartComponent, options = {} }) => (
   <div className='bg-white p-6 rounded-lg shadow hover:shadow-xl transition transform hover:-translate-y-1'>
     <h3 className='text-lg font-semibold text-gray-700 mb-4'>{title}</h3>
@@ -181,25 +152,6 @@ const Dashboard = () => {
     ).finally(() => setLoading(false));
   }, []);
 
-  const downloadFile = async (endpoint, filename) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/statistical/${endpoint}`, {
-        ...fetchOptions,
-        method: 'GET',
-      });
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    } catch (error) {
-      console.error(`Error downloading ${filename}:`, error);
-    }
-  };
-
   const formatChartData = (data, labelPrefix) => ({
     labels:
       data && data.length > 0
@@ -207,7 +159,7 @@ const Dashboard = () => {
         : [],
     datasets: [
       {
-        label: 'Số lượt đặt phòng',
+        label: 'Number of bookings',
         data: data && data.length > 0 ? data.map((item) => item.bookings) : [],
         backgroundColor: 'rgba(54, 162, 235, 0.7)',
       },
@@ -232,27 +184,27 @@ const Dashboard = () => {
         ) : stats ? (
           <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-12'>
             <StatsCard
-              title='Tổng số phòng'
+              title='Total number of rooms'
               value={stats.totalRooms}
               color='border-blue-500'
             />
             <StatsCard
-              title='Phòng có sẵn'
+              title='Room available'
               value={stats.availableRooms}
               color='border-green-500'
             />
             <StatsCard
-              title='Phòng tạm dừng'
+              title='Room unavailable'
               value={stats.unavailableRooms}
               color='border-yellow-500'
             />
             <StatsCard
-              title='Tổng lượt đặt phòng'
+              title='Total number of bookings'
               value={stats.totalBookings}
               color='border-orange-500'
             />
             <StatsCard
-              title='Đặt phòng hôm nay'
+              title='Make a reservation today'
               value={stats.todayBookings}
               color='border-red-500'
             />
@@ -261,49 +213,46 @@ const Dashboard = () => {
           <NoData />
         )}
 
-        {/* Xuất dữ liệu Excel */}
-        <ExportSection downloadFile={downloadFile} />
-
-        {/* Top 5 Người Dùng */}
-        <TableSection
-          title='Top 5 Người Dùng Đặt Phòng Nhiều Nhất'
-          columns={[
-            { key: 'index', title: '#', render: (item, index) => index + 1 },
-            { key: 'userName', title: 'Tên người dùng' },
-            { key: 'bookingCount', title: 'Số lượt đặt' },
-          ]}
-          data={topUsers}
-          rowKey='userId'
-        />
-
         {/* Biểu đồ trong grid */}
         <section className='mb-12'>
           <h2 className='text-2xl font-semibold text-gray-800 mb-4'>
-            Biểu Đồ Đặt Phòng
+            Reservation Chart
           </h2>
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
             <ChartCard
-              title='Theo Tháng'
+              title='By Month'
               data={monthlyChartData}
               ChartComponent={Bar}
             />
             <ChartCard
-              title='Theo Tuần'
+              title='By Week'
               data={weeklyChartData}
               ChartComponent={Line}
             />
             <ChartCard
-              title='Theo Quý'
+              title='By Quarterly'
               data={quarterlyChartData}
               ChartComponent={Pie}
             />
           </div>
         </section>
 
+        {/* Top 5 Người Dùng */}
+        <TableSection
+          title='Top Most Booked Users'
+          columns={[
+            { key: 'index', title: '#', render: (item, index) => index + 1 },
+            { key: 'userName', title: 'User name' },
+            { key: 'bookingCount', title: 'Number of bookings' },
+          ]}
+          data={topUsers}
+          rowKey='userId'
+        />
+
         {/* Phòng được đặt nhiều nhất */}
         <section className='mb-12'>
           <h2 className='text-2xl font-semibold text-gray-800 mb-4'>
-            Phòng Được Đặt Nhiều Nhất
+            Most booked rooms
           </h2>
           {loading ? (
             <Spinner />

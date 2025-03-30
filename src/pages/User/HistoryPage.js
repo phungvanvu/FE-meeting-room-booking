@@ -4,19 +4,27 @@ import Footer from '../../components/Footer';
 import API_BASE_URL from '../../config';
 
 const History = () => {
+  // Input states
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedDate, setSelectedDate] = useState('');
-  const [selectedTime, setSelectedTime] = useState('');
-  const [selectedLocation, setSelectedLocation] = useState([]);
-  const [selectedCapacity, setSelectedCapacity] = useState([]);
-  const [selectedStatus, setSelectedStatus] = useState([]);
+  const [startDateTime, setStartDateTime] = useState('');
+  const [endDateTime, setEndDateTime] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
+
+  // Filter parameters state (applied on Search click)
+  const [filterParams, setFilterParams] = useState({
+    searchTerm: '',
+    startDateTime: '',
+    endDateTime: '',
+    selectedStatus: '',
+  });
+
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
   const [bookings, setBookings] = useState([]);
 
   const accessToken = sessionStorage.getItem('accessToken');
 
-  // Hàm lấy danh sách booking của tôi từ API
+  // Fetch the current user's bookings from API
   const fetchBookings = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/roombooking/MyBookings`, {
@@ -40,30 +48,20 @@ const History = () => {
     fetchBookings();
   }, []);
 
-  // Lọc booking theo các điều kiện tìm kiếm
+  // Filter bookings based on filterParams
   const filteredBookings = bookings.filter((booking) => {
     const matchesSearchTerm = booking.roomName
       .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesDate =
-      (!selectedDate || booking.startTime.includes(selectedDate)) &&
-      (!selectedTime || booking.startTime.includes(selectedTime));
-    const matchesLocation =
-      selectedLocation.length === 0 ||
-      selectedLocation.includes(booking.location);
-    const matchesCapacity =
-      selectedCapacity.length === 0 ||
-      (booking.capacity &&
-        selectedCapacity.includes(booking.capacity.toString()));
+      .includes(filterParams.searchTerm.toLowerCase());
+    const matchesDateTime =
+      (!filterParams.startDateTime ||
+        new Date(booking.startTime) >= new Date(filterParams.startDateTime)) &&
+      (!filterParams.endDateTime ||
+        new Date(booking.endTime) <= new Date(filterParams.endDateTime));
     const matchesStatus =
-      selectedStatus.length === 0 || selectedStatus.includes(booking.status);
-    return (
-      matchesSearchTerm &&
-      matchesDate &&
-      matchesLocation &&
-      matchesCapacity &&
-      matchesStatus
-    );
+      !filterParams.selectedStatus ||
+      booking.status === filterParams.selectedStatus;
+    return matchesSearchTerm && matchesDateTime && matchesStatus;
   });
 
   const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
@@ -73,147 +71,134 @@ const History = () => {
     startIndex + itemsPerPage,
   );
 
+  // Update filterParams when Search is clicked
+  const handleSearch = () => {
+    setFilterParams({
+      searchTerm,
+      startDateTime,
+      endDateTime,
+      selectedStatus,
+    });
+    setCurrentPage(1);
+  };
+
   const resetFilters = () => {
     setSearchTerm('');
-    setSelectedDate('');
-    setSelectedTime('');
-    setSelectedLocation([]);
-    setSelectedCapacity([]);
-    setSelectedStatus([]);
+    setStartDateTime('');
+    setEndDateTime('');
+    setSelectedStatus('');
+    setFilterParams({
+      searchTerm: '',
+      startDateTime: '',
+      endDateTime: '',
+      selectedStatus: '',
+    });
     setCurrentPage(1);
   };
 
   return (
-    <div className='flex flex-col min-h-screen'>
+    <div className='flex flex-col min-h-screen bg-gray-50'>
       <Header />
 
       <div className='flex flex-col p-6 w-full space-y-6'>
-        <div className='flex'>
-          <div className='w-1/4 p-4 border bg-gray-100 rounded-lg mr-4 shadow-md'>
-            <h3 className='font-bold mb-4'>Tìm kiếm</h3>
+        <div className='flex space-x-6'>
+          {/* Filter Sidebar */}
+          <div className='w-1/4 bg-white p-6 rounded-2xl shadow-md border border-gray-200 h-full flex-shrink-0 flex flex-col'>
+            <h2 className='text-xl font-semibold mb-5 text-gray-800'>Filter</h2>
 
             <div className='mb-4'>
-              <label className='block mb-1 font-bold'>Tên:</label>
+              <label className='block text-sm font-bold text-gray-700 mb-2'>
+                Room Name
+              </label>
               <input
                 type='text'
+                placeholder='Enter the room name...'
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className='border border-gray-300 rounded p-2 w-full'
+                className='w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none bg-gray-50 hover:bg-gray-100 transition-all shadow-sm'
               />
             </div>
 
+            {/* DateTime Range Filter */}
             <div className='mb-4'>
-              <label className='block mb-1 font-bold'>Chọn ngày:</label>
+              <label className='block text-sm font-bold text-gray-700 mb-2'>
+                From
+              </label>
               <input
-                type='date'
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className='border border-gray-300 rounded p-2 w-full'
+                type='datetime-local'
+                value={startDateTime}
+                onChange={(e) => setStartDateTime(e.target.value)}
+                className='w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none bg-gray-50 hover:bg-gray-100 transition-all shadow-sm'
               />
             </div>
 
             <div className='mb-4'>
-              <label className='block mb-1 font-bold'>Địa điểm:</label>
-              {['Phòng A', 'Phòng B', 'Phòng C'].map((location) => (
-                <label key={location} className='flex items-center'>
-                  <input
-                    type='checkbox'
-                    value={location}
-                    checked={selectedLocation.includes(location)}
-                    onChange={() => {
-                      setSelectedLocation((prev) =>
-                        prev.includes(location)
-                          ? prev.filter((loc) => loc !== location)
-                          : [...prev, location],
-                      );
-                    }}
-                    className='mr-3 ml-4'
-                  />
-                  <span>{location}</span>
-                </label>
-              ))}
+              <label className='block text-sm font-bold text-gray-700 mb-2'>
+                To
+              </label>
+              <input
+                type='datetime-local'
+                value={endDateTime}
+                onChange={(e) => setEndDateTime(e.target.value)}
+                className='w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none bg-gray-50 hover:bg-gray-100 transition-all shadow-sm'
+              />
             </div>
 
             <div className='mb-4'>
-              <label className='block mb-1 font-bold'>Sức chứa:</label>
-              {['4', '6', '10'].map((capacity) => (
-                <label key={capacity} className='flex items-center mr-4'>
-                  <input
-                    type='checkbox'
-                    value={capacity}
-                    checked={selectedCapacity.includes(capacity)}
-                    onChange={() => {
-                      setSelectedCapacity((prev) =>
-                        prev.includes(capacity)
-                          ? prev.filter((cap) => cap !== capacity)
-                          : [...prev, capacity],
-                      );
-                    }}
-                    className='mr-2 ml-4'
-                  />
-                  <span>{capacity}</span>
-                </label>
-              ))}
-            </div>
-
-            <div className='mb-4'>
-              <label className='block mb-1 font-bold'>Trạng thái:</label>
-              {['Hoàn thành', 'Đã hủy'].map((status) => (
-                <label key={status} className='flex items-center mr-4'>
-                  <input
-                    type='checkbox'
-                    value={status}
-                    checked={selectedStatus.includes(status)}
-                    onChange={() => {
-                      setSelectedStatus((prev) =>
-                        prev.includes(status)
-                          ? prev.filter((st) => st !== status)
-                          : [...prev, status],
-                      );
-                    }}
-                    className='mr-2 ml-4'
-                  />
-                  <span>{status}</span>
-                </label>
-              ))}
-            </div>
-
-            <div className='flex'>
-              <button
-                onClick={() => setCurrentPage(1)}
-                className='bg-blue-500 text-white rounded py-2 px-4 hover:bg-blue-400 transition w-full mr-1'
+              <label className='block text-sm font-bold text-gray-700 mb-2'>
+                Status
+              </label>
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className='w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none bg-gray-50 hover:bg-gray-100 transition-all shadow-sm'
               >
-                Tìm kiếm
-              </button>
+                <option value='' className='text-gray-400'>
+                  Select status
+                </option>
+                <option value='CONFIRMED' className='text-gray-700'>
+                  CONFIRMED
+                </option>
+                <option value='CANCELLED' className='text-gray-700'>
+                  CANCELLED
+                </option>
+              </select>
+            </div>
+
+            <div className='flex justify-between mt-auto pt-4 border-t border-gray-200'>
               <button
                 onClick={resetFilters}
-                className='bg-gray-300 text-black rounded py-2 px-4 hover:bg-gray-200 transition w-full ml-1'
+                className='w-1/2 mr-2 py-2 bg-gray-100 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-200 transition-all'
               >
-                Đặt lại
+                Reset
+              </button>
+              <button
+                onClick={handleSearch}
+                className='w-1/2 ml-2 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all'
+              >
+                Search
               </button>
             </div>
           </div>
 
+          {/* Booking Table */}
           <div className='w-3/4 overflow-hidden'>
             <h2 className='text-center text-2xl font-bold mb-4'>
-              Lịch sử đặt phòng
+              Booking History
             </h2>
-
             <table className='min-w-full bg-white border border-gray-300 shadow-md text-sm'>
               <thead>
                 <tr className='bg-gray-200'>
-                  <th className='py-2 px-4 border w-1/14'>Stt</th>
-                  <th className='py-2 px-4 border w-2/12'>UserName</th>
-                  <th className='py-2 px-4 border w-2/12'>Email</th>
-                  <th className='py-2 px-4 border w-2/12'>Room</th>
-                  <th className='py-2 px-4 border w-3/12'>Thời gian bắt đầu</th>
-                  <th className='py-2 px-4 border w-3/12'>
-                    Thời gian kết thúc
-                  </th>
-                  <th className='py-2 px-4 border w-3/12'>Đặt phòng lúc</th>
-                  <th className='py-2 px-4 border w-2/12'>Mục đích</th>
-                  <th className='py-2 px-4 border w-2/12'>Mô tả</th>
-                  <th className='py-2 px-4 border w-2/12'>Trạng thái</th>
+                  <th className='py-2 px-4 border'>No.</th>
+                  <th className='py-2 px-4 border'>UserName</th>
+                  <th className='py-2 px-4 border'>Email</th>
+                  <th className='py-2 px-4 border'>Room</th>
+                  <th className='py-2 px-4 border'>Start Time</th>
+                  <th className='py-2 px-4 border'>End Time</th>
+                  <th className='py-2 px-4 border'>Booked At</th>
+                  <th className='py-2 px-4 border'>Purpose</th>
+                  <th className='py-2 px-4 border'>Description</th>
+                  <th className='py-2 px-4 border'>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -235,7 +220,7 @@ const History = () => {
                     <td className='py-2 px-4 border'>{booking.description}</td>
                     <td
                       className={`py-2 px-4 border ${
-                        booking.status === 'Hoàn thành'
+                        booking.status === 'CONFIRMED'
                           ? 'text-teal-600'
                           : 'text-red-600'
                       }`}
@@ -247,7 +232,7 @@ const History = () => {
               </tbody>
             </table>
 
-            {/* Phân trang */}
+            {/* Pagination */}
             <div className='flex justify-center items-center mt-4'>
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}

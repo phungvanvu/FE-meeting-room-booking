@@ -8,8 +8,10 @@ import API_BASE_URL from '../../config';
 import '../../App.css';
 
 export default function RoomCalendar({ roomName, refreshCalendar }) {
-  const { setFilteredEvents } = useContext(GlobalContext);
+  const { setFilteredEvents, setSelectedEvent, setShowEventDetailModal } =
+    useContext(GlobalContext);
   const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
   const accessToken = sessionStorage.getItem('accessToken');
 
   useEffect(() => {
@@ -33,11 +35,10 @@ export default function RoomCalendar({ roomName, refreshCalendar }) {
         }
 
         const data = await response.json();
-
         if (Array.isArray(data)) {
           const formattedBookings = data.map((booking) => ({
             id: booking.bookingId,
-            title: `${booking.purpose}`,
+            title: booking.purpose,
             start: booking.startTime,
             end: booking.endTime,
             backgroundColor: getEventColor(booking.status) || '#9E9E9E',
@@ -56,7 +57,6 @@ export default function RoomCalendar({ roomName, refreshCalendar }) {
             },
           }));
 
-          // Sắp xếp theo thời gian bắt đầu
           const sortedBookings = formattedBookings.sort(
             (a, b) => new Date(a.start) - new Date(b.start),
           );
@@ -69,27 +69,24 @@ export default function RoomCalendar({ roomName, refreshCalendar }) {
         }
       } catch (error) {
         console.error('Failed to fetch bookings:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchRoomBookings();
-  }, [roomName, setFilteredEvents, refreshCalendar]);
+  }, [roomName, setFilteredEvents, refreshCalendar, accessToken]);
 
-  // Định dạng giờ phút (ví dụ: 09:30)
-  const formatTime = (time) => {
-    return new Date(time).toLocaleTimeString([], {
+  const formatTime = (time) =>
+    new Date(time).toLocaleTimeString([], {
       hour: '2-digit',
       minute: '2-digit',
     });
-  };
 
-  // Đặt màu cho trạng thái sự kiện
   const getEventColor = (status) => {
     switch (status) {
       case 'CONFIRMED':
         return '#4CAF50'; // Xanh lá
-      case 'PENDING':
-        return '#FFC107'; // Vàng
       case 'CANCELLED':
         return '#F44336'; // Đỏ
       default:
@@ -97,51 +94,78 @@ export default function RoomCalendar({ roomName, refreshCalendar }) {
     }
   };
 
+  if (loading) {
+    return (
+      <div className='flex justify-center items-center h-full'>
+        <span>Loading...</span>
+      </div>
+    );
+  }
+
   return (
     <div className='calendar-container'>
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-        initialView='dayGridMonth'
+        initialView='timeGridWeek'
         headerToolbar={{
           left: 'prev,next today',
           center: 'title',
           right: 'dayGridMonth,timeGridWeek,timeGridDay',
         }}
         events={events}
-        eventClick={(info) => {
-          alert(
-            `Sự kiện: ${info.event.title}\nTrạng thái: ${info.event.extendedProps.status}\nGhi chú: ${info.event.extendedProps.note}`,
+        eventDidMount={(info) => {
+          info.el.style.setProperty(
+            'background-color',
+            'transparent',
+            'important',
           );
+          info.el.style.setProperty('border', 'none', 'important');
+        }}
+        eventClick={(info) => {
+          setSelectedEvent(info.event.extendedProps);
+          setShowEventDetailModal(true);
         }}
         eventMouseEnter={(info) => {
           const tooltip = document.createElement('div');
           tooltip.innerHTML = `
-            <strong>${info.event.title}</strong><br />
-            <em>${formatTime(info.event.start)} - ${formatTime(
+      <strong>${info.event.title}</strong><br />
+      <em>${formatTime(info.event.start)} - ${formatTime(
             info.event.end,
           )}</em><br />
-            <span style="color: ${getEventColor(
-              info.event.extendedProps.status,
-            )};">
-              BookingStatus: ${info.event.extendedProps.status}
-            </span><br />
-            Note: ${info.event.extendedProps.note || 'Không có'}
-          `;
+      <span style="color: ${getEventColor(info.event.extendedProps.status)};">
+        BookingStatus: ${info.event.extendedProps.status}
+      </span><br />
+      Note: ${info.event.extendedProps.note || 'Không có'}
+    `;
           tooltip.className = 'custom-tooltip';
           document.body.appendChild(tooltip);
-
           tooltip.style.left = `${info.jsEvent.clientX + 10}px`;
           tooltip.style.top = `${info.jsEvent.clientY + 10}px`;
-
           info.el.addEventListener('mouseleave', () => {
             tooltip.remove();
           });
         }}
         height='800px'
         eventContent={(info) => (
-          <div className='custom-event'>
-            <div className='event-title'>{info.event.title}</div>
-            <div className='event-time'>
+          <div
+            className='custom-event'
+            style={{
+              backgroundColor: info.event.backgroundColor,
+              border: `1px solid ${info.event.borderColor}`,
+              color: info.event.textColor,
+              padding: '2px 4px',
+              borderRadius: '4px',
+              height: '100%',
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+            }}
+          >
+            <div className='event-title text-base text-white tracking-tight text-center'>
+              {info.event.title}
+            </div>
+            <div className='event-time text-xs text-white opacity-90 text-center'>
               {formatTime(info.event.start)} - {formatTime(info.event.end)}
             </div>
           </div>

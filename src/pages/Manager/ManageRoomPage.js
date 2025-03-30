@@ -13,8 +13,9 @@ import {
 } from 'lucide-react';
 import { isAccessTokenValid } from '../../components/utils/auth';
 import API_BASE_URL from '../../config';
-import RoomForm from '../../components/Admin/Room/RoomForm';
-import RoomBookingsModal from '../../components/Admin/Room/RoomBookingsModal';
+import RoomForm from '../../components/Room/RoomForm';
+import RoomBookingsModal from '../../components/Room/RoomBookingsModal';
+import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 
 const ITEMS_PER_PAGE = 6;
 
@@ -33,6 +34,12 @@ export default function ManageRoomPage() {
   const navigate = useNavigate();
   const [bookingRoomId, setBookingRoomId] = useState(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteRoomId, setDeleteRoomId] = useState(null);
+
+  // New state for error message from modal form
+  // (Assume that ManageRoomPage passes error states to RoomForm internally)
+  // const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     const initPage = async () => {
@@ -43,13 +50,11 @@ export default function ManageRoomPage() {
       }
       fetchRooms();
     };
-
     initPage();
   }, [navigate]);
 
   const fetchRooms = async () => {
     const accessToken = sessionStorage.getItem('accessToken');
-
     try {
       const response = await fetch(`${API_BASE_URL}/room`, {
         method: 'GET',
@@ -58,21 +63,18 @@ export default function ManageRoomPage() {
           Authorization: `Bearer ${accessToken}`,
         },
       });
-
       const result = await response.json();
-
       if (result.success && Array.isArray(result.data)) {
         const formattedRooms = result.data.map((room) => ({
           id: room.roomId,
           name: room.roomName || 'No name',
           location: room.location || 'Unknown location',
           note: room.note || '',
-          capacity: room.capacity || 0,
+          capacity: room.capacity || null,
           status: room.available ? 'Available' : 'Unavailable',
           facilities: room.equipments || [],
           image: room.imageUrl ? `${API_BASE_URL}${room.imageUrl}` : '',
         }));
-
         setRoomsData(formattedRooms);
         setFilteredRooms(formattedRooms);
       } else {
@@ -96,7 +98,6 @@ export default function ManageRoomPage() {
     );
   };
 
-  // Xử lý chọn/deselect cho sức chứa
   const handleCapacityCheckboxChange = (capacity) => {
     setSelectedCapacities((prev) =>
       prev.includes(capacity)
@@ -105,31 +106,24 @@ export default function ManageRoomPage() {
     );
   };
 
-  // Xử lý tìm kiếm theo các bộ lọc
   const handleSearch = () => {
     const result = roomsData.filter((room) => {
       const matchesRoomName =
         searchRoomName === '' ||
         room.name.toLowerCase().includes(searchRoomName.toLowerCase());
-
       const matchesSelectedRooms =
         selectedRooms.length === 0 || selectedRooms.includes(room.id);
-
       const matchesLocation =
         selectedLocations.length === 0 ||
         selectedLocations.includes(room.location);
-
       const matchesStatus =
         selectedStatus === '' || room.status === selectedStatus;
-
       const matchesCapacity =
         selectedCapacities.length === 0 ||
         selectedCapacities.includes(room.capacity);
-
       const matchesDevices =
         selectedDevices.length === 0 ||
         selectedDevices.every((device) => room.facilities.includes(device));
-
       return (
         matchesRoomName &&
         matchesSelectedRooms &&
@@ -143,7 +137,6 @@ export default function ManageRoomPage() {
     setCurrentPage(1);
   };
 
-  // Xử lý đặt lại bộ lọc
   const handleReset = () => {
     setSearchRoomName('');
     setSelectedRooms([]);
@@ -155,7 +148,6 @@ export default function ManageRoomPage() {
     setCurrentPage(1);
   };
 
-  // Xử lý chuyển trang
   const totalPages = Math.ceil(filteredRooms.length / ITEMS_PER_PAGE);
   const currentRooms = filteredRooms.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
@@ -167,14 +159,12 @@ export default function ManageRoomPage() {
   const handleNextPage = () =>
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
 
-  // Xử lý nút mở form thêm/sửa
   const openAddForm = () => {
     setFormInitialData(null);
     setShowForm(true);
   };
 
   const openEditForm = (room) => {
-    // Chuyển đổi đối tượng room thành đối tượng có key phù hợp với RoomForm
     const roomData = {
       roomName: room.name,
       location: room.location,
@@ -189,7 +179,6 @@ export default function ManageRoomPage() {
     setShowForm(true);
   };
 
-  // Xử lý nút Xoá
   const handleDelete = async (roomId) => {
     const accessToken = sessionStorage.getItem('accessToken');
     try {
@@ -202,7 +191,6 @@ export default function ManageRoomPage() {
       });
       const result = await response.json();
       if (result.success) {
-        // Cập nhật lại danh sách sau khi xoá
         fetchRooms();
       } else {
         console.error('Error deleting room:', result.error?.message);
@@ -212,11 +200,11 @@ export default function ManageRoomPage() {
     }
   };
 
+  // Updated addRoom and updateRoom to return result
   const addRoom = async (payload) => {
     const accessToken = sessionStorage.getItem('accessToken');
     try {
       const formData = new FormData();
-      // Đóng gói thông tin phòng dưới dạng JSON trong Blob
       const roomData = {
         roomName: payload.roomName,
         location: payload.location,
@@ -232,12 +220,9 @@ export default function ManageRoomPage() {
         type: 'application/json',
       });
       formData.append('room', roomBlob);
-
-      // Nếu có file ảnh, thêm vào FormData
       if (payload.image && payload.image instanceof File) {
         formData.append('file', payload.image, payload.image.name);
       }
-
       const response = await fetch(`${API_BASE_URL}/room`, {
         method: 'POST',
         headers: {
@@ -245,24 +230,23 @@ export default function ManageRoomPage() {
         },
         body: formData,
       });
-
       const result = await response.json();
       if (result.success) {
         fetchRooms();
       } else {
         console.error('Error adding room:', result.error?.message);
       }
+      return result;
     } catch (error) {
       console.error('Add error:', error);
+      return { success: false, error: { message: error.message } };
     }
   };
 
-  // Hàm cập nhật phòng (giả sử endpoint PUT /room/:id)
   const updateRoom = async (payload, roomId) => {
     const accessToken = sessionStorage.getItem('accessToken');
     try {
       const formData = new FormData();
-      // Đóng gói thông tin phòng thành JSON và tạo Blob
       const roomData = {
         roomId: payload.id,
         roomName: payload.roomName,
@@ -272,7 +256,6 @@ export default function ManageRoomPage() {
         available: payload.available,
         equipments: payload.equipments || [],
       };
-      // Nếu không có file mới, gửi lại imageUrl cũ (relative)
       if (!payload.image && payload.imageUrl) {
         roomData.imageUrl = payload.imageUrl;
       }
@@ -280,12 +263,9 @@ export default function ManageRoomPage() {
         type: 'application/json',
       });
       formData.append('room', roomBlob);
-
-      // Nếu payload có file ảnh, thêm vào FormData
       if (payload.image && payload.image instanceof File) {
         formData.append('file', payload.image, payload.image.name);
       }
-
       const response = await fetch(`${API_BASE_URL}/room/${roomId}`, {
         method: 'PUT',
         headers: {
@@ -293,41 +273,86 @@ export default function ManageRoomPage() {
         },
         body: formData,
       });
-
       const result = await response.json();
       if (result.success) {
         fetchRooms();
       } else {
         console.error('Error updating room:', result.error?.message);
       }
+      return result;
     } catch (error) {
       console.error('Update error:', error);
+      return { success: false, error: { message: error.message } };
     }
+  };
+
+  // Delete confirmation modal functions
+  const openDeleteModal = (roomId) => {
+    setDeleteRoomId(roomId);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deleteRoomId) {
+      await handleDelete(deleteRoomId);
+      setShowDeleteModal(false);
+    }
+  };
+
+  // Function to download file (Excel export)
+  const downloadFile = (urlSuffix, fileName) => {
+    const accessToken = sessionStorage.getItem('accessToken');
+    fetch(`${API_BASE_URL}/${urlSuffix}`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+      .then((res) => res.blob())
+      .then((blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      })
+      .catch((err) => console.error('Error downloading file:', err));
   };
 
   return (
     <div className='min-h-screen flex flex-col'>
       <Header />
 
-      {/* Modal Form cho Thêm/Sửa phòng */}
       {showForm && (
         <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
           <RoomForm
             initialData={formInitialData}
-            onSubmit={(payload) => {
+            onSubmit={async (payload) => {
+              let result;
               if (formInitialData) {
-                updateRoom(payload, formInitialData.id);
+                result = await updateRoom(payload, formInitialData.id);
               } else {
-                addRoom(payload);
+                result = await addRoom(payload);
               }
-              setShowForm(false);
+              if (result.success) {
+                setShowForm(false);
+              }
+              return result;
             }}
             onCancel={() => setShowForm(false)}
           />
         </div>
       )}
 
-      {/* Modal Booking */}
+      {showDeleteModal && (
+        <DeleteConfirmModal
+          message='Are you sure you want to delete this room?'
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setShowDeleteModal(false)}
+        />
+      )}
+
       {showBookingModal && (
         <RoomBookingsModal
           roomId={bookingRoomId}
@@ -336,61 +361,58 @@ export default function ManageRoomPage() {
       )}
 
       <div className='flex-grow mx-auto mt-10 flex gap-4 mb-10 px-6 w-full'>
-        {/* Sidebar Filter */}
         <div className='w-1/4 bg-white p-6 rounded-2xl shadow-md border border-gray-200 h-full flex-shrink-0 flex flex-col'>
           <h2 className='text-xl font-semibold mb-5 text-gray-800'>Filter</h2>
 
-          {/* Nút thêm phòng */}
           <div className='mb-4'>
             <button
               onClick={openAddForm}
               className='w-full py-2 bg-green-500 hover:bg-green-600 text-white font-medium rounded-xl transition-all'
             >
-              Thêm phòng
+              Create room
             </button>
           </div>
 
-          {/* Tìm kiếm theo tên phòng */}
           <div className='mb-4'>
             <label className='block text-sm font-bold text-black-700 mb-2'>
-              Tìm kiếm tên phòng
+              Search for room name
             </label>
             <input
               type='text'
-              placeholder='Nhập tên phòng...'
+              placeholder='Enter the room name...'
               value={searchRoomName}
               onChange={(e) => setSearchRoomName(e.target.value)}
               className='w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none bg-gray-50 hover:bg-gray-100 transition-all shadow-sm'
             />
           </div>
 
-          {/* Chọn địa điểm phòng */}
           <div className='mb-4'>
             <label className='block text-sm font-bold text-black-700 mb-2'>
-              Chọn địa điểm phòng
+              Select room location
             </label>
             <div className='border border-gray-300 rounded-lg p-2 bg-gray-50 hover:bg-gray-100 transition-all'>
-              {roomsData.map((room) => (
-                <label
-                  key={room.id}
-                  className='flex items-center space-x-2 py-1 cursor-pointer'
-                >
-                  <input
-                    type='checkbox'
-                    checked={selectedLocations.includes(room.location)}
-                    onChange={() => handleLocationCheckboxChange(room.location)}
-                    className='h-4 w-4 border-gray-300 rounded text-blue-500 focus:ring-blue-400'
-                  />
-                  <span className='text-sm text-gray-700'>{room.location}</span>
-                </label>
-              ))}
+              {[...new Set(roomsData.map((room) => room.location))].map(
+                (location) => (
+                  <label
+                    key={location}
+                    className='flex items-center space-x-2 py-1 cursor-pointer'
+                  >
+                    <input
+                      type='checkbox'
+                      checked={selectedLocations.includes(location)}
+                      onChange={() => handleLocationCheckboxChange(location)}
+                      className='h-4 w-4 border-gray-300 rounded text-blue-500 focus:ring-blue-400'
+                    />
+                    <span className='text-sm text-gray-700'>{location}</span>
+                  </label>
+                ),
+              )}
             </div>
           </div>
 
-          {/* Lọc theo trạng thái */}
           <div className='mb-4'>
             <label className='block text-sm font-bold text-black-700 mb-2'>
-              Trạng thái
+              Status
             </label>
             <select
               value={selectedStatus}
@@ -398,7 +420,7 @@ export default function ManageRoomPage() {
               className='w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none bg-gray-50 hover:bg-gray-100 transition-all shadow-sm'
             >
               <option value='' className='text-gray-400'>
-                Trạng thái
+                Select status
               </option>
               <option value='Available' className='text-gray-700'>
                 Available
@@ -409,10 +431,9 @@ export default function ManageRoomPage() {
             </select>
           </div>
 
-          {/* Lọc theo sức chứa (checkbox cho nhiều lựa chọn) */}
           <div className='mb-4'>
             <label className='block text-sm font-bold text-black-700 mb-2'>
-              Sức chứa
+              Capacity
             </label>
             <div className='flex flex-wrap gap-2'>
               {[6, 8, 10, 12].map((capacity) => (
@@ -427,17 +448,16 @@ export default function ManageRoomPage() {
                     className='h-4 w-4 border-gray-300 rounded text-blue-500 focus:ring-blue-400'
                   />
                   <span className='text-sm text-gray-700'>
-                    {capacity} người
+                    {capacity} person
                   </span>
                 </label>
               ))}
             </div>
           </div>
 
-          {/* Lọc theo thiết bị */}
           <div className='mb-4'>
             <label className='block text-sm font-bold text-black-700 mb-2'>
-              Thiết bị
+              Device
             </label>
             <div className='flex flex-wrap gap-2'>
               {[
@@ -469,30 +489,33 @@ export default function ManageRoomPage() {
             </div>
           </div>
 
-          {/* Các nút tìm kiếm và đặt lại bộ lọc */}
           <div className='flex justify-between mt-auto pt-4 border-t border-gray-200'>
             <button
               onClick={handleReset}
               className='w-1/2 mr-2 py-2 bg-gray-100 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-200 transition-all'
             >
-              Đặt lại
+              Reset
             </button>
             <button
               onClick={handleSearch}
               className='w-1/2 ml-2 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all'
             >
-              Tìm kiếm
+              Search
             </button>
           </div>
         </div>
 
-        {/* Danh sách phòng quản lý */}
         <div className='w-3/4 flex-grow bg-gray-50 p-6 rounded-2xl shadow-md border border-gray-200'>
           <div className='flex justify-between items-center mb-6'>
-            <h2 className='text-2xl font-bold'>Quản lý phòng họp</h2>
+            <h2 className='text-2xl font-bold'>Meeting room management</h2>
+            <button
+              onClick={() => downloadFile('export-rooms-excel', 'rooms.xlsx')}
+              className='bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg shadow transition'
+            >
+              Xuất Rooms
+            </button>
           </div>
 
-          {/* Hiển thị danh sách phòng */}
           <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8'>
             {currentRooms.map((room) => (
               <div
@@ -510,31 +533,22 @@ export default function ManageRoomPage() {
                     No image available
                   </div>
                 )}
-
                 <div className='p-5'>
-                  {/* Tên phòng */}
                   <h3 className='font-semibold text-xl text-gray-800 truncate'>
                     {room.name}
                   </h3>
-
-                  {/* Các trường dữ liệu theo dạng key: value, chia 2 cột */}
                   <div className='mt-2'>
                     <dl className='grid grid-cols-2 gap-x-4 gap-y-2 text-gray-600'>
-                      {/* Row 1: Location */}
                       <dt className='flex items-center font-medium'>
                         <MapPin size={18} className='mr-1 text-blue-500' />
                         Location:
                       </dt>
                       <dd className='flex items-center'>{room.location}</dd>
-
-                      {/* Row 2: Capacity */}
                       <dt className='flex items-center font-medium'>
                         <Users size={18} className='mr-1 text-red-500' />
                         Capacity:
                       </dt>
                       <dd className='flex items-center'>{room.capacity}</dd>
-
-                      {/* Row 3: Status */}
                       <dt className='flex items-center font-medium'>
                         {room.status === 'Available' ? (
                           <CheckCircle
@@ -555,8 +569,6 @@ export default function ManageRoomPage() {
                       >
                         {room.status}
                       </dd>
-
-                      {/* Row 4: Note (chỉ hiển thị nếu có) */}
                       {room.note && (
                         <>
                           <dt className='flex items-center font-medium'>
@@ -573,8 +585,6 @@ export default function ManageRoomPage() {
                       )}
                     </dl>
                   </div>
-
-                  {/* Danh sách tiện ích */}
                   <div className='flex flex-wrap gap-2 mt-3'>
                     {room.facilities.map((facility, index) => (
                       <span
@@ -585,14 +595,12 @@ export default function ManageRoomPage() {
                       </span>
                     ))}
                   </div>
-
-                  {/* Nút Sửa, Booking và Xoá */}
                   <div className='flex gap-2 mt-5'>
                     <button
                       onClick={() => openEditForm(room)}
                       className='flex-1 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-medium rounded-xl transition-all'
                     >
-                      Sửa
+                      Edit
                     </button>
                     <button
                       onClick={() => openBookingModal(room.id)}
@@ -601,26 +609,16 @@ export default function ManageRoomPage() {
                       Booking
                     </button>
                     <button
-                      onClick={() => {
-                        if (
-                          window.confirm(
-                            'Bạn có chắc chắn muốn xoá phòng này không?',
-                          )
-                        ) {
-                          handleDelete(room.id);
-                        }
-                      }}
+                      onClick={() => openDeleteModal(room.id)}
                       className='flex-1 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl transition-all'
                     >
-                      Xoá
+                      Delete
                     </button>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-
-          {/* Phân trang */}
           {totalPages > 1 && (
             <div className='flex justify-center items-center mt-8 gap-2'>
               <button
@@ -634,7 +632,6 @@ export default function ManageRoomPage() {
               >
                 <ChevronLeft size={18} />
               </button>
-
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(
                 (page) => (
                   <button
@@ -650,7 +647,6 @@ export default function ManageRoomPage() {
                   </button>
                 ),
               )}
-
               <button
                 onClick={handleNextPage}
                 disabled={currentPage === totalPages}
@@ -666,7 +662,6 @@ export default function ManageRoomPage() {
           )}
         </div>
       </div>
-
       <Footer />
     </div>
   );

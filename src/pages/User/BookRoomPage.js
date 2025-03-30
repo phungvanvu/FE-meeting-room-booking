@@ -12,7 +12,6 @@ export default function BookRoomPage() {
   const [roomsData, setRoomsData] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedCapacities, setSelectedCapacities] = useState([]);
-  const [setSearchLocation] = useState('');
   const [selectedDevices, setSelectedDevices] = useState([]);
   const [filteredRooms, setFilteredRooms] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -53,7 +52,7 @@ export default function BookRoomPage() {
           name: room.roomName || 'No name',
           location: room.location || 'Unknown location',
           note: room.note || '',
-          capacity: room.capacity || 0,
+          capacity: room.capacity || null,
           status: room.available ? 'Available' : 'Unavailable',
           facilities: room.equipments || [],
           image: room.imageUrl ? `${API_BASE_URL}${room.imageUrl}` : '',
@@ -162,24 +161,25 @@ export default function BookRoomPage() {
           {/* Chọn địa điểm phòng */}
           <div className='mb-4'>
             <label className='block text-sm font-bold text-black-700 mb-2'>
-              Select room location
+              Chọn địa điểm phòng
             </label>
             <div className='border border-gray-300 rounded-lg p-2 bg-gray-50 hover:bg-gray-100 transition-all'>
-              {/* Danh sách checkbox */}
-              {roomsData.map((room) => (
-                <label
-                  key={room.id}
-                  className='flex items-center space-x-2 py-1 cursor-pointer'
-                >
-                  <input
-                    type='checkbox'
-                    checked={selectedLocations.includes(room.location)} // Kiểm tra nếu đã được chọn
-                    onChange={() => handleLocationCheckboxChange(room.location)}
-                    className='h-4 w-4 border-gray-300 rounded text-blue-500 focus:ring-blue-400'
-                  />
-                  <span className='text-sm text-gray-700'>{room.location}</span>
-                </label>
-              ))}
+              {[...new Set(roomsData.map((room) => room.location))].map(
+                (location) => (
+                  <label
+                    key={location}
+                    className='flex items-center space-x-2 py-1 cursor-pointer'
+                  >
+                    <input
+                      type='checkbox'
+                      checked={selectedLocations.includes(location)}
+                      onChange={() => handleLocationCheckboxChange(location)}
+                      className='h-4 w-4 border-gray-300 rounded text-blue-500 focus:ring-blue-400'
+                    />
+                    <span className='text-sm text-gray-700'>{location}</span>
+                  </label>
+                ),
+              )}
             </div>
           </div>
 

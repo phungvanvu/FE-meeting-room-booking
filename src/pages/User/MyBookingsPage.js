@@ -8,10 +8,11 @@ const MyRooms = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [bookings, setBookings] = useState([]);
+  const [editError, setEditError] = useState(null);
 
   const accessToken = sessionStorage.getItem('accessToken');
 
-  // Lấy danh sách booking sắp tới của người dùng hiện tại
+  // Fetch the current user's upcoming bookings
   const fetchBookings = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/roombooking/upcoming/my`, {
@@ -35,21 +36,22 @@ const MyRooms = () => {
     fetchBookings();
   }, []);
 
-  // Mở form sửa booking
+  // Open the edit booking form
   const handleEdit = (booking) => {
     setSelectedBooking(booking);
+    setEditError(null);
     setIsEditing(true);
   };
 
-  // Mở form xác nhận hủy booking
+  // Open the cancel booking confirmation
   const handleDelete = (booking) => {
     setSelectedBooking(booking);
     setIsConfirming(true);
   };
 
-  // Lưu cập nhật booking
+  // Save booking update and handle API errors
   const saveBooking = async () => {
-    // Chuẩn bị dữ liệu cập nhật theo yêu cầu của API
+    setEditError(null);
     const updatedBooking = {
       bookingId: selectedBooking.bookingId,
       roomId: selectedBooking.roomId,
@@ -62,7 +64,7 @@ const MyRooms = () => {
 
     try {
       const response = await fetch(
-        `${API_BASE_URL}/roombooking/${selectedBooking.bookingId}`, // thêm bookingId vào URL
+        `${API_BASE_URL}/roombooking/${selectedBooking.bookingId}`,
         {
           method: 'PUT',
           headers: {
@@ -83,20 +85,22 @@ const MyRooms = () => {
         setIsEditing(false);
         setSelectedBooking(null);
       } else {
-        console.error('Update failed:', data.error);
+        // Display error message from API
+        setEditError(data.error.message);
       }
     } catch (error) {
       console.error('Error updating booking:', error);
+      setEditError('An error occurred while updating the booking.');
     }
   };
 
-  // Hủy booking: chuyển trạng thái sang CANCELLED
+  // Cancel booking by changing its status to CANCELLED
   const cancelBooking = async () => {
     try {
       const response = await fetch(
         `${API_BASE_URL}/roombooking/cancel/${selectedBooking.bookingId}`,
         {
-          method: 'PUT', // hoặc POST tùy API thiết kế
+          method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${accessToken}`,
@@ -105,7 +109,6 @@ const MyRooms = () => {
       );
       const data = await response.json();
       if (data.success) {
-        // Có thể loại bỏ booking vừa hủy khỏi danh sách hoặc cập nhật trạng thái của nó
         setBookings(
           bookings.filter((b) => b.bookingId !== selectedBooking.bookingId),
         );
@@ -127,57 +130,53 @@ const MyRooms = () => {
   const closeEditForm = () => {
     setIsEditing(false);
     setSelectedBooking(null);
+    setEditError(null);
   };
 
   return (
-    <div className='min-h-screen flex flex-col'>
+    <div className='min-h-screen flex flex-col bg-gray-50'>
       <Header />
-      <h2
-        className='text-xl font-bold mb-4 text-center'
-        style={{ marginTop: '20px' }}
-      >
-        My Bookings
-      </h2>
-      <div className='flex-grow flex justify-center'>
-        <div className='w-full max-w-5xl'>
-          <table className='min-w-full bg-white border border-gray-300 shadow-md text-sm'>
-            <thead>
-              <tr className='bg-gray-200'>
-                <th className='py-2 px-2 border'>STT</th>
-                <th className='py-2 px-2 border'>Tên Phòng</th>
-                <th className='py-2 px-2 border'>Thời gian bắt đầu</th>
-                <th className='py-2 px-2 border'>Thời gian kết thúc</th>
-                <th className='py-2 px-2 border'>Đặt phòng lúc</th>
-                <th className='py-2 px-2 border'>Mục đích</th>
-                <th className='py-2 px-2 border'>Mô tả</th>
-                <th className='py-2 px-2 border text-center'>Hành động</th>
+      <main className='container mx-auto px-4 py-8 flex-grow'>
+        <h2 className='text-2xl font-bold text-center mb-8'>My Bookings</h2>
+        <div className='overflow-x-auto shadow-lg rounded-lg'>
+          <table className='min-w-full bg-white'>
+            <thead className='bg-gradient-to-r from-blue-500 to-blue-600 text-white'>
+              <tr>
+                <th className='py-3 px-4 text-left'>No.</th>
+                <th className='py-3 px-4 text-left'>Room Name</th>
+                <th className='py-3 px-4 text-left'>Start Time</th>
+                <th className='py-3 px-4 text-left'>End Time</th>
+                <th className='py-3 px-4 text-left'>Booked At</th>
+                <th className='py-3 px-4 text-left'>Purpose</th>
+                <th className='py-3 px-4 text-left'>Description</th>
+                <th className='py-3 px-4 text-center'>Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className='divide-y divide-gray-200'>
               {bookings.map((booking, index) => (
                 <tr
                   key={booking.bookingId}
-                  className='border-b hover:bg-gray-100 transition'
+                  className='hover:bg-gray-100 transition'
                 >
-                  <td className='py-2 px-2 border'>{index + 1}</td>
-                  <td className='py-2 px-2 border'>{booking.roomName}</td>
-                  <td className='py-2 px-2 border'>{booking.startTime}</td>
-                  <td className='py-2 px-2 border'>{booking.endTime}</td>
-                  <td className='py-2 px-2 border'>{booking.createdAt}</td>
-                  <td className='py-2 px-2 border'>{booking.purpose}</td>
-                  <td className='py-2 px-2 border'>{booking.description}</td>
-                  <td className='py-2 px-2 border text-center'>
+                  <td className='py-3 px-4'>{index + 1}</td>
+                  <td className='py-3 px-4'>{booking.roomName}</td>
+                  <td className='py-3 px-4'>{booking.startTime}</td>
+                  <td className='py-3 px-4'>{booking.endTime}</td>
+                  <td className='py-3 px-4'>{booking.createdAt}</td>
+                  <td className='py-3 px-4'>{booking.purpose}</td>
+                  <td className='py-3 px-4'>{booking.description}</td>
+                  <td className='py-3 px-4 text-center'>
                     <button
-                      className='text-blue-500 hover:underline'
+                      className='text-blue-600 font-semibold hover:underline mr-2'
                       onClick={() => handleEdit(booking)}
                     >
-                      Sửa
+                      Edit
                     </button>
                     <button
-                      className='text-red-500 hover:underline ml-2'
+                      className='text-red-600 font-semibold hover:underline'
                       onClick={() => handleDelete(booking)}
                     >
-                      Hủy
+                      Cancel
                     </button>
                   </td>
                 </tr>
@@ -185,21 +184,25 @@ const MyRooms = () => {
             </tbody>
           </table>
         </div>
-      </div>
+      </main>
 
-      {/* Form sửa booking */}
+      {/* Edit Booking Modal */}
       {isEditing && selectedBooking && (
         <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
-          <div
-            className='bg-white p-4 rounded shadow-lg'
-            style={{ width: '350px' }}
-          >
-            <h3 className='text-lg justify-center font-bold mb-4'>
-              Sửa booking
+          <div className='bg-white rounded-lg shadow-xl w-full max-w-lg p-8 transform transition-all'>
+            <h3 className='text-2xl font-bold text-center mb-6'>
+              Edit Booking
             </h3>
+            {editError && (
+              <div className='bg-red-100 text-red-600 p-3 rounded mb-4 text-center'>
+                {editError}
+              </div>
+            )}
             <form>
-              <div className='mb-2'>
-                <label className='block'>Thời gian bắt đầu:</label>
+              <div className='mb-4'>
+                <label className='block text-gray-700 font-medium mb-2'>
+                  Start Time:
+                </label>
                 <input
                   type='datetime-local'
                   value={selectedBooking.startTime}
@@ -209,11 +212,13 @@ const MyRooms = () => {
                       startTime: e.target.value,
                     })
                   }
-                  className='border rounded w-full'
+                  className='w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
                 />
               </div>
-              <div className='mb-2'>
-                <label className='block'>Thời gian kết thúc:</label>
+              <div className='mb-4'>
+                <label className='block text-gray-700 font-medium mb-2'>
+                  End Time:
+                </label>
                 <input
                   type='datetime-local'
                   value={selectedBooking.endTime}
@@ -223,13 +228,14 @@ const MyRooms = () => {
                       endTime: e.target.value,
                     })
                   }
-                  className='border rounded w-full'
+                  className='w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
                 />
               </div>
-              <div className='mb-2'>
-                <label className='block'>Mục đích:</label>
-                <input
-                  type='text'
+              <div className='mb-4'>
+                <label className='block text-gray-700 font-medium mb-2'>
+                  Purpose:
+                </label>
+                <select
                   value={selectedBooking.purpose}
                   onChange={(e) =>
                     setSelectedBooking({
@@ -237,11 +243,19 @@ const MyRooms = () => {
                       purpose: e.target.value,
                     })
                   }
-                  className='border rounded w-full'
-                />
+                  className='w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                >
+                  <option value=''>-- Select Purpose --</option>
+                  <option value='INTERVIEW'>Interview</option>
+                  <option value='MEETING'>Meeting</option>
+                  <option value='TRAINING'>Training</option>
+                  <option value='CLIENT_MEETING'>Client Meeting</option>
+                </select>
               </div>
-              <div className='mb-2'>
-                <label className='block'>Mô tả:</label>
+              <div className='mb-4'>
+                <label className='block text-gray-700 font-medium mb-2'>
+                  Description:
+                </label>
                 <input
                   type='text'
                   value={selectedBooking.description}
@@ -251,23 +265,23 @@ const MyRooms = () => {
                       description: e.target.value,
                     })
                   }
-                  className='border rounded w-full'
+                  className='w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
                 />
               </div>
-              <div className='flex justify-center mt-4'>
+              <div className='flex justify-center space-x-4 mt-6'>
                 <button
                   type='button'
-                  className='border border-gray-300 text-blue-700 px-4 py-2 rounded mr-2 hover:bg-blue-300 hover:text-black'
+                  className='bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded transition'
                   onClick={saveBooking}
                 >
-                  Lưu
+                  Save
                 </button>
                 <button
                   type='button'
-                  className='border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 hover:text-black'
+                  className='bg-gray-600 hover:bg-gray-700 text-white font-semibold px-6 py-2 rounded transition'
                   onClick={closeEditForm}
                 >
-                  Hủy
+                  Cancel
                 </button>
               </div>
             </form>
@@ -275,33 +289,34 @@ const MyRooms = () => {
         </div>
       )}
 
-      {/* Form xác nhận hủy booking */}
+      {/* Cancel Booking Confirmation Modal */}
       {isConfirming && selectedBooking && (
         <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
-          <div className='bg-white p-4 rounded shadow-lg'>
-            <h3 className='text-lg font-bold mb-4'>Xác nhận hủy</h3>
-            <p>
-              Bạn có chắc chắn muốn hủy booking tại phòng "
-              {selectedBooking.roomName}" không?
+          <div className='bg-white rounded-lg shadow-xl w-full max-w-md p-8 transform transition-all'>
+            <h3 className='text-2xl font-bold text-center mb-6'>
+              Confirm Cancellation
+            </h3>
+            <p className='text-center text-gray-700 mb-6'>
+              Are you sure you want to cancel the booking for room "
+              {selectedBooking.roomName}"?
             </p>
-            <div className='flex justify-center mt-4'>
+            <div className='flex justify-center space-x-4'>
               <button
-                className='border border-red-500 text-red-500 px-4 py-2 rounded mr-2 hover:bg-red-500 hover:text-white'
+                className='bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-2 rounded transition'
                 onClick={cancelBooking}
               >
-                Có
+                Yes
               </button>
               <button
-                className='border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 hover:text-black'
+                className='bg-gray-600 hover:bg-gray-700 text-white font-semibold px-6 py-2 rounded transition'
                 onClick={cancelDelete}
               >
-                Hủy
+                Cancel
               </button>
             </div>
           </div>
         </div>
       )}
-
       <Footer />
     </div>
   );

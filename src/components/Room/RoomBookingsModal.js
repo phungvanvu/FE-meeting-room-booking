@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { isAccessTokenValid } from '../../utils/auth';
-import API_BASE_URL from '../../../config';
+import { isAccessTokenValid } from '../utils/auth';
+import API_BASE_URL from '../../config';
 
 export default function RoomBookingsModal({ roomId, onClose }) {
   const [bookings, setBookings] = useState([]);

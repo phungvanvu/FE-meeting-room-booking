@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Bell, ChevronDown, UserCircle } from 'lucide-react';
 import Cookies from 'js-cookie';
@@ -7,9 +7,9 @@ import { jwtDecode } from 'jwt-decode';
 export default function Header() {
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [userInfo, setUserInfo] = useState(null); // lưu thông tin người dùng
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
 
-  // Lấy accessToken và giải mã để lấy quyền (scope)
   const token = sessionStorage.getItem('accessToken');
   let roles = [];
   if (token) {
@@ -21,7 +21,6 @@ export default function Header() {
     }
   }
 
-  // Gọi API để lấy thông tin người dùng (my-info)
   useEffect(() => {
     if (token) {
       fetch('http://localhost:8080/MeetingRoomBooking/user/my-info', {
@@ -55,7 +54,6 @@ export default function Header() {
             body: JSON.stringify({ token: token }),
           },
         );
-
         if (response.ok) {
           sessionStorage.removeItem('accessToken');
           Cookies.remove('refreshToken');
@@ -72,90 +70,126 @@ export default function Header() {
     }
   };
 
+  // Dummy notifications data (empty array for no notifications)
+  const notifications = [];
+
   return (
-    <div className='bg-teal-600 text-white flex justify-between items-center px-6 py-4 shadow-md'>
-      {/* Logo */}
-      <Link to='/Home'>
-        <img
-          src='/Header/Logo.png'
-          alt='Logo'
-          className='h-10 cursor-pointer'
-        />
-      </Link>
-
-      {/* Navigation */}
-      <div className='flex items-center space-x-6'>
-        {/* Render link dựa theo quyền */}
-        {roles.includes('ROLE_USER') && (
-          <>
-            <Link to='/BookRoom' className='cursor-pointer hover:underline'>
-              Book Room
-            </Link>
-            <Link to='/Home' className='cursor-pointer hover:underline'>
-              Home
-            </Link>
-          </>
-        )}
-
-        {roles.includes('ROLE_ADMIN') && (
-          <>
-            <Link to='/ManageRoom' className='cursor-pointer hover:underline'>
-              Room Management
-            </Link>
-            <Link to='/Dashboard' className='cursor-pointer hover:underline'>
-              Dashboard
-            </Link>
-            <Link to='/ManageUser' className='cursor-pointer hover:underline'>
-              User Management
-            </Link>
-            <Link to='/BookRoom' className='cursor-pointer hover:underline'>
-              Book Room
-            </Link>
-            <Link to='/MyBookings' className='cursor-pointer hover:underline'>
-              My Bookings
-            </Link>
-            <Link to='/History' className='cursor-pointer hover:underline'>
-              History
-            </Link>
-            <Link to='/Home' className='cursor-pointer hover:underline'>
-              Home
-            </Link>
-          </>
-        )}
-
-        {/* Icon thông báo */}
-        <div className='relative cursor-pointer'>
-          <Bell className='h-6 w-6' />
-          <span className='absolute -top-2 -right-2 bg-red-500 text-xs text-white rounded-full px-1'>
-            6
-          </span>
+    <header className='bg-gradient-to-r from-teal-500 to-blue-500 text-white shadow-lg'>
+      <div className='container mx-auto px-4 py-4 flex items-center justify-between'>
+        {/* Logo & Branding */}
+        <div className='flex items-center'>
+          <Link to='/Home' className='flex items-center'>
+            <img src='logo512.png' alt='Logo' className='h-10 w-auto mr-3' />
+            <span className='text-2xl font-bold'>Meeting Room</span>
+          </Link>
         </div>
-
-        {/* Hồ sơ người dùng + Dropdown */}
-        <div className='relative'>
-          <div
-            className='flex items-center space-x-2 cursor-pointer'
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+        {/* Navigation Links */}
+        <nav className='hidden md:flex space-x-6'>
+          <Link to='/Home' className='hover:underline hover:text-gray-200'>
+            Trang chủ
+          </Link>
+          <Link to='/BookRoom' className='hover:underline hover:text-gray-200'>
+            Đặt phòng
+          </Link>
+          <Link
+            to='/MyBookings'
+            className='hover:underline hover:text-gray-200'
           >
-            <UserCircle className='h-8 w-8' />
-            <span>{userInfo ? userInfo.fullName : 'User'}</span>
-            <ChevronDown className='h-5 w-5' />
-          </div>
-          {isDropdownOpen && (
-            <div className='absolute right-0 mt-2 w-40 bg-white text-black shadow-md rounded-lg overflow-hidden z-50'>
-              <Link to='/Profile' className='block px-4 py-2 hover:bg-gray-100'>
-                Profile
-              </Link>
-              <button
-                onClick={handleLogout}
-                className='block w-full text-left px-4 py-2 hover:bg-gray-100'
+            Đặt của tôi
+          </Link>
+          <Link to='/History' className='hover:underline hover:text-gray-200'>
+            Lịch sử
+          </Link>
+          {roles.includes('ROLE_ADMIN') && (
+            <>
+              <Link
+                to='/Dashboard'
+                className='hover:underline hover:text-gray-200'
               >
-                Logout
-              </button>
-            </div>
+                Dashboard
+              </Link>
+              <Link
+                to='/ManageRoom'
+                className='hover:underline hover:text-gray-200'
+              >
+                Quản lý phòng
+              </Link>
+              <Link
+                to='/ManageUser'
+                className='hover:underline hover:text-gray-200'
+              >
+                Quản lý người dùng
+              </Link>
+            </>
           )}
+        </nav>
+        {/* Right: Notification & User Dropdown */}
+        <div className='flex items-center space-x-6'>
+          {/* Notification Icon */}
+          <div
+            className='relative cursor-pointer'
+            onClick={() => {
+              setIsNotifOpen(!isNotifOpen);
+              setIsDropdownOpen(false);
+            }}
+          >
+            <Bell className='h-6 w-6' />
+            <span className='absolute -top-2 -right-2 bg-red-500 text-xs text-white rounded-full px-1'>
+              {notifications.length}
+            </span>
+            {isNotifOpen && (
+              <div className='absolute right-0 mt-2 w-64 bg-white text-gray-800 shadow-md rounded-lg overflow-hidden z-50'>
+                {notifications.length > 0 ? (
+                  notifications.map((notif, idx) => (
+                    <div
+                      key={idx}
+                      className='px-4 py-2 border-b last:border-b-0 hover:bg-gray-100'
+                    >
+                      {notif}
+                    </div>
+                  ))
+                ) : (
+                  <div className='px-4 py-2 text-sm text-gray-500'>
+                    {/* Empty frame if no notifications */}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          {/* User Dropdown */}
+          <div className='relative ml-4'>
+            <div
+              className='flex items-center space-x-2 cursor-pointer'
+              onClick={() => {
+                setIsDropdownOpen(!isDropdownOpen);
+                setIsNotifOpen(false);
+              }}
+            >
+              <UserCircle className='h-8 w-8' />
+              <span className='hidden md:block font-medium'>
+                {userInfo ? userInfo.fullName : 'User'}
+              </span>
+              <ChevronDown className='h-5 w-5' />
+            </div>
+            {isDropdownOpen && (
+              <div className='absolute right-0 mt-2 w-40 bg-white text-gray-800 shadow-md rounded-lg overflow-hidden z-50'>
+                <Link
+                  to='/Profile'
+                  className='block px-4 py-2 hover:bg-gray-100'
+                >
+                  Hồ sơ
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className='block w-full text-left px-4 py-2 hover:bg-gray-100'
+                >
+                  Đăng xuất
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </header>
   );
 }
