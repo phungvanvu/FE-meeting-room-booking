@@ -19,6 +19,7 @@ import ManageGroup from './pages/Manager/ManageGroupPage';
 import MyBookings from './pages/User/MyBookingsPage';
 import History from './pages/User/HistoryPage';
 import Home from './pages/User/HomePage';
+import Profile from './pages/User/ProfilePage';
 
 function App() {
   const navigate = useNavigate();
@@ -77,6 +78,7 @@ function App() {
                 <Route path='/MyBookings' element={<MyBookings />} />
                 <Route path='/History' element={<History />} />
                 <Route path='/Home' element={<Home />} />
+                <Route path='/Profile' element={<Profile />} />
               </>
             );
           }
@@ -100,6 +102,7 @@ function App() {
                 <Route path='/MyBookings' element={<MyBookings />} />
                 <Route path='/History' element={<History />} />
                 <Route path='/Home' element={<Home />} />
+                <Route path='/Profile' element={<Profile />} />
               </>
             );
           }

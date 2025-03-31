@@ -4,13 +4,11 @@ import Footer from '../../components/Footer';
 import API_BASE_URL from '../../config';
 
 const History = () => {
-  // Input states
   const [searchTerm, setSearchTerm] = useState('');
   const [startDateTime, setStartDateTime] = useState('');
   const [endDateTime, setEndDateTime] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
 
-  // Filter parameters state (applied on Search click)
   const [filterParams, setFilterParams] = useState({
     searchTerm: '',
     startDateTime: '',
@@ -23,8 +21,6 @@ const History = () => {
   const [bookings, setBookings] = useState([]);
 
   const accessToken = sessionStorage.getItem('accessToken');
-
-  // Fetch the current user's bookings from API
   const fetchBookings = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/roombooking/MyBookings`, {
@@ -43,12 +39,9 @@ const History = () => {
       console.error('Error fetching bookings:', error);
     }
   };
-
   useEffect(() => {
     fetchBookings();
   }, []);
-
-  // Filter bookings based on filterParams
   const filteredBookings = bookings.filter((booking) => {
     const matchesSearchTerm = booking.roomName
       .toLowerCase()
@@ -71,7 +64,6 @@ const History = () => {
     startIndex + itemsPerPage,
   );
 
-  // Update filterParams when Search is clicked
   const handleSearch = () => {
     setFilterParams({
       searchTerm,

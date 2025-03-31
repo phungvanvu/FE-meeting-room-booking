@@ -12,7 +12,6 @@ const MyRooms = () => {
 
   const accessToken = sessionStorage.getItem('accessToken');
 
-  // Fetch the current user's upcoming bookings
   const fetchBookings = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/roombooking/upcoming/my`, {
@@ -36,20 +35,17 @@ const MyRooms = () => {
     fetchBookings();
   }, []);
 
-  // Open the edit booking form
   const handleEdit = (booking) => {
     setSelectedBooking(booking);
     setEditError(null);
     setIsEditing(true);
   };
 
-  // Open the cancel booking confirmation
   const handleDelete = (booking) => {
     setSelectedBooking(booking);
     setIsConfirming(true);
   };
 
-  // Save booking update and handle API errors
   const saveBooking = async () => {
     setEditError(null);
     const updatedBooking = {
@@ -94,7 +90,6 @@ const MyRooms = () => {
     }
   };
 
-  // Cancel booking by changing its status to CANCELLED
   const cancelBooking = async () => {
     try {
       const response = await fetch(
@@ -249,7 +244,7 @@ const MyRooms = () => {
                   <option value='INTERVIEW'>Interview</option>
                   <option value='MEETING'>Meeting</option>
                   <option value='TRAINING'>Training</option>
-                  <option value='CLIENT_MEETING'>Client Meeting</option>
+                  <option value='CLIENT_MEETING'>Meet customers/partners</option>
                 </select>
               </div>
               <div className='mb-4'>
