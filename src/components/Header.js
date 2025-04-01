@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Bell, ChevronDown, UserCircle } from 'lucide-react';
 import Cookies from 'js-cookie';
@@ -9,38 +9,20 @@ export default function Header() {
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const [userInfo, setUserInfo] = useState(null);
 
   const token = sessionStorage.getItem('accessToken');
   let roles = [];
+  let userName = 'User';
+
   if (token) {
     try {
       const decoded = jwtDecode(token);
       roles = decoded.scope || [];
+      userName = decoded.name || decoded.sub;
     } catch (error) {
       console.error('Invalid token', error);
     }
   }
-
-  useEffect(() => {
-    if (token) {
-      fetch(`${API_BASE_URL}/user/my-info`, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token ? `Bearer ${token}` : '',
-        },
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success) {
-            setUserInfo(data.data);
-          } else {
-            console.error('Error fetching my info:', data.error);
-          }
-        })
-        .catch((err) => console.error('Error fetching my info:', err));
-    }
-  }, [token]);
 
   const handleLogout = async () => {
     if (token) {
@@ -147,7 +129,7 @@ export default function Header() {
                   ))
                 ) : (
                   <div className='px-4 py-2 text-sm text-gray-500'>
-                    {/* Empty frame if no notifications */}
+                    No notifications.
                   </div>
                 )}
               </div>
@@ -163,9 +145,7 @@ export default function Header() {
               }}
             >
               <UserCircle className='h-8 w-8' />
-              <span className='hidden md:block font-medium'>
-                {userInfo ? userInfo.fullName : 'User'}
-              </span>
+              <span className='hidden md:block font-medium'>{userName}</span>
               <ChevronDown className='h-5 w-5' />
             </div>
             {isDropdownOpen && (

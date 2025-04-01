@@ -54,8 +54,9 @@ export default function Login() {
         }
       }
     } catch (err) {
-      console.error('Login error:', err);
-      setError('An error occurred while logging in. Please try again!');
+      setError(
+        err.message || 'An error occurred while logging in. Please try again!',
+      );
     } finally {
       setLoading(false);
     }
@@ -66,7 +67,6 @@ export default function Login() {
       <div className='w-full max-w-md bg-white p-8 shadow-lg rounded-xl'>
         <h2 className='text-3xl font-bold text-center text-gray-700'>Login</h2>
 
-        {/* Thông báo lỗi */}
         {error && (
           <p className='bg-red-100 border-l-4 border-red-500 text-red-700 p-3 rounded-md text-sm mt-4 text-center'>
             {error}
@@ -74,7 +74,6 @@ export default function Login() {
         )}
 
         <form className='mt-6' onSubmit={handleLogin}>
-          {/* Tên đăng nhập */}
           <div className='mb-4'>
             <label className='block text-gray-600 font-medium'>Username</label>
             <input
@@ -86,7 +85,6 @@ export default function Login() {
             />
           </div>
 
-          {/* Mật khẩu */}
           <div className='mb-4 relative'>
             <label className='block text-gray-600 font-medium'>Password</label>
             <input
@@ -106,7 +104,6 @@ export default function Login() {
             </button>
           </div>
 
-          {/* Nút Đăng nhập */}
           <button
             type='submit'
             disabled={loading}
@@ -117,7 +114,6 @@ export default function Login() {
             {loading ? 'Signing in...' : 'Login'}
           </button>
 
-          {/* Điều hướng */}
           <p className='mt-4 text-center text-gray-600'>
             <a href='#' className='text-blue-500 hover:underline'>
               Forgot password?
