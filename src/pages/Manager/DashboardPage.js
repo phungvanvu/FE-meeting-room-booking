@@ -166,9 +166,9 @@ const Dashboard = () => {
     ],
   });
 
-  const monthlyChartData = formatChartData(monthlyBookings, 'Tháng');
-  const weeklyChartData = formatChartData(weeklyBookings, 'Tuần');
-  const quarterlyChartData = formatChartData(quarterlyBookings, 'Quý');
+  const monthlyChartData = formatChartData(monthlyBookings, 'Month');
+  const weeklyChartData = formatChartData(weeklyBookings, 'Week');
+  const quarterlyChartData = formatChartData(quarterlyBookings, 'Quarter');
 
   return (
     <div className='min-h-screen flex flex-col'>
@@ -260,7 +260,7 @@ const Dashboard = () => {
             <div className='bg-white p-6 rounded-lg shadow-lg hover:shadow-2xl transition'>
               <p className='text-xl font-bold'>{mostBookedRoom.roomName}</p>
               <p className='mt-2 text-gray-600'>
-                Số lượt đặt: {mostBookedRoom.bookingCount}
+                Count: {mostBookedRoom.bookingCount}
               </p>
             </div>
           ) : (

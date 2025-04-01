@@ -73,7 +73,6 @@ export default function RoomCalendar({ roomName, refreshCalendar }) {
         setLoading(false);
       }
     };
-
     fetchRoomBookings();
   }, [roomName, setFilteredEvents, refreshCalendar, accessToken]);
 
@@ -135,7 +134,7 @@ export default function RoomCalendar({ roomName, refreshCalendar }) {
       <span style="color: ${getEventColor(info.event.extendedProps.status)};">
         BookingStatus: ${info.event.extendedProps.status}
       </span><br />
-      Note: ${info.event.extendedProps.note || 'Không có'}
+      Note: ${info.event.extendedProps.note || 'Not thing'}
     `;
           tooltip.className = 'custom-tooltip';
           document.body.appendChild(tooltip);

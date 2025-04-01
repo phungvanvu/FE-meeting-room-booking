@@ -12,7 +12,6 @@ export default function EventModal({ onBookingSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Define default values for eventData
   const defaultEventData = {
     roomId: '',
     bookedById: '',
@@ -22,7 +21,6 @@ export default function EventModal({ onBookingSuccess }) {
     description: '',
   };
 
-  // Fetch roomId from API based on roomName
   useEffect(() => {
     const fetchRoomId = async () => {
       setLoading(true);
@@ -48,7 +46,6 @@ export default function EventModal({ onBookingSuccess }) {
         setLoading(false);
       }
     };
-
     if (roomName) fetchRoomId();
   }, [roomName, setEventData, accessToken]);
 
@@ -81,21 +78,17 @@ export default function EventModal({ onBookingSuccess }) {
         setLoading(false);
       }
     };
-
     fetchUserInfo();
   }, [setEventData, accessToken]);
 
-  // Handle input changes and clear error message
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (error) setError('');
     setEventData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Dedicated close handler to reset form data
   const handleClose = () => {
     setShowEventModal(false);
-    // Reset eventData to default values when modal closes
     setEventData({ ...defaultEventData });
   };
 
@@ -110,7 +103,6 @@ export default function EventModal({ onBookingSuccess }) {
     const startTimeObj = new Date(eventData.startTime);
     const endTimeObj = new Date(eventData.endTime);
 
-    // Validate date objects
     if (isNaN(startTimeObj.getTime()) || isNaN(endTimeObj.getTime())) {
       setError('Invalid time value. Please check your input.');
       return;
@@ -121,7 +113,6 @@ export default function EventModal({ onBookingSuccess }) {
       return;
     }
 
-    // Adjust time to UTC+0 if needed
     startTimeObj.setHours(
       startTimeObj.getHours() - startTimeObj.getTimezoneOffset() / 60,
     );
@@ -152,7 +143,6 @@ export default function EventModal({ onBookingSuccess }) {
       const result = await response.json();
       if (result.success) {
         onBookingSuccess();
-        // Reset form data on success before closing modal
         setEventData({ ...defaultEventData });
         setShowEventModal(false);
         setSuccessMessage('');
@@ -198,7 +188,6 @@ export default function EventModal({ onBookingSuccess }) {
         <h2 className='text-2xl font-bold text-gray-800 mb-6 text-center'>
           Book a Room
         </h2>
-
         {error && <p className='text-red-500 text-center mb-4'>{error}</p>}
         {successMessage && (
           <p className='text-green-500 text-center mb-4'>{successMessage}</p>
@@ -206,11 +195,10 @@ export default function EventModal({ onBookingSuccess }) {
         {loading && (
           <p className='text-blue-500 text-center mb-4'>Processing...</p>
         )}
-
         <form className='space-y-5' onSubmit={handleSubmit}>
           <input type='hidden' name='roomId' value={eventData.roomId || ''} />
 
-          {/* Title (Purpose) */}
+          {/* Purpose */}
           <div>
             <label className='block text-sm font-medium text-gray-700 mb-1'>
               Title
@@ -221,7 +209,7 @@ export default function EventModal({ onBookingSuccess }) {
               onChange={handleChange}
               className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400'
             >
-              <option value=''>Choose Title</option>
+              <option value=''>Choose Purpose</option>
               <option value='INTERVIEW'>Interview</option>
               <option value='MEETING'>Meeting</option>
               <option value='TRAINING'>Training</option>
