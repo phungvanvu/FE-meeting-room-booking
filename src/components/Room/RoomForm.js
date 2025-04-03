@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
-const availableEquipments = [
-  'Projector',
-  'Monitor',
-  'HDMI',
-  'Whiteboard',
-  'Microphone',
-  'Speaker',
-];
+import API_BASE_URL from '../../config';
 
 export default function RoomForm({ initialData, onSubmit, onCancel }) {
   const [roomName, setRoomName] = useState('');
@@ -20,8 +12,30 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [equipmentOptions, setEquipmentOptions] = useState([]);
 
   useEffect(() => {
+    // Fetch equipment data when the component mounts
+    const fetchEquipment = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/equipment`, {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem('accessToken')}`,
+          },
+        });
+        const data = await response.json();
+        if (data.success) {
+          setEquipmentOptions(data.data);
+        } else {
+          setErrorMessage('Failed to fetch equipment');
+        }
+      } catch (error) {
+        setErrorMessage('Error fetching equipment');
+      }
+    };
+
+    fetchEquipment();
+
     if (initialData) {
       setRoomName(initialData.roomName || '');
       setLocation(initialData.location || '');
@@ -108,7 +122,7 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
         {/* Room Name */}
         <div>
           <label className='block text-sm font-medium text-gray-700 mb-1'>
-            Room Name
+            Room Name <span className='text-red-500 text-2xl'>*</span>
           </label>
           <input
             type='text'
@@ -122,7 +136,7 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
         {/* Location */}
         <div>
           <label className='block text-sm font-medium text-gray-700 mb-1'>
-            Location
+            Location <span className='text-red-500 text-2xl'>*</span>
           </label>
           <input
             type='text'
@@ -136,7 +150,7 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
         {/* Capacity */}
         <div>
           <label className='block text-sm font-medium text-gray-700 mb-1'>
-            Capacity
+            Capacity <span className='text-red-500 text-2xl'>*</span>
           </label>
           <div className='flex items-center space-x-4'>
             {['6', '8', '10', '12'].map((option) => (
@@ -211,18 +225,18 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
             Equipments
           </label>
           <div className='flex flex-wrap gap-2'>
-            {availableEquipments.map((device) => (
+            {equipmentOptions.map((device) => (
               <button
-                key={device}
+                key={device.equipmentName}
                 type='button'
-                onClick={() => toggleEquipment(device)}
+                onClick={() => toggleEquipment(device.equipmentName)}
                 className={`px-3 py-1 rounded-full text-sm border transition-all ${
-                  facilities.includes(device)
+                  facilities.includes(device.equipmentName)
                     ? 'bg-blue-500 text-white border-blue-500'
                     : 'border-gray-300 text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                {device}
+                {device.equipmentName}
               </button>
             ))}
           </div>
@@ -257,46 +271,38 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
                       strokeLinecap='round'
                       strokeLinejoin='round'
                       strokeWidth='2'
-                      d='M7 16V4m0 0l-3 3m3-3l3 3M17 16v-8m0 0l-3 3m3-3l3 3'
-                    ></path>
+                      d='M7 16V4m0 0l-3 3m3-3l3 3M17 16v-8m0 0l3 3m-3-3l-3 3'
+                    />
                   </svg>
-                  <p className='mb-2 text-sm text-gray-600'>
-                    <span className='font-semibold'>Click to upload</span> or
-                    drag & drop
-                  </p>
-                  <p className='text-xs text-gray-500'>
-                    SVG, PNG, JPG (max 2MB)
-                  </p>
+                  <p className='text-sm text-gray-500'>Click to upload</p>
                 </div>
               )}
-              <input
-                id='file-upload'
-                type='file'
-                accept='image/*'
-                onChange={handleImageChange}
-                className='hidden'
-              />
             </label>
+            <input
+              id='file-upload'
+              type='file'
+              accept='image/*'
+              onChange={handleImageChange}
+              className='hidden'
+            />
           </div>
         </div>
 
-        {/* Submit and Cancel Buttons */}
-        <div className='flex justify-end gap-4 mt-4'>
+        {/* Submit Button */}
+        <div className='flex justify-end gap-3 mt-4'>
+          <button
+            type='button'
+            onClick={onCancel}
+            className='px-4 py-2 bg-gray-300 text-gray-700 rounded-md'
+          >
+            Cancel
+          </button>
           <button
             type='submit'
-            className='py-2 px-5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition'
+            className='px-4 py-2 bg-blue-500 text-white rounded-md'
           >
-            {initialData ? 'Update Room' : 'Add Room'}
+            Save
           </button>
-          {onCancel && (
-            <button
-              type='button'
-              onClick={onCancel}
-              className='py-2 px-5 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition'
-            >
-              Cancel
-            </button>
-          )}
         </div>
       </form>
     </div>

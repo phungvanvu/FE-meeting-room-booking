@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../../config';
 import Header from '../../components/Header';
@@ -8,29 +8,24 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 const UserManagement = () => {
   const navigate = useNavigate();
 
-  // State dữ liệu người dùng từ API
+  // States for filtering and pagination from API response
   const [users, setUsers] = useState([]);
-  const [filteredUsers, setFilteredUsers] = useState([]);
-
-  // State cho bộ lọc
   const [searchTerm, setSearchTerm] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState('');
   const [selectedGroups, setSelectedGroups] = useState([]);
-  const [selectedDepartments, setSelectedDepartments] = useState([]);
   const [selectedRoles, setSelectedRoles] = useState([]);
-
-  // State cho foreign key (role, position, group)
+  const [selectedPositions, setSelectedPositions] = useState([]);
   const [roleOptions, setRoleOptions] = useState([]);
   const [positionOptions, setPositionOptions] = useState([]);
   const [groupOptions, setGroupOptions] = useState([]);
+  const [totalPages, setTotalPages] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 10;
 
-  // State cho form và xác nhận xóa
   const [showForm, setShowForm] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
-
   const [errorMessage, setErrorMessage] = useState('');
-
-  // State cho dữ liệu form
   const [formData, setFormData] = useState({
     userName: '',
     fullName: '',
@@ -43,11 +38,6 @@ const UserManagement = () => {
     roles: [],
   });
 
-  // State phân trang
-  const [currentPage, setCurrentPage] = useState(1);
-  const usersPerPage = 10;
-
-  // Hàm helper để lấy headers với accessToken
   const getAuthHeaders = () => {
     const accessToken = sessionStorage.getItem('accessToken');
     return {
@@ -56,15 +46,31 @@ const UserManagement = () => {
     };
   };
 
-  // Lấy danh sách người dùng từ API
   const fetchUsers = () => {
-    fetch(`${API_BASE_URL}/user`, {
-      headers: getAuthHeaders(),
-    })
+    let url = `${API_BASE_URL}/user/search?`;
+    if (searchTerm) {
+      url += `fullName=${encodeURIComponent(searchTerm)}&`;
+    }
+    if (departmentFilter) {
+      url += `department=${encodeURIComponent(departmentFilter)}&`;
+    }
+    if (selectedGroups.length > 0) {
+      url += `group=${encodeURIComponent(selectedGroups.join(','))}&`;
+    }
+    if (selectedRoles.length > 0) {
+      url += `roles=${encodeURIComponent(selectedRoles.join(','))}&`;
+    }
+    if (selectedPositions.length > 0) {
+      url += `position=${encodeURIComponent(selectedPositions.join(','))}&`;
+    }
+    url += `page=${currentPage - 1}&size=${usersPerPage}`;
+
+    fetch(url, { headers: getAuthHeaders() })
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
-          setUsers(data.data);
+          setUsers(data.data.content);
+          setTotalPages(data.data.totalPages);
         } else {
           console.error('Error fetching users:', data.error);
         }
@@ -72,91 +78,46 @@ const UserManagement = () => {
       .catch((err) => console.error(err));
   };
 
-  // Lấy danh sách foreign key từ API
   const fetchForeignData = () => {
-    // Roles
     fetch(`${API_BASE_URL}/role`, { headers: getAuthHeaders() })
       .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          setRoleOptions(data.data);
-        } else {
-          console.error('Error fetching roles:', data.error);
-        }
-      })
+      .then((data) => data.success && setRoleOptions(data.data))
       .catch((err) => console.error(err));
-    // Positions
+
     fetch(`${API_BASE_URL}/position`, { headers: getAuthHeaders() })
       .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          setPositionOptions(data.data);
-        } else {
-          console.error('Error fetching positions:', data.error);
-        }
-      })
+      .then((data) => data.success && setPositionOptions(data.data))
       .catch((err) => console.error(err));
-    // Groups
+
     fetch(`${API_BASE_URL}/group`, { headers: getAuthHeaders() })
       .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          setGroupOptions(data.data);
-        } else {
-          console.error('Error fetching groups:', data.error);
-        }
-      })
+      .then((data) => data.success && setGroupOptions(data.data))
       .catch((err) => console.error(err));
   };
 
   useEffect(() => {
-    fetchUsers();
     fetchForeignData();
   }, []);
 
-  // Khi danh sách users thay đổi, cập nhật filteredUsers
   useEffect(() => {
-    setFilteredUsers(users);
-  }, [users]);
+    fetchUsers();
+  }, [currentPage]);
 
-  // Hàm lọc người dùng theo search term, nhóm, phòng ban và vai trò
-  const handleSearch = useCallback(() => {
-    const filtered = users.filter((user) => {
-      const matchesSearchTerm =
-        user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.phoneNumber.includes(searchTerm);
-      const matchesGroup =
-        selectedGroups.length === 0 || selectedGroups.includes(user.groupName);
-      const matchesDepartment =
-        selectedDepartments.length === 0 ||
-        selectedDepartments.includes(user.department);
-      const matchesRole =
-        selectedRoles.length === 0 ||
-        selectedRoles.some((r) => user.roles.includes(r));
-      return (
-        matchesSearchTerm && matchesGroup && matchesDepartment && matchesRole
-      );
-    });
-    setFilteredUsers(filtered);
+  const handleSearch = () => {
     setCurrentPage(1);
-  }, [searchTerm, selectedGroups, selectedDepartments, selectedRoles, users]);
+    fetchUsers();
+  };
 
-  // Reset bộ lọc
   const resetFilters = () => {
     setSearchTerm('');
+    setDepartmentFilter('');
     setSelectedGroups([]);
-    setSelectedDepartments([]);
     setSelectedRoles([]);
-    setFilteredUsers(users);
+    setSelectedPositions([]);
     setCurrentPage(1);
+    fetchUsers();
   };
 
-  const navigateToGroupManagement = () => {
-    navigate('/group-management');
-  };
-
-  // Xử lý thêm người dùng: reset form và mở form
   const handleAddUser = () => {
     setCurrentUser(null);
     setFormData({
@@ -173,7 +134,6 @@ const UserManagement = () => {
     setShowForm(true);
   };
 
-  // Xử lý sửa người dùng: điền dữ liệu hiện có vào form
   const handleEditUser = (user) => {
     setCurrentUser(user);
     setFormData({
@@ -183,113 +143,75 @@ const UserManagement = () => {
       phoneNumber: user.phoneNumber,
       department: user.department,
       group: user.groupName,
-      password: '', // Để trống nếu không muốn đổi password
+      password: '',
       position: user.positionName || '',
       roles: user.roles,
     });
     setShowForm(true);
   };
 
-  // Lưu người dùng (thêm hoặc sửa)
-  // Lưu người dùng (thêm hoặc sửa)
   const saveUser = () => {
-    if (currentUser) {
-      // Sửa: chỉ gửi password nếu có giá trị
-      const updateBody = {
-        userName: formData.userName,
-        fullName: formData.fullName,
-        email: formData.email,
-        phoneNumber: formData.phoneNumber,
-        department: formData.department,
-        group: formData.group,
-        position: formData.position,
-        roles: formData.roles,
-        enabled: true,
-      };
-      if (formData.password.trim() !== '') {
-        updateBody.password = formData.password;
-      }
-      fetch(`${API_BASE_URL}/user/${currentUser.userId}`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(updateBody),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success) {
-            fetchUsers();
-            setShowForm(false);
-          } else {
-            // Hiển thị thông báo lỗi từ API
-            setErrorMessage(
-              data.error?.message || 'Có lỗi xảy ra khi cập nhật người dùng',
-            );
-          }
-        })
-        .catch((err) => {
-          console.error(err);
-          setErrorMessage(err.message || 'Lỗi kết nối đến server.');
-        });
-    } else {
-      // Thêm: gọi POST
-      fetch(`${API_BASE_URL}/user`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          userName: formData.userName,
-          fullName: formData.fullName,
-          email: formData.email,
-          phoneNumber: formData.phoneNumber,
-          department: formData.department,
-          group: formData.group,
-          password: formData.password,
-          position: formData.position,
-          roles: formData.roles,
-          enabled: true,
-        }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success) {
-            fetchUsers();
-            setShowForm(false);
-          } else {
-            // Hiển thị thông báo lỗi từ API
-            setErrorMessage(
-              data.error?.message || 'Có lỗi xảy ra khi thêm người dùng',
-            );
-          }
-        })
-        .catch((err) => {
-          console.error(err);
-          setErrorMessage(err.message || 'Lỗi kết nối đến server.');
-        });
+    const requestBody = {
+      userName: formData.userName,
+      fullName: formData.fullName,
+      email: formData.email,
+      phoneNumber: formData.phoneNumber,
+      department: formData.department,
+      group: formData.group,
+      position: formData.position,
+      roles: formData.roles,
+      enabled: true,
+    };
+
+    if (formData.password.trim()) {
+      requestBody.password = formData.password;
     }
+
+    const url = currentUser
+      ? `${API_BASE_URL}/user/${currentUser.userId}`
+      : `${API_BASE_URL}/user`;
+
+    fetch(url, {
+      method: currentUser ? 'PUT' : 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(requestBody),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          fetchUsers();
+          setShowForm(false);
+        } else {
+          setErrorMessage(data.error?.message || 'Error saving user');
+        }
+      })
+      .catch((err) =>
+        setErrorMessage(err.message || 'Server connection error.'),
+      );
   };
 
-  // Xử lý khi muốn xóa người dùng: lưu lại user hiện hành và mở dialog xác nhận
   const handleDeleteUser = (user) => {
     setCurrentUser(user);
     setShowConfirmDelete(true);
   };
 
-  // Xác nhận xóa người dùng
   const confirmDelete = () => {
-    if (currentUser) {
-      fetch(`${API_BASE_URL}/user/${currentUser.userId}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders(),
+    if (!currentUser) return;
+
+    fetch(`${API_BASE_URL}/user/${currentUser.userId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          fetchUsers();
+        } else {
+          console.error('Error deleting user', data.error);
+        }
       })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success) {
-            fetchUsers();
-          } else {
-            console.error('Error deleting user', data.error);
-          }
-        })
-        .catch((err) => console.error(err));
-    }
+      .catch((err) => console.error(err));
+
     setShowConfirmDelete(false);
   };
 
@@ -297,79 +219,118 @@ const UserManagement = () => {
     setShowConfirmDelete(false);
   };
 
-  useEffect(() => {
-    handleSearch();
-  }, [handleSearch]);
-
-  // Phân trang
-  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
-  const startIndex = (currentPage - 1) * usersPerPage;
-  const currentUsers = filteredUsers.slice(
-    startIndex,
-    startIndex + usersPerPage,
-  );
-
-  // Xử lý thay đổi input form
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Hàm xuất Excel
-  const exportToExcel = () => {
-    fetch(`${API_BASE_URL}/statistical/export-user-excel`, {
-      headers: getAuthHeaders(),
-      method: 'GET',
-    })
-      .then((res) => res.blob())
-      .then((blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'users.xlsx';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-      })
-      .catch((err) => console.error('Error exporting Excel:', err));
-  };
+  const exportToExcel = async () => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/statistical/export-user-excel`,
+        {
+          headers: getAuthHeaders(),
+        },
+      );
+      if (!response.ok) throw new Error('Error downloading file');
+      const disposition = response.headers.get('Content-Disposition');
+      const filenameMatch = disposition && disposition.match(/filename="(.+)"/);
+      let filename = filenameMatch && filenameMatch[1];
 
-  // Tính toán danh sách phòng ban duy nhất từ users
-  const departmentOptions = React.useMemo(() => {
-    const departments = new Set();
-    users.forEach((user) => {
-      if (user.department) {
-        departments.add(user.department);
+      if (!filename) {
+        const date = new Date();
+        const vietnamTime = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+        const formattedTime = vietnamTime
+          .toISOString()
+          .replace(/T/, '_')
+          .replace(/:/g, '-')
+          .split('.')[0];
+        filename = `users_${formattedTime}.xlsx`;
       }
-    });
-    return Array.from(departments);
-  }, [users]);
+      const blob = await response.blob();
+
+      // Tạo một liên kết tạm thời để tải tệp về
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename; // Dùng tên tệp đã xử lý
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(link.href);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+    }
+  };
 
   return (
     <div className='min-h-screen flex flex-col bg-gray-50'>
       <Header />
       <div className='flex-grow mx-auto mt-10 flex gap-4 mb-10 px-6 w-full'>
-        {/* Bộ lọc - Sidebar */}
-        <div className='w-1/5 bg-white p-6 rounded-2xl shadow-md border border-gray-200 flex flex-col max-h-[calc(100vh-120px)] overflow-y-auto'>
+        {/* Filter Sidebar */}
+        <div className='w-1/5 bg-white p-6 rounded-2xl shadow-md border border-gray-200 flex flex-col'>
           <h2 className='text-xl font-semibold mb-5 text-gray-800'>Filter</h2>
-          {/* Tìm kiếm theo tên/số điện thoại */}
+          {/* Search by Name*/}
           <div className='mb-4'>
             <label className='block text-sm font-bold text-gray-700 mb-2'>
-              Nhập tên / SĐT
+              Enter Name
             </label>
             <input
               type='text'
-              placeholder='Nhập tên hoặc số điện thoại...'
+              placeholder='Enter name...'
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className='w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none bg-gray-50 hover:bg-gray-100 transition-all shadow-sm'
+              className='w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50 hover:bg-gray-100 transition-all shadow-sm'
             />
           </div>
-          {/* Checkbox Nhóm */}
+          {/* Department Input */}
           <div className='mb-4'>
             <label className='block text-sm font-bold text-gray-700 mb-2'>
-              Nhóm
+              Department
+            </label>
+            <input
+              type='text'
+              placeholder='Enter department...'
+              value={departmentFilter}
+              onChange={(e) => setDepartmentFilter(e.target.value)}
+              className='w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50 hover:bg-gray-100 transition-all shadow-sm'
+            />
+          </div>
+          {/* Position Filter */}
+          <div className='mb-4'>
+            <label className='block text-sm font-bold text-gray-700 mb-2'>
+              Position
+            </label>
+            <div className='border border-gray-300 rounded-lg p-3 bg-gray-50 hover:bg-gray-100 transition-all'>
+              {positionOptions.map((position) => (
+                <label
+                  key={position.positionName}
+                  className='flex items-center space-x-2 py-1 cursor-pointer'
+                >
+                  <input
+                    type='checkbox'
+                    value={position.positionName}
+                    checked={selectedPositions.includes(position.positionName)}
+                    onChange={() => {
+                      setSelectedPositions((prev) =>
+                        prev.includes(position.positionName)
+                          ? prev.filter((p) => p !== position.positionName)
+                          : [...prev, position.positionName],
+                      );
+                    }}
+                    className='h-4 w-4 border-gray-300 rounded text-blue-500 focus:ring-blue-400'
+                  />
+                  <span className='text-sm text-gray-700'>
+                    {position.positionName}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Group Filter */}
+          <div className='mb-4'>
+            <label className='block text-sm font-bold text-gray-700 mb-2'>
+              Group
             </label>
             <div className='border border-gray-300 rounded-lg p-3 bg-gray-50 hover:bg-gray-100 transition-all'>
               {groupOptions.map((group) => (
@@ -397,39 +358,10 @@ const UserManagement = () => {
               ))}
             </div>
           </div>
-          {/* Checkbox Phòng ban */}
+          {/* Role Filter */}
           <div className='mb-4'>
             <label className='block text-sm font-bold text-gray-700 mb-2'>
-              Phòng ban
-            </label>
-            <div className='border border-gray-300 rounded-lg p-3 bg-gray-50 hover:bg-gray-100 transition-all'>
-              {departmentOptions.map((dept) => (
-                <label
-                  key={dept}
-                  className='flex items-center space-x-2 cursor-pointer py-1'
-                >
-                  <input
-                    type='checkbox'
-                    value={dept}
-                    checked={selectedDepartments.includes(dept)}
-                    onChange={() => {
-                      setSelectedDepartments((prev) =>
-                        prev.includes(dept)
-                          ? prev.filter((d) => d !== dept)
-                          : [...prev, dept],
-                      );
-                    }}
-                    className='h-4 w-4 border-gray-300 rounded text-blue-500 focus:ring-blue-400'
-                  />
-                  <span className='text-sm text-gray-700'>{dept}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-          {/* Vai trò */}
-          <div className='mb-4'>
-            <label className='block text-sm font-bold text-gray-700 mb-2'>
-              Vai trò
+              Role
             </label>
             <div className='flex flex-wrap gap-2'>
               {roleOptions.map((role) => (
@@ -453,8 +385,7 @@ const UserManagement = () => {
               ))}
             </div>
           </div>
-
-          {/* Nút Reset & Search */}
+          {/* Reset & Search Buttons */}
           <div className='flex justify-between mt-auto pt-4 border-t border-gray-200'>
             <button
               onClick={resetFilters}
@@ -470,116 +401,113 @@ const UserManagement = () => {
             </button>
           </div>
         </div>
-
-        {/* Bảng danh sách người dùng */}
+        {/* User List */}
         <div className='w-4/5'>
           <div className='flex justify-between items-center mb-6'>
-            <h2 className='text-2xl font-bold text-gray-800'>
-              Danh sách người dùng
-            </h2>
+            <h2 className='text-2xl font-bold text-gray-800'>User List</h2>
             <div className='flex gap-3'>
               <button
                 onClick={handleAddUser}
-                className='border border-blue-700 text-blue-700 rounded py-2 px-4 hover:bg-blue-700 hover:text-white transition'
+                className='bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow transition'
               >
-                Thêm
+                Add User
               </button>
+
               <button
                 onClick={exportToExcel}
-                className='bg-white border border-yellow-500 text-yellow-500 rounded py-2 px-4 hover:bg-yellow-500 hover:text-white transition'
+                className='bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg shadow transition'
               >
-                Excel
+                Export Excel
               </button>
             </div>
           </div>
-
           <div className='overflow-x-auto bg-white rounded-xl shadow-md'>
             <table className='min-w-full table-fixed'>
               <thead className='bg-gray-200'>
                 <tr>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider break-words'>
-                    STT
+                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    No.
                   </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider break-words'>
-                    Tên
+                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    Name
                   </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider break-words'>
+                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                     Username
                   </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider break-words'>
+                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                     Email
                   </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider break-words'>
-                    SĐT
+                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    Phone
                   </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider break-words'>
-                    Nhóm
+                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    Group
                   </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider break-words'>
-                    Vị Trí
+                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    Position
                   </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider break-words'>
-                    Phòng ban
+                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    Department
                   </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider break-words'>
-                    Vai trò
+                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    Roles
                   </th>
-                  <th className='px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider break-words'>
-                    Hành động
+                  <th className='px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    Actions
                   </th>
                 </tr>
               </thead>
               <tbody className='bg-white divide-y divide-gray-200'>
-                {currentUsers.map((user, index) => (
+                {users.map((user, index) => (
                   <tr key={user.userId} className='hover:bg-gray-50 transition'>
-                    <td className='px-6 py-4 whitespace-normal break-words'>
-                      {startIndex + index + 1}
+                    <td className='px-6 py-4 whitespace-normal'>
+                      {(currentPage - 1) * usersPerPage + index + 1}
                     </td>
-                    <td className='px-6 py-4 whitespace-normal break-words font-medium text-gray-900'>
+                    <td className='px-6 py-4 whitespace-normal font-medium text-gray-900'>
                       {user.fullName}
                     </td>
-                    <td className='px-6 py-4 whitespace-normal break-words'>
+                    <td className='px-6 py-4 whitespace-normal'>
                       {user.userName}
                     </td>
-                    <td className='px-6 py-4 whitespace-normal break-words'>
+                    <td className='px-6 py-4 whitespace-normal'>
                       {user.email}
                     </td>
-                    <td className='px-6 py-4 whitespace-normal break-words'>
+                    <td className='px-6 py-4 whitespace-normal'>
                       {user.phoneNumber}
                     </td>
-                    <td className='px-6 py-4 whitespace-normal break-words'>
+                    <td className='px-6 py-4 whitespace-normal'>
                       {user.groupName}
                     </td>
-                    <td className='px-6 py-4 whitespace-normal break-words'>
+                    <td className='px-6 py-4 whitespace-normal'>
                       {user.positionName}
                     </td>
-                    <td className='px-6 py-4 whitespace-normal break-words'>
+                    <td className='px-6 py-4 whitespace-normal'>
                       {user.department}
                     </td>
-                    <td className='px-6 py-4 whitespace-normal break-words'>
+                    <td className='px-6 py-4 whitespace-normal'>
                       <div className='flex flex-wrap gap-1'>
                         {user.roles.map((role, idx) => (
                           <span
                             key={idx}
-                            className='px-2 py-1 bg-blue-100 text-blue-600 text-xs font-semibold rounded-full break-words'
+                            className='px-2 py-1 bg-blue-100 text-blue-600 text-xs font-semibold rounded-full'
                           >
                             {role}
                           </span>
                         ))}
                       </div>
                     </td>
-                    <td className='px-6 py-4 whitespace-normal break-words text-center'>
+                    <td className='px-6 py-4 whitespace-normal text-center'>
                       <button
                         onClick={() => handleEditUser(user)}
                         className='text-blue-500 hover:text-blue-700 transition mr-2 text-sm font-medium'
                       >
-                        Sửa
+                        Edit
                       </button>
                       <button
                         onClick={() => handleDeleteUser(user)}
                         className='text-red-500 hover:text-red-700 transition text-sm font-medium'
                       >
-                        Xóa
+                        Delete
                       </button>
                     </td>
                   </tr>
@@ -587,11 +515,9 @@ const UserManagement = () => {
               </tbody>
             </table>
           </div>
-
-          {/* Phân trang */}
+          {/* Pagination */}
           {totalPages > 1 && (
             <div className='flex justify-center items-center mt-8 gap-2'>
-              {/* Nút chuyển trang trước */}
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
@@ -603,8 +529,6 @@ const UserManagement = () => {
               >
                 <ChevronLeft size={18} />
               </button>
-
-              {/* Các số trang */}
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(
                 (page) => (
                   <button
@@ -620,8 +544,6 @@ const UserManagement = () => {
                   </button>
                 ),
               )}
-
-              {/* Nút chuyển trang sau */}
               <button
                 onClick={() =>
                   setCurrentPage((prev) => Math.min(prev + 1, totalPages))
@@ -639,14 +561,12 @@ const UserManagement = () => {
           )}
         </div>
       </div>
-
       {showForm && (
         <div className='fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50'>
           <div className='bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4'>
             <div className='border-b px-6 py-4'>
               <h2 className='text-2xl font-bold text-gray-800'>
-                {currentUser ? 'Sửa người dùng' : 'Thêm người dùng'}
-                {/* thông báo lỗi*/}
+                {currentUser ? 'Edit User' : 'Add User'}
                 {errorMessage && (
                   <div className='mt-3 p-3 bg-red-100 text-red-700 rounded text-sm text-center'>
                     {errorMessage}
@@ -664,7 +584,7 @@ const UserManagement = () => {
               <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Tên:
+                    Name:
                   </label>
                   <input
                     type='text'
@@ -672,7 +592,7 @@ const UserManagement = () => {
                     value={formData.fullName}
                     onChange={handleInputChange}
                     className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
-                    placeholder='Nhập tên đầy đủ...'
+                    placeholder='Enter full name...'
                   />
                 </div>
                 <div>
@@ -685,7 +605,7 @@ const UserManagement = () => {
                     value={formData.userName}
                     onChange={handleInputChange}
                     className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
-                    placeholder='Nhập username...'
+                    placeholder='Enter username...'
                   />
                 </div>
                 <div>
@@ -703,7 +623,7 @@ const UserManagement = () => {
                 </div>
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    SĐT:
+                    Phone:
                   </label>
                   <input
                     type='text'
@@ -711,12 +631,12 @@ const UserManagement = () => {
                     value={formData.phoneNumber}
                     onChange={handleInputChange}
                     className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
-                    placeholder='Nhập số điện thoại...'
+                    placeholder='Enter phone number...'
                   />
                 </div>
                 <div className='col-span-1'>
                   <label className='block mb-1 flex items-center justify-between'>
-                    Nhóm
+                    Group
                     <button
                       type='button'
                       onClick={() => navigate('/group-management')}
@@ -731,7 +651,7 @@ const UserManagement = () => {
                     onChange={handleInputChange}
                     className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
                   >
-                    <option value=''>Chọn nhóm</option>
+                    <option value=''>Select group</option>
                     {groupOptions.map((group) => (
                       <option key={group.groupName} value={group.groupName}>
                         {group.groupName}
@@ -739,17 +659,16 @@ const UserManagement = () => {
                     ))}
                   </select>
                 </div>
-
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Phòng ban:
+                    Department:
                   </label>
                   <input
                     type='text'
                     name='department'
                     value={formData.department}
                     onChange={handleInputChange}
-                    placeholder='Software Development'
+                    placeholder='e.g. Software Development'
                     className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
                   />
                 </div>
@@ -822,39 +741,37 @@ const UserManagement = () => {
                   type='submit'
                   className='mr-3 px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition'
                 >
-                  Lưu
+                  Save
                 </button>
                 <button
                   type='button'
                   onClick={() => setShowForm(false)}
                   className='px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-200 transition'
                 >
-                  Hủy
+                  Cancel
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-
-      {/* Confirm delete dialog */}
       {showConfirmDelete && (
         <div className='fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50'>
           <div className='bg-white p-6 rounded-lg shadow-lg'>
-            <h2 className='text-lg font-bold mb-4'>Xác nhận xóa</h2>
-            <p>Bạn có chắc chắn muốn xóa người dùng này?</p>
+            <h2 className='text-lg font-bold mb-4'>Confirm Delete</h2>
+            <p>Are you sure you want to delete this user?</p>
             <div className='flex justify-end mt-4'>
               <button
                 onClick={confirmDelete}
                 className='border border-red-500 text-red-500 rounded py-2 px-4 hover:bg-red-500 hover:text-white transition mr-2'
               >
-                Xóa
+                Delete
               </button>
               <button
                 onClick={cancelDelete}
                 className='border border-gray-300 text-black rounded py-2 px-4 hover:bg-gray-200 transition'
               >
-                Hủy
+                Cancel
               </button>
             </div>
           </div>

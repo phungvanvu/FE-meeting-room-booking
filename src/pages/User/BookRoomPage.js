@@ -14,11 +14,13 @@ export default function BookRoomPage() {
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedCapacities, setSelectedCapacities] = useState([]);
   const [selectedDevices, setSelectedDevices] = useState([]);
-  const [currentPage, setCurrentPage] = useState(0);
   const [selectedLocations, setSelectedLocations] = useState([]);
   const [searchRoomName, setSearchRoomName] = useState('');
-  const [equipmentsData, setEquipmentsData] = useState([]); // Dữ liệu thiết bị cho lọc
+  const [allLocations, setAllLocations] = useState([]);
+  const [allCapacities, setAllCapacities] = useState([]);
+  const [equipmentsData, setEquipmentsData] = useState([]);
 
+  const [currentPage, setCurrentPage] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,66 +30,40 @@ export default function BookRoomPage() {
         navigate('/Login');
         return;
       }
-      // Lấy dữ liệu danh sách thiết bị và phòng
-      fetchEquipments();
+      fetchFilterOptions();
       fetchRooms(0);
     };
 
     initPage();
   }, [navigate]);
 
-  // Hàm gọi API lấy danh sách phòng theo bộ lọc và phân trang từ BE
-  const fetchRooms = async (page) => {
+  const fetchFilterOptions = async () => {
     const accessToken = sessionStorage.getItem('accessToken');
-    const params = new URLSearchParams();
-    if (searchRoomName) params.append('roomName', searchRoomName);
-    if (selectedLocations.length > 0) {
-      // Giả sử API chỉ nhận 1 địa điểm, ví dụ dùng phần tử đầu tiên
-      params.append('location', selectedLocations[0]);
-    }
-    if (selectedStatus) {
-      // API nhận Boolean cho available
-      params.append('available', selectedStatus === 'Available');
-    }
-    if (selectedCapacities.length > 0) {
-      // Giả sử chỉ chọn 1 sức chứa. Nếu cần hỗ trợ nhiều giá trị, bạn có thể truyền chuỗi phân cách
-      params.append('capacity', selectedCapacities[0]);
-    }
-    if (selectedDevices.length > 0) {
-      // Với thiết bị, nếu API cho phép truyền nhiều giá trị thì append theo cách này:
-      selectedDevices.forEach((device) => params.append('equipments', device));
-    }
-    params.append('page', page);
-    params.append('size', ITEMS_PER_PAGE);
-
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/room/search?${params.toString()}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
-          },
+      const response = await fetch(`${API_BASE_URL}/room`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
         },
-      );
+      });
       const result = await response.json();
       if (result.success && result.data) {
-        // Đảm bảo roomsData luôn là mảng
-        setRoomsData(result.data.content || []);
-        setTotalPages(result.data.totalPages);
-        setCurrentPage(page);
+        const locations = [
+          ...new Set(result.data.map((room) => room.location)),
+        ];
+        const capacities = [
+          ...new Set(result.data.map((room) => room.capacity)),
+        ];
+        setAllLocations(locations);
+        setAllCapacities(capacities);
       } else {
-        console.error('Error fetching rooms:', result.error?.message);
+        console.error('Error fetching room options:', result.error?.message);
       }
     } catch (error) {
-      console.error('Fetch error:', error);
+      console.error('Fetch room options error:', error);
     }
-  };
 
-  // Hàm lấy danh sách thiết bị từ API
-  const fetchEquipments = async () => {
-    const accessToken = sessionStorage.getItem('accessToken');
     try {
       const response = await fetch(`${API_BASE_URL}/equipment`, {
         method: 'GET',
@@ -107,11 +83,62 @@ export default function BookRoomPage() {
     }
   };
 
+  const fetchRooms = async (page) => {
+    const accessToken = sessionStorage.getItem('accessToken');
+    const params = new URLSearchParams();
+
+    if (searchRoomName) params.append('roomName', searchRoomName);
+
+    if (selectedLocations.length > 0) {
+      selectedLocations.forEach((location) =>
+        params.append('locations', location),
+      );
+    }
+
+    if (selectedStatus) {
+      params.append('available', selectedStatus === 'Available');
+    }
+    if (selectedCapacities.length > 0) {
+      selectedCapacities.forEach((capacity) =>
+        params.append('capacities', capacity),
+      );
+    }
+
+    if (selectedDevices.length > 0) {
+      selectedDevices.forEach((device) => params.append('equipments', device));
+    }
+
+    params.append('page', page);
+    params.append('size', ITEMS_PER_PAGE);
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/room/search?${params.toString()}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      );
+      const result = await response.json();
+      if (result.success && result.data) {
+        setRoomsData(result.data.content || []);
+        setTotalPages(result.data.totalPages);
+        setCurrentPage(page);
+      } else {
+        console.error('Error fetching rooms:', result.error?.message);
+      }
+    } catch (error) {
+      console.error('Fetch error:', error);
+    }
+  };
   // Hàm xử lý tìm kiếm, gọi lại fetchRooms với page = 0
   const handleSearch = () => {
     fetchRooms(0);
   };
-
+  // Hàm reset lại các filter
   const handleReset = () => {
     setSearchRoomName('');
     setSelectedDevices([]);
@@ -120,8 +147,6 @@ export default function BookRoomPage() {
     setSelectedLocations([]);
     fetchRooms(0);
   };
-
-  // Xử lý phân trang
   const handlePreviousPage = () => {
     if (currentPage > 0) {
       fetchRooms(currentPage - 1);
@@ -159,31 +184,29 @@ export default function BookRoomPage() {
           {/* Chọn địa điểm phòng */}
           <div className='mb-4'>
             <label className='block text-sm font-bold text-black-700 mb-2'>
-              Chọn địa điểm phòng
+              Select room location
             </label>
             <div className='border border-gray-300 rounded-lg p-2 bg-gray-50 hover:bg-gray-100 transition-all'>
-              {[...new Set(roomsData.map((room) => room.location))].map(
-                (location) => (
-                  <label
-                    key={location}
-                    className='flex items-center space-x-2 py-1 cursor-pointer'
-                  >
-                    <input
-                      type='checkbox'
-                      checked={selectedLocations.includes(location)}
-                      onChange={() =>
-                        setSelectedLocations((prev) =>
-                          prev.includes(location)
-                            ? prev.filter((loc) => loc !== location)
-                            : [...prev, location],
-                        )
-                      }
-                      className='h-4 w-4 border-gray-300 rounded text-blue-500 focus:ring-blue-400'
-                    />
-                    <span className='text-sm text-gray-700'>{location}</span>
-                  </label>
-                ),
-              )}
+              {allLocations.map((location) => (
+                <label
+                  key={location}
+                  className='flex items-center space-x-2 py-1 cursor-pointer'
+                >
+                  <input
+                    type='checkbox'
+                    checked={selectedLocations.includes(location)}
+                    onChange={() =>
+                      setSelectedLocations((prev) =>
+                        prev.includes(location)
+                          ? prev.filter((loc) => loc !== location)
+                          : [...prev, location],
+                      )
+                    }
+                    className='h-4 w-4 border-gray-300 rounded text-blue-500 focus:ring-blue-400'
+                  />
+                  <span className='text-sm text-gray-700'>{location}</span>
+                </label>
+              ))}
             </div>
           </div>
 
@@ -215,7 +238,7 @@ export default function BookRoomPage() {
               Capacity
             </label>
             <div className='flex flex-wrap gap-2'>
-              {[6, 8, 10, 12].map((capacity) => (
+              {allCapacities.map((capacity) => (
                 <label
                   key={capacity}
                   className='flex items-center space-x-1 cursor-pointer'
@@ -246,52 +269,26 @@ export default function BookRoomPage() {
               Device
             </label>
             <div className='flex flex-wrap gap-2'>
-              {equipmentsData.length > 0
-                ? equipmentsData.map((device) => (
-                    <button
-                      key={device.equipmentName} // Sử dụng equipmentName làm key
-                      onClick={() =>
-                        setSelectedDevices((prev) =>
-                          prev.includes(device.equipmentName)
-                            ? prev.filter((d) => d !== device.equipmentName)
-                            : [...prev, device.equipmentName],
-                        )
-                      }
-                      className={`px-3 py-1 rounded-full text-sm border transition-all ${
-                        selectedDevices.includes(device.equipmentName)
-                          ? 'bg-blue-500 text-white border-blue-500'
-                          : 'border-gray-300 text-gray-600 hover:bg-gray-100'
-                      }`}
-                    >
-                      {device.equipmentName}
-                    </button>
-                  ))
-                : [
-                    'Projector',
-                    'Monitor',
-                    'HDMI',
-                    'Whiteboard',
-                    'Microphone',
-                    'Speaker',
-                  ].map((device) => (
-                    <button
-                      key={device}
-                      onClick={() =>
-                        setSelectedDevices((prev) =>
-                          prev.includes(device)
-                            ? prev.filter((d) => d !== device)
-                            : [...prev, device],
-                        )
-                      }
-                      className={`px-3 py-1 rounded-full text-sm border transition-all ${
-                        selectedDevices.includes(device)
-                          ? 'bg-blue-500 text-white border-blue-500'
-                          : 'border-gray-300 text-gray-600 hover:bg-gray-100'
-                      }`}
-                    >
-                      {device}
-                    </button>
-                  ))}
+              {equipmentsData.length > 0 &&
+                equipmentsData.map((device) => (
+                  <button
+                    key={device.equipmentName}
+                    onClick={() =>
+                      setSelectedDevices((prev) =>
+                        prev.includes(device.equipmentName)
+                          ? prev.filter((d) => d !== device.equipmentName)
+                          : [...prev, device.equipmentName],
+                      )
+                    }
+                    className={`px-3 py-1 rounded-full text-sm border transition-all ${
+                      selectedDevices.includes(device.equipmentName)
+                        ? 'bg-blue-500 text-white border-blue-500'
+                        : 'border-gray-300 text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    {device.equipmentName}
+                  </button>
+                ))}
             </div>
           </div>
 
@@ -322,11 +319,11 @@ export default function BookRoomPage() {
           <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8'>
             {roomsData.map((room) => (
               <div
-                key={room.roomId} // Sử dụng roomId làm key
+                key={room.roomId}
                 className='border rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow bg-white flex flex-col'
               >
                 <img
-                  src={room.imageUrl ? `${API_BASE_URL}${room.imageUrl}` : ''}
+                  src={room.imageUrl || ''}
                   alt={room.roomName}
                   className='w-full h-48 object-cover'
                 />
@@ -358,7 +355,7 @@ export default function BookRoomPage() {
                     >
                       {room.available ? 'Available' : 'Unavailable'}
                     </p>
-                    <div className='font-medium text-sm line-clamp-3 whitespace-pre-line'>
+                    <div className='font-medium text-sm whitespace-pre-line break-words'>
                       {room.note}
                     </div>
                     <div className='flex flex-wrap gap-2 mt-3 mb-4'>
@@ -372,7 +369,7 @@ export default function BookRoomPage() {
                       ))}
                     </div>
                   </div>
-                  {/* Nút Book Room cố định ở dưới cùng */}
+                  {/* Nút Book Room */}
                   <div className='mt-auto'>
                     {room.available ? (
                       <Link to={`/Calendar/${room.roomId}`}>
