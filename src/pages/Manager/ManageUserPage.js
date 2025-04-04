@@ -227,7 +227,7 @@ const UserManagement = () => {
   const exportToExcel = async () => {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/statistical/export-user-excel`,
+        `${API_BASE_URL}/statistical/export-users-excel`,
         {
           headers: getAuthHeaders(),
         },
