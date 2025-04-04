@@ -64,11 +64,8 @@ export default function Header() {
         </div>
         {/* Navigation Links */}
         <nav className='hidden md:flex space-x-6'>
-          <Link to='/Home' className='hover:underline hover:text-gray-200'>
-            Home
-          </Link>
           <Link to='/BookRoom' className='hover:underline hover:text-gray-200'>
-            Book a Room
+            Booking
           </Link>
           <Link
             to='/MyBookings'

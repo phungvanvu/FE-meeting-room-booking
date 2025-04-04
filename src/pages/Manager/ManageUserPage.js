@@ -4,12 +4,12 @@ import API_BASE_URL from '../../config';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 
 const UserManagement = () => {
   const navigate = useNavigate();
-
-  // States for filtering and pagination from API response
   const [users, setUsers] = useState([]);
+  const [showPassword, setShowPassword] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');
   const [selectedGroups, setSelectedGroups] = useState([]);
@@ -584,7 +584,7 @@ const UserManagement = () => {
               <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Name:
+                    Name:<span className='text-red-500 text-2xl'>*</span> 
                   </label>
                   <input
                     type='text'
@@ -597,7 +597,7 @@ const UserManagement = () => {
                 </div>
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Username:
+                    Username:<span className='text-red-500 text-2xl'>*</span>
                   </label>
                   <input
                     type='text'
@@ -610,7 +610,7 @@ const UserManagement = () => {
                 </div>
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Email:
+                    Email:<span className='text-red-500 text-2xl'>*</span>
                   </label>
                   <input
                     type='email'
@@ -635,15 +635,8 @@ const UserManagement = () => {
                   />
                 </div>
                 <div className='col-span-1'>
-                  <label className='block mb-1 flex items-center justify-between'>
-                    Group
-                    <button
-                      type='button'
-                      onClick={() => navigate('/group-management')}
-                      className='text-blue-500 text-sm'
-                    >
-                      Edit
-                    </button>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                    Group:<span className='text-red-500 text-2xl'>*</span>
                   </label>
                   <select
                     name='group'
@@ -661,7 +654,7 @@ const UserManagement = () => {
                 </div>
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Department:
+                    Department:<span className='text-red-500 text-2xl'>*</span>
                   </label>
                   <input
                     type='text'
@@ -673,15 +666,8 @@ const UserManagement = () => {
                   />
                 </div>
                 <div className='col-span-1'>
-                  <label className='block mb-1 flex items-center justify-between'>
-                    Position:
-                    <button
-                      type='button'
-                      onClick={() => navigate('/position-management')}
-                      className='text-blue-500 text-sm'
-                    >
-                      Edit
-                    </button>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                    Position:<span className='text-red-500 text-2xl'>*</span>
                   </label>
                   <select
                     name='position'
@@ -702,12 +688,20 @@ const UserManagement = () => {
                     Password:
                   </label>
                   <input
-                    type='password'
+                    type={showPassword ? 'text' : 'password'}
                     name='password'
                     value={formData.password}
                     onChange={handleInputChange}
                     className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
+                    placeholder='Enter password if you want change'
                   />
+                  <button
+                    type='button'
+                    className='absolute right-3 top-9 text-gray-500 hover:text-gray-700'
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
                 </div>
                 <div className='md:col-span-2'>
                   <label className='block text-sm font-medium text-gray-700 mb-2'>

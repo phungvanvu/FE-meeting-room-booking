@@ -23,7 +23,6 @@ export default function HomePage() {
     <div className='min-h-screen flex flex-col'>
       {/* Header */}
       <Header />
-
       {/* Nội dung chính */}
       <div className='flex-grow container mx-auto mt-10 mb-10'>
         <h2 className='text-2xl font-bold'>

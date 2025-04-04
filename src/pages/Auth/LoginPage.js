@@ -39,13 +39,10 @@ export default function Login() {
             : 'Incorrect username or password.';
         throw new Error(errorMessage);
       }
-
       const result = await response.json();
-
       if (result.success) {
         sessionStorage.setItem('accessToken', result.data.accessToken);
         setRefreshToken(result.data.refreshToken);
-
         const decoded = jwtDecode(result.data.accessToken);
         if (decoded.scope.includes('ROLE_USER')) {
           navigate('/BookRoom');
@@ -103,7 +100,6 @@ export default function Login() {
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
-
           <button
             type='submit'
             disabled={loading}
@@ -113,7 +109,6 @@ export default function Login() {
           >
             {loading ? 'Signing in...' : 'Login'}
           </button>
-
           <p className='mt-4 text-center text-gray-600'>
             <a href='#' className='text-blue-500 hover:underline'>
               Forgot password?

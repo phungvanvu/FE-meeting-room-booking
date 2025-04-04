@@ -184,8 +184,6 @@ const History = () => {
                 <thead>
                   <tr className='bg-gray-200'>
                     <th className='py-2 px-4 border'>No.</th>
-                    <th className='py-2 px-4 border'>UserName</th>
-                    <th className='py-2 px-4 border'>Email</th>
                     <th className='py-2 px-4 border'>Room</th>
                     <th className='py-2 px-4 border'>Start Time</th>
                     <th className='py-2 px-4 border'>End Time</th>
@@ -204,8 +202,6 @@ const History = () => {
                       <td className='py-2 px-4 border'>
                         {startIndex + index + 1}
                       </td>
-                      <td className='py-2 px-4 border'>{booking.userName}</td>
-                      <td className='py-2 px-4 border'>{booking.userEmail}</td>
                       <td className='py-2 px-4 border'>{booking.roomName}</td>
                       <td className='py-2 px-4 border'>{booking.startTime}</td>
                       <td className='py-2 px-4 border'>{booking.endTime}</td>

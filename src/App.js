@@ -18,7 +18,6 @@ import ManageUser from './pages/Manager/ManageUserPage';
 import ManageGroup from './pages/Manager/ManageGroupPage';
 import MyBookings from './pages/User/MyBookingsPage';
 import History from './pages/User/HistoryPage';
-import Home from './pages/User/HomePage';
 // import Profile from './pages/User/ProfilePage';
 
 function App() {
@@ -77,7 +76,6 @@ function App() {
                 <Route path='/Calendar/:roomName' element={<CalenderPage />} />
                 <Route path='/MyBookings' element={<MyBookings />} />
                 <Route path='/History' element={<History />} />
-                <Route path='/Home' element={<Home />} />
                 {/* <Route path='/Profile' element={<Profile />} /> */}
               </>
             );
@@ -101,7 +99,6 @@ function App() {
                 <Route path='/Calendar/:roomName' element={<CalenderPage />} />
                 <Route path='/MyBookings' element={<MyBookings />} />
                 <Route path='/History' element={<History />} />
-                <Route path='/Home' element={<Home />} />
                 {/* <Route path='/Profile' element={<Profile />} /> */}
               </>
             );

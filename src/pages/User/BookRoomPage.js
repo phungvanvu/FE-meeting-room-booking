@@ -134,11 +134,9 @@ export default function BookRoomPage() {
       console.error('Fetch error:', error);
     }
   };
-  // Hàm xử lý tìm kiếm, gọi lại fetchRooms với page = 0
   const handleSearch = () => {
     fetchRooms(0);
   };
-  // Hàm reset lại các filter
   const handleReset = () => {
     setSearchRoomName('');
     setSelectedDevices([]);
