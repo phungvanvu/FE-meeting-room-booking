@@ -11,7 +11,7 @@ import { isAccessTokenValid } from '../../components/utils/auth';
 
 export default function CalendarPage() {
   const { showEventModal } = useContext(GlobalContext);
-  const { roomName } = useParams();
+  const { roomId } = useParams();
   const navigate = useNavigate();
   const [refreshCalendar, setRefreshCalendar] = useState(false);
 
@@ -31,7 +31,9 @@ export default function CalendarPage() {
 
   return (
     <>
-      {showEventModal && <EventModal onBookingSuccess={handleBookingSuccess} />}
+      {showEventModal && (
+        <EventModal roomId={roomId} onBookingSuccess={handleBookingSuccess} />
+      )}
       <div className='min-h-screen flex flex-col bg-gray-50'>
         <Header />
         <div className='flex flex-1 w-full overflow-hidden p-4 gap-4'>
@@ -39,10 +41,7 @@ export default function CalendarPage() {
             <Sidebar />
           </aside>
           <main className='flex-grow bg-white shadow-lg rounded-xl overflow-auto border border-gray-200'>
-            <RoomCalendar
-              roomName={roomName}
-              refreshCalendar={refreshCalendar}
-            />
+            <RoomCalendar roomId={roomId} refreshCalendar={refreshCalendar} />
           </main>
         </div>
         <Footer className='flex-shrink-0' />

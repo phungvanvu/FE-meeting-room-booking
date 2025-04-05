@@ -9,29 +9,38 @@ const History = () => {
   const [endDateTime, setEndDateTime] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
 
-  const [filterParams, setFilterParams] = useState({
-    searchTerm: '',
-    startDateTime: '',
-    endDateTime: '',
-    selectedStatus: '',
-  });
-
+  const [bookings, setBookings] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  const [bookings, setBookings] = useState([]);
 
   const accessToken = sessionStorage.getItem('accessToken');
+
   const fetchBookings = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/roombooking/MyBookings`, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
+      const queryParams = new URLSearchParams();
+      if (searchTerm) queryParams.append('roomName', searchTerm);
+      if (startDateTime) queryParams.append('fromTime', startDateTime);
+      if (endDateTime) queryParams.append('toTime', endDateTime);
+      if (selectedStatus) queryParams.append('status', selectedStatus);
+      // API phân trang bắt đầu từ 0
+      queryParams.append('page', currentPage - 1);
+      queryParams.append('size', itemsPerPage);
+
+      const response = await fetch(
+        `${API_BASE_URL}/roombooking/search-my?${queryParams.toString()}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
         },
-      });
+      );
       const data = await response.json();
       if (data.success) {
-        setBookings(data.data);
+        // API trả về dữ liệu dạng Page: { content, totalPages, ... }
+        setBookings(data.data.content);
+        setTotalPages(data.data.totalPages);
       } else {
         console.error('Error fetching bookings:', data.error);
       }
@@ -39,39 +48,17 @@ const History = () => {
       console.error('Error fetching bookings:', error);
     }
   };
+
+  // Gọi API mỗi khi các tham số lọc hoặc trang hiện tại thay đổi
   useEffect(() => {
     fetchBookings();
-  }, []);
-  const filteredBookings = bookings.filter((booking) => {
-    const matchesSearchTerm = booking.roomName
-      .toLowerCase()
-      .includes(filterParams.searchTerm.toLowerCase());
-    const matchesDateTime =
-      (!filterParams.startDateTime ||
-        new Date(booking.startTime) >= new Date(filterParams.startDateTime)) &&
-      (!filterParams.endDateTime ||
-        new Date(booking.endTime) <= new Date(filterParams.endDateTime));
-    const matchesStatus =
-      !filterParams.selectedStatus ||
-      booking.status === filterParams.selectedStatus;
-    return matchesSearchTerm && matchesDateTime && matchesStatus;
-  });
-
-  const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentBookings = filteredBookings.slice(
-    startIndex,
-    startIndex + itemsPerPage,
-  );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, startDateTime, endDateTime, selectedStatus, currentPage]);
 
   const handleSearch = () => {
-    setFilterParams({
-      searchTerm,
-      startDateTime,
-      endDateTime,
-      selectedStatus,
-    });
+    // Khi thực hiện tìm kiếm, reset currentPage về 1
     setCurrentPage(1);
+    fetchBookings();
   };
 
   const resetFilters = () => {
@@ -79,13 +66,8 @@ const History = () => {
     setStartDateTime('');
     setEndDateTime('');
     setSelectedStatus('');
-    setFilterParams({
-      searchTerm: '',
-      startDateTime: '',
-      endDateTime: '',
-      selectedStatus: '',
-    });
     setCurrentPage(1);
+    fetchBookings();
   };
 
   return (
@@ -194,13 +176,13 @@ const History = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentBookings.map((booking, index) => (
+                  {bookings.map((booking, index) => (
                     <tr
                       key={booking.bookingId}
                       className='border-b hover:bg-gray-100 transition'
                     >
                       <td className='py-2 px-4 border'>
-                        {startIndex + index + 1}
+                        {(currentPage - 1) * itemsPerPage + index + 1}
                       </td>
                       <td className='py-2 px-4 border'>{booking.roomName}</td>
                       <td className='py-2 px-4 border'>{booking.startTime}</td>
@@ -235,7 +217,6 @@ const History = () => {
                 >
                   &laquo;
                 </button>
-
                 {[...Array(totalPages)].map((_, index) => (
                   <button
                     key={index}
@@ -249,7 +230,6 @@ const History = () => {
                     {index + 1}
                   </button>
                 ))}
-
                 <button
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))

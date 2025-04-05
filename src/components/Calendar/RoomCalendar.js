@@ -7,7 +7,7 @@ import GlobalContext from '../../context/GlobalContext';
 import API_BASE_URL from '../../config';
 import '../../App.css';
 
-export default function RoomCalendar({ roomName, refreshCalendar }) {
+export default function RoomCalendar({ roomId, refreshCalendar }) {
   const { setFilteredEvents, setSelectedEvent, setShowEventDetailModal } =
     useContext(GlobalContext);
   const [events, setEvents] = useState([]);
@@ -18,9 +18,7 @@ export default function RoomCalendar({ roomName, refreshCalendar }) {
     const fetchRoomBookings = async () => {
       try {
         const response = await fetch(
-          `${API_BASE_URL}/roombooking/by-room-name?roomName=${encodeURIComponent(
-            roomName,
-          )}`,
+          `${API_BASE_URL}/roombooking/by-room-id/${roomId}`,
           {
             method: 'GET',
             headers: {
@@ -34,19 +32,19 @@ export default function RoomCalendar({ roomName, refreshCalendar }) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
 
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          const formattedBookings = data.map((booking) => ({
+        const result = await response.json();
+        if (result.success && Array.isArray(result.data)) {
+          const formattedBookings = result.data.map((booking) => ({
             id: booking.bookingId,
             title: booking.purpose,
             start: booking.startTime,
             end: booking.endTime,
-            backgroundColor: getEventColor(booking.status) || '#9E9E9E',
-            borderColor: getEventColor(booking.status) || '#9E9E9E',
+            backgroundColor: '#4CAF50', // Màu cố định cho CONFIRMED
+            borderColor: '#4CAF50',
             textColor: '#FFFFFF',
             extendedProps: {
               status: booking.status,
-              note: booking.note,
+              note: booking.description || booking.note,
               startTime: booking.startTime,
               endTime: booking.endTime,
               roomId: booking.roomId,
@@ -64,7 +62,7 @@ export default function RoomCalendar({ roomName, refreshCalendar }) {
           setEvents(sortedBookings);
           setFilteredEvents(sortedBookings);
         } else {
-          console.error('Invalid data format:', data);
+          console.error('Invalid data format:', result);
           setEvents([]);
         }
       } catch (error) {
@@ -73,25 +71,15 @@ export default function RoomCalendar({ roomName, refreshCalendar }) {
         setLoading(false);
       }
     };
+
     fetchRoomBookings();
-  }, [roomName, setFilteredEvents, refreshCalendar, accessToken]);
+  }, [roomId, setFilteredEvents, refreshCalendar, accessToken]);
 
   const formatTime = (time) =>
     new Date(time).toLocaleTimeString([], {
       hour: '2-digit',
       minute: '2-digit',
     });
-
-  const getEventColor = (status) => {
-    switch (status) {
-      case 'CONFIRMED':
-        return '#4CAF50'; // Xanh lá
-      case 'CANCELLED':
-        return '#F44336'; // Đỏ
-      default:
-        return '#9E9E9E'; // Xám
-    }
-  };
 
   if (loading) {
     return (
@@ -127,15 +115,15 @@ export default function RoomCalendar({ roomName, refreshCalendar }) {
         eventMouseEnter={(info) => {
           const tooltip = document.createElement('div');
           tooltip.innerHTML = `
-      <strong>${info.event.title}</strong><br />
-      <em>${formatTime(info.event.start)} - ${formatTime(
+            <strong>${info.event.title}</strong><br />
+            <em>${formatTime(info.event.start)} - ${formatTime(
             info.event.end,
           )}</em><br />
-      <span style="color: ${getEventColor(info.event.extendedProps.status)};">
-        BookingStatus: ${info.event.extendedProps.status}
-      </span><br />
-      Note: ${info.event.extendedProps.note || 'Not thing'}
-    `;
+            <span style="color: #4CAF50;">
+              BookingStatus: ${info.event.extendedProps.status}
+            </span><br />
+            Note: ${info.event.extendedProps.note || 'Nothing'}
+          `;
           tooltip.className = 'custom-tooltip';
           document.body.appendChild(tooltip);
           tooltip.style.left = `${info.jsEvent.clientX + 10}px`;

@@ -73,7 +73,7 @@ function App() {
             return (
               <>
                 <Route path='/BookRoom' element={<BookRoom />} />
-                <Route path='/Calendar/:roomName' element={<CalenderPage />} />
+                <Route path='/Calendar/:roomId' element={<CalenderPage />} />
                 <Route path='/MyBookings' element={<MyBookings />} />
                 <Route path='/History' element={<History />} />
                 {/* <Route path='/Profile' element={<Profile />} /> */}
@@ -96,7 +96,7 @@ function App() {
                 <Route path='/ManageUser' element={<ManageUser />} />
                 <Route path='/ManageGroup' element={<ManageGroup />} />
                 <Route path='/BookRoom' element={<BookRoom />} />
-                <Route path='/Calendar/:roomName' element={<CalenderPage />} />
+                <Route path='/Calendar/:roomId' element={<CalenderPage />} />
                 <Route path='/MyBookings' element={<MyBookings />} />
                 <Route path='/History' element={<History />} />
                 {/* <Route path='/Profile' element={<Profile />} /> */}

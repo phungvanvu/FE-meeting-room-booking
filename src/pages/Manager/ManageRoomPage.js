@@ -37,7 +37,7 @@ export default function ManageRoomPage() {
   const [allEquipments, setAllEquipments] = useState([]);
 
   // Các state khác
-  const [currentPage, setCurrentPage] = useState(0); // dùng 0-based index cho API
+  const [currentPage, setCurrentPage] = useState(0);
   const [selectedRooms, setSelectedRooms] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [formInitialData, setFormInitialData] = useState(null);
@@ -159,7 +159,6 @@ export default function ManageRoomPage() {
       );
       const result = await response.json();
       if (result.success && result.data) {
-        // Format lại dữ liệu phòng cho Admin
         const formattedRooms = result.data.content.map((room) => ({
           id: room.roomId,
           name: room.roomName || 'No name',

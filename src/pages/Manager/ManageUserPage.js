@@ -581,10 +581,12 @@ const UserManagement = () => {
                 saveUser();
               }}
             >
+              {/* Container cho các trường đầu tiên */}
               <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                {/* Name */}
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Name:<span className='text-red-500 text-2xl'>*</span> 
+                    Name:<span className='text-red-500 text-2xl'>*</span>
                   </label>
                   <input
                     type='text'
@@ -595,6 +597,7 @@ const UserManagement = () => {
                     placeholder='Enter full name...'
                   />
                 </div>
+                {/* Username */}
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
                     Username:<span className='text-red-500 text-2xl'>*</span>
@@ -608,6 +611,7 @@ const UserManagement = () => {
                     placeholder='Enter username...'
                   />
                 </div>
+                {/* Email */}
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
                     Email:<span className='text-red-500 text-2xl'>*</span>
@@ -621,6 +625,7 @@ const UserManagement = () => {
                     placeholder='example@mail.com'
                   />
                 </div>
+                {/* Phone */}
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
                     Phone:
@@ -634,7 +639,22 @@ const UserManagement = () => {
                     placeholder='Enter phone number...'
                   />
                 </div>
-                <div className='col-span-1'>
+                {/* Department */}
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                    Department:<span className='text-red-500 text-2xl'>*</span>
+                  </label>
+                  <input
+                    type='text'
+                    name='department'
+                    value={formData.department}
+                    onChange={handleInputChange}
+                    placeholder='e.g. Software Development'
+                    className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
+                  />
+                </div>
+                {/* Group */}
+                <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
                     Group:<span className='text-red-500 text-2xl'>*</span>
                   </label>
@@ -652,20 +672,11 @@ const UserManagement = () => {
                     ))}
                   </select>
                 </div>
+              </div>
+              {/* Container cho Position và Password nằm trong cùng 1 hàng */}
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mt-4'>
+                {/* Position */}
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Department:<span className='text-red-500 text-2xl'>*</span>
-                  </label>
-                  <input
-                    type='text'
-                    name='department'
-                    value={formData.department}
-                    onChange={handleInputChange}
-                    placeholder='e.g. Software Development'
-                    className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
-                  />
-                </div>
-                <div className='col-span-1'>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
                     Position:<span className='text-red-500 text-2xl'>*</span>
                   </label>
@@ -683,51 +694,62 @@ const UserManagement = () => {
                     ))}
                   </select>
                 </div>
+                {/* Password */}
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
                     Password:
+                    {!currentUser && (
+                      <span className='text-red-500 text-2xl'>*</span>
+                    )}
                   </label>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    name='password'
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
-                    placeholder='Enter password if you want change'
-                  />
-                  <button
-                    type='button'
-                    className='absolute right-3 top-9 text-gray-500 hover:text-gray-700'
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
-                </div>
-                <div className='md:col-span-2'>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
-                    Role:
-                  </label>
-                  <div className='flex flex-wrap gap-2'>
-                    {roleOptions.map((role) => (
-                      <button
-                        key={role.roleName}
-                        type='button'
-                        onClick={() =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            roles: [role.roleName],
-                          }))
-                        }
-                        className={`px-3 py-1 rounded-full text-sm border transition-all ${
-                          formData.roles && formData.roles[0] === role.roleName
-                            ? 'bg-blue-500 text-white border-blue-500'
-                            : 'border-gray-300 text-gray-600 hover:bg-gray-100'
-                        }`}
-                      >
-                        {role.roleName}
-                      </button>
-                    ))}
+                  <div className='relative'>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      name='password'
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400 pr-10'
+                      placeholder={
+                        currentUser
+                          ? 'Enter password to change'
+                          : 'Enter password'
+                      }
+                    />
+                    <button
+                      type='button'
+                      className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700'
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
                   </div>
+                </div>
+              </div>
+              {/* Role */}
+              <div className='mt-4'>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  Role:<span className='text-red-500 text-2xl'>*</span>
+                </label>
+                <div className='flex flex-wrap gap-2'>
+                  {roleOptions.map((role) => (
+                    <button
+                      key={role.roleName}
+                      type='button'
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          roles: [role.roleName],
+                        }))
+                      }
+                      className={`px-3 py-1 rounded-full text-sm border transition-all ${
+                        formData.roles && formData.roles[0] === role.roleName
+                          ? 'bg-blue-500 text-white border-blue-500'
+                          : 'border-gray-300 text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      {role.roleName}
+                    </button>
+                  ))}
                 </div>
               </div>
               <div className='flex justify-end mt-6'>
@@ -749,6 +771,7 @@ const UserManagement = () => {
           </div>
         </div>
       )}
+
       {showConfirmDelete && (
         <div className='fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50'>
           <div className='bg-white p-6 rounded-lg shadow-lg'>

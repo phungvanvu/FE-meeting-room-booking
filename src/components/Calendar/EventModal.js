@@ -6,7 +6,7 @@ import API_BASE_URL from '../../config';
 export default function EventModal({ onBookingSuccess }) {
   const { setShowEventModal, eventData, setEventData } =
     useContext(GlobalContext);
-  const { roomName } = useParams();
+  const { roomId } = useParams();
   const accessToken = sessionStorage.getItem('accessToken');
   const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,34 +22,11 @@ export default function EventModal({ onBookingSuccess }) {
   };
 
   useEffect(() => {
-    const fetchRoomId = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const response = await fetch(`${API_BASE_URL}/room/name/${roomName}`, {
-          method: 'GET',
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        if (response.ok) {
-          const roomData = await response.json();
-          if (roomData?.data?.roomId) {
-            setEventData((prev) => ({ ...prev, roomId: roomData.data.roomId }));
-          } else {
-            console.error('Room ID not found in response');
-          }
-        } else {
-          console.error('Failed to fetch room ID');
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (roomName) fetchRoomId();
-  }, [roomName, setEventData, accessToken]);
+    if (roomId) {
+      setEventData((prev) => ({ ...prev, roomId }));
+    }
+  }, [roomId, setEventData]);
 
-  // Fetch user info
   useEffect(() => {
     const fetchUserInfo = async () => {
       setLoading(true);
@@ -113,6 +90,7 @@ export default function EventModal({ onBookingSuccess }) {
       return;
     }
 
+    // Điều chỉnh múi giờ
     startTimeObj.setHours(
       startTimeObj.getHours() - startTimeObj.getTimezoneOffset() / 60,
     );
@@ -201,7 +179,7 @@ export default function EventModal({ onBookingSuccess }) {
           {/* Purpose */}
           <div>
             <label className='block text-sm font-medium text-gray-700 mb-1'>
-              Title
+              Purpose
             </label>
             <select
               name='purpose'
