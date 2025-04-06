@@ -11,6 +11,7 @@ import {
   XCircle,
   FileText,
 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { isAccessTokenValid } from '../../components/utils/auth';
 import API_BASE_URL from '../../config';
 import RoomForm from '../../components/Room/RoomForm';
@@ -210,6 +211,7 @@ export default function ManageRoomPage() {
       });
       const result = await response.json();
       if (result.success) {
+        toast.success('Room added successfully!');
         fetchRooms(currentPage);
       } else {
         console.error('Error adding room:', result.error?.message);
@@ -255,6 +257,7 @@ export default function ManageRoomPage() {
       });
       const result = await response.json();
       if (result.success) {
+        toast.success('Room updated successfully!');
         fetchRooms(currentPage);
       } else {
         console.error('Error updating room:', result.error?.message);
@@ -309,12 +312,15 @@ export default function ManageRoomPage() {
       });
       const result = await response.json();
       if (result.success) {
+        toast.success('Room deleted successfully!');
         fetchRooms(currentPage);
       } else {
+        toast.error(result.error.message || 'Error deleting room');
         console.error('Error deleting room:', result.error?.message);
       }
     } catch (error) {
       console.error('Delete error:', error);
+      toast.error(error.message || 'Error deleting room');
     }
   };
 

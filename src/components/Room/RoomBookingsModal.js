@@ -33,10 +33,10 @@ export default function RoomBookingsModal({ roomId, onClose }) {
         if (result.success && Array.isArray(result.data)) {
           setBookings(result.data);
         } else {
-          setError(result.error?.message || 'Không thể tải dữ liệu booking');
+          setError(result.error?.message || 'Unable to load booking data');
         }
       } catch (err) {
-        setError('Lỗi khi tải dữ liệu booking');
+        setError('Error loading booking data');
       } finally {
         setLoading(false);
       }
@@ -61,12 +61,12 @@ export default function RoomBookingsModal({ roomId, onClose }) {
 
         {/* Trạng thái tải hoặc lỗi */}
         {loading ? (
-          <div className='text-center text-gray-600'>Đang tải dữ liệu...</div>
+          <div className='text-center text-gray-600'>Loading data...</div>
         ) : error ? (
           <div className='text-center text-red-500'>{error}</div>
         ) : bookings.length === 0 ? (
           <div className='text-center text-gray-500'>
-            Chưa có booking cho phòng này.
+            There is no booking for this room yet.
           </div>
         ) : (
           <div className='space-y-4 overflow-y-auto max-h-[400px]'>
@@ -92,26 +92,26 @@ export default function RoomBookingsModal({ roomId, onClose }) {
                 <div className='mt-2 text-gray-600'>
                   <div className='grid grid-cols-2 gap-4'>
                     <div>
-                      <span className='font-medium'>Người đặt:</span>{' '}
+                      <span className='font-medium'>Booking by:</span>{' '}
                       {booking.userName} ({booking.userEmail})
                     </div>
                     <div>
-                      <span className='font-medium'>Thời gian:</span>{' '}
+                      <span className='font-medium'>Time:</span>{' '}
                       {new Date(booking.startTime).toLocaleTimeString()} -{' '}
                       {new Date(booking.endTime).toLocaleTimeString()}
                     </div>
                     <div>
-                      <span className='font-medium'>Ngày:</span>{' '}
+                      <span className='font-medium'>Day:</span>{' '}
                       {new Date(booking.startTime).toLocaleDateString()}
                     </div>
                     <div>
-                      <span className='font-medium'>Mục đích:</span>{' '}
+                      <span className='font-medium'>Purpose:</span>{' '}
                       {booking.purpose}
                     </div>
                   </div>
                   {booking.description && (
                     <div className='mt-2'>
-                      <span className='font-medium'>Mô tả:</span>{' '}
+                      <span className='font-medium'>Describe:</span>{' '}
                       {booking.description}
                     </div>
                   )}

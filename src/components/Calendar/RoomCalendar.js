@@ -39,7 +39,7 @@ export default function RoomCalendar({ roomId, refreshCalendar }) {
             title: booking.purpose,
             start: booking.startTime,
             end: booking.endTime,
-            backgroundColor: '#4CAF50', // Màu cố định cho CONFIRMED
+            backgroundColor: '#4CAF50',
             borderColor: '#4CAF50',
             textColor: '#FFFFFF',
             extendedProps: {

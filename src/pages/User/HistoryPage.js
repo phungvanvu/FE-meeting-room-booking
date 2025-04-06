@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import API_BASE_URL from '../../config';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const History = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -206,40 +207,50 @@ const History = () => {
                 </tbody>
               </table>
 
-              {/* Pagination */}
-              <div className='flex justify-center items-center mt-4'>
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
-                  disabled={currentPage === 1}
-                  className='border border-gray-300 text-gray-700 rounded py-2 px-4 hover:bg-gray-200 transition'
-                >
-                  &laquo;
-                </button>
-                {[...Array(totalPages)].map((_, index) => (
+              {/* Pagination (giao diện đồng nhất với các trang khác) */}
+              {totalPages > 1 && (
+                <div className='flex justify-center items-center mt-8 gap-2'>
                   <button
-                    key={index}
-                    onClick={() => setCurrentPage(index + 1)}
-                    className={`border border-gray-300 text-gray-700 py-2 px-4 transition mx-1 ${
-                      currentPage === index + 1
-                        ? 'bg-blue-700 text-white'
-                        : 'hover:bg-gray-200'
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
+                    disabled={currentPage === 1}
+                    className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${
+                      currentPage === 1
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        : 'bg-blue-500 text-white hover:bg-blue-600'
                     }`}
                   >
-                    {index + 1}
+                    <ChevronLeft size={18} />
                   </button>
-                ))}
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                  }
-                  disabled={currentPage === totalPages}
-                  className='border border-gray-300 text-gray-700 rounded py-2 px-4 hover:bg-gray-200 transition'
-                >
-                  &raquo;
-                </button>
-              </div>
+                  {Array.from({ length: totalPages }, (_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentPage(index + 1)}
+                      className={`w-10 h-10 flex items-center justify-center rounded-full font-medium transition-all ${
+                        currentPage === index + 1
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-blue-100'
+                      }`}
+                    >
+                      {index + 1}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                    disabled={currentPage === totalPages}
+                    className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${
+                      currentPage === totalPages
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        : 'bg-blue-500 text-white hover:bg-blue-600'
+                    }`}
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

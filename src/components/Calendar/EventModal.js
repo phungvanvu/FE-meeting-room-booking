@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import GlobalContext from '../../context/GlobalContext';
 import API_BASE_URL from '../../config';
+import { toast } from 'react-toastify';
 
 export default function EventModal({ onBookingSuccess }) {
   const { setShowEventModal, eventData, setEventData } =
@@ -120,6 +121,7 @@ export default function EventModal({ onBookingSuccess }) {
 
       const result = await response.json();
       if (result.success) {
+        toast.success('Booking successful!');
         onBookingSuccess();
         setEventData({ ...defaultEventData });
         setShowEventModal(false);

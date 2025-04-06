@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../../config';
+import { toast } from 'react-toastify';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -36,6 +37,7 @@ const UserManagement = () => {
     password: '',
     position: '',
     roles: [],
+    enabled: true,
   });
 
   const getAuthHeaders = () => {
@@ -146,6 +148,7 @@ const UserManagement = () => {
       password: '',
       position: user.positionName || '',
       roles: user.roles,
+      enabled: user.enabled,
     });
     setShowForm(true);
   };
@@ -160,7 +163,7 @@ const UserManagement = () => {
       group: formData.group,
       position: formData.position,
       roles: formData.roles,
-      enabled: true,
+      enabled: formData.enabled,
     };
 
     if (formData.password.trim()) {
@@ -179,6 +182,11 @@ const UserManagement = () => {
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
+          toast.success(
+            currentUser
+              ? 'User updated successfully!'
+              : 'User added successfully!',
+          );
           fetchUsers();
           setShowForm(false);
         } else {
@@ -205,12 +213,17 @@ const UserManagement = () => {
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
+          toast.success('User deleted successfully!');
           fetchUsers();
         } else {
+          toast.error(data.error?.message || 'Error deleting user');
           console.error('Error deleting user', data.error);
         }
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error('Error deleting user', err);
+        toast.error(err.message || 'Error deleting user');
+      });
 
     setShowConfirmDelete(false);
   };
@@ -724,6 +737,42 @@ const UserManagement = () => {
                     </button>
                   </div>
                 </div>
+              </div>
+              {/* Toggle Switch cho Enabled */}
+              <div className='mt-4 flex items-center'>
+                <label
+                  htmlFor='toggle-enabled'
+                  className='relative inline-block w-12 h-6'
+                >
+                  <input
+                    id='toggle-enabled'
+                    type='checkbox'
+                    checked={formData.enabled}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        enabled: e.target.checked,
+                      }))
+                    }
+                    className='opacity-0 w-0 h-0'
+                  />
+                  <span
+                    className={`absolute inset-0 cursor-pointer rounded-full transition-colors duration-200 ${
+                      formData.enabled ? 'bg-blue-500' : 'bg-gray-300'
+                    }`}
+                  ></span>
+                  <span
+                    className={`absolute left-0 top-0 bg-white w-6 h-6 rounded-full transition-transform duration-200 ease-in-out transform ${
+                      formData.enabled ? 'translate-x-6' : 'translate-x-0'
+                    }`}
+                  ></span>
+                </label>
+                <span className='ml-3 text-sm font-medium text-gray-700'>
+                  Enabled{' '}
+                  <span className='font-normal text-gray-600'>
+                    (User is active)
+                  </span>
+                </span>
               </div>
               {/* Role */}
               <div className='mt-4'>
