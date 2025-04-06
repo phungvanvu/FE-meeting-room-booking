@@ -1,20 +1,51 @@
 import React, { useEffect, useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import API_BASE_URL from '../../config';
+import { toast } from 'react-toastify';
 
-const MyRooms = () => {
+const MyBookings = () => {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [bookings, setBookings] = useState([]);
   const [editError, setEditError] = useState(null);
-
+  const [searchTerm, setSearchTerm] = useState('');
+  const [startDateTime, setStartDateTime] = useState('');
+  const [endDateTime, setEndDateTime] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [size, setSize] = useState(6);
+  const [totalPages, setTotalPages] = useState(0);
+  const [sort, setSort] = useState('startTime,asc');
   const accessToken = sessionStorage.getItem('accessToken');
+
+  // Hàm helper lấy thời gian hiện tại theo local định dạng "YYYY-MM-DDTHH:mm"
+  const getLocalDateTime = () => {
+    const now = new Date();
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16);
+  };
 
   const fetchBookings = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/roombooking/upcoming/my`, {
+      const url = new URL(`${API_BASE_URL}/roombooking/upcoming/my`);
+      const params = {
+        page: currentPage - 1,
+        size: size,
+        sort: sort,
+      };
+      if (searchTerm) params.roomName = searchTerm;
+      if (startDateTime) params.fromTime = startDateTime;
+      if (endDateTime) params.toTime = endDateTime;
+
+      Object.keys(params).forEach((key) =>
+        url.searchParams.append(key, params[key]),
+      );
+
+      const response = await fetch(url, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
@@ -22,7 +53,8 @@ const MyRooms = () => {
       });
       const data = await response.json();
       if (data.success) {
-        setBookings(data.data);
+        setBookings(data.data.content);
+        setTotalPages(data.data.totalPages);
       } else {
         console.error('Error fetching bookings:', data.error);
       }
@@ -33,8 +65,24 @@ const MyRooms = () => {
 
   useEffect(() => {
     fetchBookings();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, sort]);
 
+  const handleSearch = () => {
+    setCurrentPage(1);
+    fetchBookings();
+  };
+
+  const resetFilters = () => {
+    setSearchTerm('');
+    setStartDateTime('');
+    setEndDateTime('');
+    setSelectedStatus('');
+    setCurrentPage(1);
+    fetchBookings();
+  };
+
+  // Các hàm xử lý chỉnh sửa và hủy booking như cũ
   const handleEdit = (booking) => {
     setSelectedBooking(booking);
     setEditError(null);
@@ -72,6 +120,7 @@ const MyRooms = () => {
       );
       const data = await response.json();
       if (data.success) {
+        toast.success('Update successfully!');
         setBookings(
           bookings.map((b) =>
             b.bookingId === data.data.bookingId ? data.data : b,
@@ -81,7 +130,6 @@ const MyRooms = () => {
         setIsEditing(false);
         setSelectedBooking(null);
       } else {
-        // Display error message from API
         setEditError(data.error.message);
       }
     } catch (error) {
@@ -104,6 +152,7 @@ const MyRooms = () => {
       );
       const data = await response.json();
       if (data.success) {
+        toast.success('Deleted successfully!');
         setBookings(
           bookings.filter((b) => b.bookingId !== selectedBooking.bookingId),
         );
@@ -129,55 +178,159 @@ const MyRooms = () => {
   };
 
   return (
-    <div className='flex flex-col min-h-screen'>
+    <div className='flex flex-col min-h-screen bg-gray-50'>
       <Header />
-      <main className='container mx-auto px-4 py-8 flex-grow'>
+      <main className='container mx-auto px-8 py-8 flex-grow'>
         <h2 className='text-2xl font-bold text-center mb-8'>My Bookings</h2>
-        <div className='overflow-x-auto shadow-lg rounded-lg'>
-          <table className='min-w-full bg-white'>
-            <thead className='bg-gradient-to-r from-blue-500 to-blue-600 text-white'>
-              <tr>
-                <th className='py-3 px-4 text-left'>No.</th>
-                <th className='py-3 px-4 text-left'>Room Name</th>
-                <th className='py-3 px-4 text-left'>Start Time</th>
-                <th className='py-3 px-4 text-left'>End Time</th>
-                <th className='py-3 px-4 text-left'>Booked At</th>
-                <th className='py-3 px-4 text-left'>Purpose</th>
-                <th className='py-3 px-4 text-left'>Description</th>
-                <th className='py-3 px-4 text-center'>Actions</th>
-              </tr>
-            </thead>
-            <tbody className='divide-y divide-gray-200'>
-              {bookings.map((booking, index) => (
-                <tr
-                  key={booking.bookingId}
-                  className='hover:bg-gray-100 transition'
-                >
-                  <td className='py-3 px-4'>{index + 1}</td>
-                  <td className='py-3 px-4'>{booking.roomName}</td>
-                  <td className='py-3 px-4'>{booking.startTime}</td>
-                  <td className='py-3 px-4'>{booking.endTime}</td>
-                  <td className='py-3 px-4'>{booking.createdAt}</td>
-                  <td className='py-3 px-4'>{booking.purpose}</td>
-                  <td className='py-3 px-4'>{booking.description}</td>
-                  <td className='py-3 px-4 text-center'>
-                    <button
-                      className='text-blue-600 font-semibold hover:underline mr-2'
-                      onClick={() => handleEdit(booking)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className='text-red-600 font-semibold hover:underline'
-                      onClick={() => handleDelete(booking)}
-                    >
-                      Cancel
-                    </button>
-                  </td>
+        <div className='flex gap-6'>
+          {/* Filter Sidebar */}
+          <div className='w-1/4 bg-white p-6 rounded-2xl shadow-md border border-gray-200 h-full flex-shrink-0 flex flex-col'>
+            <h2 className='text-xl font-semibold mb-5 text-gray-800'>Filter</h2>
+            <div className='mb-4'>
+              <label className='block text-sm font-bold text-gray-700 mb-2'>
+                Room Name
+              </label>
+              <input
+                type='text'
+                placeholder='Enter the room name...'
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className='w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none bg-gray-50 hover:bg-gray-100 transition-all shadow-sm'
+              />
+            </div>
+            {/* DateTime Range Filter */}
+            <div className='mb-4'>
+              <label className='block text-sm font-bold text-gray-700 mb-2'>
+                From
+              </label>
+              <input
+                type='datetime-local'
+                value={startDateTime}
+                onChange={(e) => setStartDateTime(e.target.value)}
+                min={getLocalDateTime()}
+                className='w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none bg-gray-50 hover:bg-gray-100 transition-all shadow-sm'
+              />
+            </div>
+            <div className='mb-4'>
+              <label className='block text-sm font-bold text-gray-700 mb-2'>
+                To
+              </label>
+              <input
+                type='datetime-local'
+                value={endDateTime}
+                onChange={(e) => setEndDateTime(e.target.value)}
+                min={startDateTime || getLocalDateTime()}
+                className='w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none bg-gray-50 hover:bg-gray-100 transition-all shadow-sm'
+              />
+            </div>
+            <div className='flex justify-between mt-auto pt-4 border-t border-gray-200'>
+              <button
+                onClick={resetFilters}
+                className='w-1/2 mr-2 py-2 bg-gray-100 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-200 transition-all'
+              >
+                Reset
+              </button>
+              <button
+                onClick={handleSearch}
+                className='w-1/2 ml-2 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all'
+              >
+                Search
+              </button>
+            </div>
+          </div>
+          {/* Table hiển thị danh sách booking */}
+          <div className='w-3/4 overflow-hidden'>
+            <table className='min-w-full bg-white border border-gray-300 shadow-md text-sm'>
+              <thead>
+                <tr className='bg-gradient-to-r from-blue-500 to-blue-600 text-white'>
+                  <th className='py-3 px-4 text-left'>No.</th>
+                  <th className='py-3 px-4 text-left'>Room Name</th>
+                  <th className='py-3 px-4 text-left'>Start Time</th>
+                  <th className='py-3 px-4 text-left'>End Time</th>
+                  <th className='py-3 px-4 text-left'>Booked At</th>
+                  <th className='py-3 px-4 text-left'>Purpose</th>
+                  <th className='py-3 px-4 text-left'>Description</th>
+                  <th className='py-3 px-4 text-center'>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className='divide-y divide-gray-200'>
+                {bookings.map((booking, index) => (
+                  <tr
+                    key={booking.bookingId}
+                    className='hover:bg-gray-100 transition'
+                  >
+                    <td className='py-3 px-4'>
+                      {(currentPage - 1) * size + index + 1}
+                    </td>
+                    <td className='py-3 px-4'>{booking.roomName}</td>
+                    <td className='py-3 px-4'>{booking.startTime}</td>
+                    <td className='py-3 px-4'>{booking.endTime}</td>
+                    <td className='py-3 px-4'>{booking.createdAt}</td>
+                    <td className='py-3 px-4'>{booking.purpose}</td>
+                    <td className='py-3 px-4'>{booking.description}</td>
+                    <td className='py-3 px-4 text-center'>
+                      <button
+                        className='text-blue-600 font-semibold hover:underline mr-2'
+                        onClick={() => handleEdit(booking)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className='text-red-600 font-semibold hover:underline'
+                        onClick={() => handleDelete(booking)}
+                      >
+                        Cancel
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className='flex justify-center items-center mt-8 gap-2'>
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  disabled={currentPage === 1}
+                  className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${
+                    currentPage === 1
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-500 text-white hover:bg-blue-600'
+                  }`}
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                {Array.from({ length: totalPages }, (_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentPage(index + 1)}
+                    className={`w-10 h-10 flex items-center justify-center rounded-full font-medium transition-all ${
+                      currentPage === index + 1
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-blue-100'
+                    }`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                  disabled={currentPage === totalPages}
+                  className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${
+                    currentPage === totalPages
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-500 text-white hover:bg-blue-600'
+                  }`}
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </main>
 
@@ -244,7 +397,9 @@ const MyRooms = () => {
                   <option value='INTERVIEW'>Interview</option>
                   <option value='MEETING'>Meeting</option>
                   <option value='TRAINING'>Training</option>
-                  <option value='CLIENT_MEETING'>Meet customers/partners</option>
+                  <option value='CLIENT_MEETING'>
+                    Meet customers/partners
+                  </option>
                 </select>
               </div>
               <div className='mb-4'>
@@ -317,4 +472,4 @@ const MyRooms = () => {
   );
 };
 
-export default MyRooms;
+export default MyBookings;

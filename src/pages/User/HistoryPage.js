@@ -78,7 +78,7 @@ const History = () => {
         <div className='flex flex-col p-6 w-full space-y-6'>
           <div className='flex space-x-6'>
             {/* Filter Sidebar */}
-            <div className='w-1/4 bg-white p-6 rounded-2xl shadow-md border border-gray-200 h-full flex-shrink-0 flex flex-col'>
+            <div className='w-1/5 bg-white p-6 rounded-2xl shadow-md border border-gray-200 h-full flex-shrink-0 flex flex-col'>
               <h2 className='text-xl font-semibold mb-5 text-gray-800'>
                 Filter
               </h2>
@@ -159,7 +159,7 @@ const History = () => {
             </div>
 
             {/* Booking Table */}
-            <div className='w-3/4 overflow-hidden'>
+            <div className='w-4/5 overflow-hidden'>
               <h2 className='text-center text-2xl font-bold mb-4'>
                 Booking History
               </h2>

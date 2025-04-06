@@ -22,6 +22,14 @@ export default function EventModal({ onBookingSuccess }) {
     description: '',
   };
 
+  // Hàm helper lấy thời gian hiện tại theo local định dạng "YYYY-MM-DDTHH:mm"
+  const getLocalDateTime = () => {
+    const now = new Date();
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16);
+  };
+
   useEffect(() => {
     if (roomId) {
       setEventData((prev) => ({ ...prev, roomId }));
@@ -207,6 +215,7 @@ export default function EventModal({ onBookingSuccess }) {
               name='startTime'
               value={eventData.startTime || ''}
               onChange={handleChange}
+              min={getLocalDateTime()}
               className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400'
             />
           </div>
@@ -221,6 +230,7 @@ export default function EventModal({ onBookingSuccess }) {
               name='endTime'
               value={eventData.endTime || ''}
               onChange={handleChange}
+              min={eventData.startTime || getLocalDateTime()}
               className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400'
             />
           </div>
