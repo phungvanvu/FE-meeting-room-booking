@@ -16,7 +16,7 @@ const MyBookings = () => {
   const [endDateTime, setEndDateTime] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [size, setSize] = useState(6);
+  const [size, setSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
   const [sort, setSort] = useState('startTime,asc');
   const accessToken = sessionStorage.getItem('accessToken');

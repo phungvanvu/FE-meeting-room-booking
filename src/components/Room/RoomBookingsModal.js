@@ -55,9 +55,7 @@ export default function RoomBookingsModal({ roomId, onClose }) {
           <X size={24} />
         </button>
         {/* Tiêu đề */}
-        <h2 className='text-2xl font-bold mb-6 text-gray-800'>
-          Danh sách Booking
-        </h2>
+        <h2 className='text-2xl font-bold mb-6 text-gray-800'>Booking List</h2>
 
         {/* Trạng thái tải hoặc lỗi */}
         {loading ? (
