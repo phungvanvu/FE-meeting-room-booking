@@ -5,8 +5,10 @@ import Footer from '../../components/Footer';
 import API_BASE_URL from '../../config';
 import { toast } from 'react-toastify';
 
-const MyBookings = () => {
+const MyBookingsPage = () => {
+  // State quản lý booking và thao tác liên quan
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [selectedBookingIds, setSelectedBookingIds] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [bookings, setBookings] = useState([]);
@@ -14,14 +16,14 @@ const MyBookings = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [startDateTime, setStartDateTime] = useState('');
   const [endDateTime, setEndDateTime] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
+  // Các state phân trang và sắp xếp
   const [currentPage, setCurrentPage] = useState(1);
-  const [size, setSize] = useState(10);
+  const [size] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
-  const [sort, setSort] = useState('startTime,asc');
+  const [sort] = useState('startTime,asc');
   const accessToken = sessionStorage.getItem('accessToken');
 
-  // Hàm helper lấy thời gian hiện tại theo local định dạng "YYYY-MM-DDTHH:mm"
+  // Hàm trả về thời gian hiện tại định dạng "YYYY-MM-DDTHH:mm" theo local time
   const getLocalDateTime = () => {
     const now = new Date();
     return new Date(now.getTime() - now.getTimezoneOffset() * 60000)
@@ -29,6 +31,7 @@ const MyBookings = () => {
       .slice(0, 16);
   };
 
+  // Lấy danh sách booking của chính user
   const fetchBookings = async () => {
     try {
       const url = new URL(`${API_BASE_URL}/roombooking/upcoming/my`);
@@ -65,7 +68,6 @@ const MyBookings = () => {
 
   useEffect(() => {
     fetchBookings();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, sort]);
 
   const handleSearch = () => {
@@ -77,12 +79,10 @@ const MyBookings = () => {
     setSearchTerm('');
     setStartDateTime('');
     setEndDateTime('');
-    setSelectedStatus('');
     setCurrentPage(1);
     fetchBookings();
   };
 
-  // Các hàm xử lý chỉnh sửa và hủy booking như cũ
   const handleEdit = (booking) => {
     setSelectedBooking(booking);
     setEditError(null);
@@ -92,6 +92,14 @@ const MyBookings = () => {
   const handleDelete = (booking) => {
     setSelectedBooking(booking);
     setIsConfirming(true);
+  };
+
+  const handleSelectBooking = (bookingId) => {
+    setSelectedBookingIds((prevSelected) =>
+      prevSelected.includes(bookingId)
+        ? prevSelected.filter((id) => id !== bookingId)
+        : [...prevSelected, bookingId],
+    );
   };
 
   const saveBooking = async () => {
@@ -166,6 +174,38 @@ const MyBookings = () => {
     }
   };
 
+  const cancelMultipleBookings = async () => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/roombooking/cancel-multiple`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(selectedBookingIds),
+        },
+      );
+
+      const data = await response.json();
+      if (data.success) {
+        toast.success(data.data);
+        setBookings(
+          bookings.filter((b) => !selectedBookingIds.includes(b.bookingId)),
+        );
+        setSelectedBookingIds([]);
+        setIsConfirming(false);
+      } else {
+        console.error('Cancel multiple bookings failed:', data.error);
+        toast.error('Batch cancellation failed.');
+      }
+    } catch (error) {
+      console.error('Error cancelling multiple bookings:', error);
+      toast.error('An error occurred while cancelling bookings.');
+    }
+  };
+
   const cancelDelete = () => {
     setIsConfirming(false);
     setSelectedBooking(null);
@@ -178,79 +218,128 @@ const MyBookings = () => {
   };
 
   return (
-    <div className='flex flex-col min-h-screen bg-gray-50'>
+    <div className='min-h-screen flex flex-col bg-gray-50'>
       <Header />
-      <main className='container mx-auto px-8 py-8 flex-grow'>
-        <h2 className='text-2xl font-bold text-center mb-8'>My Bookings</h2>
-        <div className='flex gap-6'>
-          {/* Filter Sidebar */}
-          <div className='w-1/4 bg-white p-6 rounded-2xl shadow-md border border-gray-200 h-full flex-shrink-0 flex flex-col'>
-            <h2 className='text-xl font-semibold mb-5 text-gray-800'>Filter</h2>
-            <div className='mb-4'>
-              <label className='block text-sm font-bold text-gray-700 mb-2'>
-                Room Name
-              </label>
-              <input
-                type='text'
-                placeholder='Enter the room name...'
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className='w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none bg-gray-50 hover:bg-gray-100 transition-all shadow-sm'
-              />
-            </div>
-            {/* DateTime Range Filter */}
-            <div className='mb-4'>
-              <label className='block text-sm font-bold text-gray-700 mb-2'>
-                From
-              </label>
-              <input
-                type='datetime-local'
-                value={startDateTime}
-                onChange={(e) => setStartDateTime(e.target.value)}
-                min={getLocalDateTime()}
-                className='w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none bg-gray-50 hover:bg-gray-100 transition-all shadow-sm'
-              />
-            </div>
-            <div className='mb-4'>
-              <label className='block text-sm font-bold text-gray-700 mb-2'>
-                To
-              </label>
-              <input
-                type='datetime-local'
-                value={endDateTime}
-                onChange={(e) => setEndDateTime(e.target.value)}
-                min={startDateTime || getLocalDateTime()}
-                className='w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none bg-gray-50 hover:bg-gray-100 transition-all shadow-sm'
-              />
-            </div>
-            <div className='flex justify-between mt-auto pt-4 border-t border-gray-200'>
-              <button
-                onClick={resetFilters}
-                className='w-1/2 mr-2 py-2 bg-gray-100 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-200 transition-all'
-              >
-                Reset
-              </button>
-              <button
-                onClick={handleSearch}
-                className='w-1/2 ml-2 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all'
-              >
-                Search
-              </button>
-            </div>
+      <div className='flex-grow mx-auto mt-10 flex gap-4 mb-10 px-6 w-full'>
+        {/* Filter Sidebar */}
+        <div className='w-1/5 bg-white p-6 rounded-2xl shadow-md border border-gray-200 flex flex-col'>
+          <h2 className='text-xl font-semibold mb-5 text-gray-800'>Filter</h2>
+          <div className='mb-4'>
+            <label className='block text-sm font-bold text-gray-700 mb-2'>
+              Room Name
+            </label>
+            <input
+              type='text'
+              placeholder='Enter room name...'
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className='w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50 hover:bg-gray-100 transition-all shadow-sm'
+            />
           </div>
-          {/* Table hiển thị danh sách booking */}
-          <div className='w-3/4 overflow-hidden'>
-            <table className='min-w-full bg-white border border-gray-300 shadow-md text-sm'>
-              <thead>
-                <tr className='bg-gradient-to-r from-blue-500 to-blue-600 text-white'>
-                  <th className='py-3 px-4 text-left'>No.</th>
-                  <th className='py-3 px-4 text-left'>Room Name</th>
-                  <th className='py-3 px-4 text-left'>Start Time</th>
-                  <th className='py-3 px-4 text-left'>End Time</th>
-                  <th className='py-3 px-4 text-left'>Booked At</th>
-                  <th className='py-3 px-4 text-left'>Purpose</th>
-                  <th className='py-3 px-4 text-left'>Description</th>
-                  <th className='py-3 px-4 text-center'>Actions</th>
+          {/* DateTime Range Filter */}
+          <div className='mb-4'>
+            <label className='block text-sm font-bold text-gray-700 mb-2'>
+              From
+            </label>
+            <input
+              type='datetime-local'
+              value={startDateTime}
+              onChange={(e) => setStartDateTime(e.target.value)}
+              min={getLocalDateTime()}
+              className='w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50 hover:bg-gray-100 transition-all shadow-sm'
+            />
+          </div>
+          <div className='mb-4'>
+            <label className='block text-sm font-bold text-gray-700 mb-2'>
+              To
+            </label>
+            <input
+              type='datetime-local'
+              value={endDateTime}
+              onChange={(e) => setEndDateTime(e.target.value)}
+              min={startDateTime || getLocalDateTime()}
+              className='w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50 hover:bg-gray-100 transition-all shadow-sm'
+            />
+          </div>
+          <div className='flex justify-between mt-auto pt-4 border-t border-gray-200'>
+            <button
+              onClick={resetFilters}
+              className='w-1/2 mr-2 py-2 bg-gray-100 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-200 transition-all'
+            >
+              Reset
+            </button>
+            <button
+              onClick={handleSearch}
+              className='w-1/2 ml-2 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all'
+            >
+              Search
+            </button>
+          </div>
+        </div>
+        {/* Booking List */}
+        <div className='w-4/5'>
+          <div className='flex justify-between items-center mb-6'>
+            <h2 className='text-2xl font-bold text-gray-800'>My Bookings</h2>
+            {/* Always visible Cancel Selected button */}
+            <button
+              className='bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow transition'
+              onClick={() => {
+                if (selectedBookingIds.length === 0) {
+                  toast.error('Please select at least one booking to cancel.');
+                  return;
+                }
+                setIsConfirming(true);
+              }}
+            >
+              Cancel Selected
+            </button>
+          </div>
+          <div className='overflow-x-auto bg-white rounded-xl shadow-md'>
+            <table className='min-w-full table-fixed'>
+              <thead className='bg-gray-200'>
+                <tr>
+                  <th className='px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    <input
+                      type='checkbox'
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          const allIds = bookings.map((b) => b.bookingId);
+                          setSelectedBookingIds(allIds);
+                        } else {
+                          setSelectedBookingIds([]);
+                        }
+                      }}
+                      checked={
+                        bookings.length > 0 &&
+                        selectedBookingIds.length === bookings.length
+                      }
+                      className='h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500'
+                    />
+                  </th>
+                  <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    No.
+                  </th>
+                  <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    Room Name
+                  </th>
+                  <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    Start Time
+                  </th>
+                  <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    End Time
+                  </th>
+                  <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    Booked At
+                  </th>
+                  <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    Purpose
+                  </th>
+                  <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    Description
+                  </th>
+                  <th className='px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className='divide-y divide-gray-200'>
@@ -259,25 +348,33 @@ const MyBookings = () => {
                     key={booking.bookingId}
                     className='hover:bg-gray-100 transition'
                   >
-                    <td className='py-3 px-4'>
+                    <td className='px-4 py-3 text-center'>
+                      <input
+                        type='checkbox'
+                        checked={selectedBookingIds.includes(booking.bookingId)}
+                        onChange={() => handleSelectBooking(booking.bookingId)}
+                        className='h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500'
+                      />
+                    </td>
+                    <td className='px-4 py-3'>
                       {(currentPage - 1) * size + index + 1}
                     </td>
-                    <td className='py-3 px-4'>{booking.roomName}</td>
-                    <td className='py-3 px-4'>{booking.startTime}</td>
-                    <td className='py-3 px-4'>{booking.endTime}</td>
-                    <td className='py-3 px-4'>{booking.createdAt}</td>
-                    <td className='py-3 px-4'>{booking.purpose}</td>
-                    <td className='py-3 px-4'>{booking.description}</td>
-                    <td className='py-3 px-4 text-center'>
+                    <td className='px-4 py-3'>{booking.roomName}</td>
+                    <td className='px-4 py-3'>{booking.startTime}</td>
+                    <td className='px-4 py-3'>{booking.endTime}</td>
+                    <td className='px-4 py-3'>{booking.createdAt}</td>
+                    <td className='px-4 py-3'>{booking.purpose}</td>
+                    <td className='px-4 py-3'>{booking.description}</td>
+                    <td className='px-4 py-3 text-center'>
                       <button
-                        className='text-blue-600 font-semibold hover:underline mr-2'
                         onClick={() => handleEdit(booking)}
+                        className='text-blue-600 font-semibold hover:underline mr-2 text-sm'
                       >
                         Edit
                       </button>
                       <button
-                        className='text-red-600 font-semibold hover:underline'
                         onClick={() => handleDelete(booking)}
+                        className='text-red-600 font-semibold hover:underline text-sm'
                       >
                         Cancel
                       </button>
@@ -286,57 +383,57 @@ const MyBookings = () => {
                 ))}
               </tbody>
             </table>
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className='flex justify-center items-center mt-8 gap-2'>
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
-                  disabled={currentPage === 1}
-                  className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${
-                    currentPage === 1
-                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                      : 'bg-blue-500 text-white hover:bg-blue-600'
-                  }`}
-                >
-                  <ChevronLeft size={18} />
-                </button>
-                {Array.from({ length: totalPages }, (_, index) => (
+          </div>
+          {/* Phân trang */}
+          {totalPages > 1 && (
+            <div className='flex justify-center items-center mt-8 gap-2'>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${
+                  currentPage === 1
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-500 text-white hover:bg-blue-600'
+                }`}
+              >
+                <ChevronLeft size={18} />
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
                   <button
-                    key={index}
-                    onClick={() => setCurrentPage(index + 1)}
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
                     className={`w-10 h-10 flex items-center justify-center rounded-full font-medium transition-all ${
-                      currentPage === index + 1
+                      currentPage === page
                         ? 'bg-blue-500 text-white'
                         : 'bg-gray-100 text-gray-700 hover:bg-blue-100'
                     }`}
                   >
-                    {index + 1}
+                    {page}
                   </button>
-                ))}
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                  }
-                  disabled={currentPage === totalPages}
-                  className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${
-                    currentPage === totalPages
-                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                      : 'bg-blue-500 text-white hover:bg-blue-600'
-                  }`}
-                >
-                  <ChevronRight size={18} />
-                </button>
-              </div>
-            )}
-          </div>
+                ),
+              )}
+              <button
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+                className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${
+                  currentPage === totalPages
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-500 text-white hover:bg-blue-600'
+                }`}
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          )}
         </div>
-      </main>
+      </div>
 
-      {/* Edit Booking Modal */}
+      {/* Modal Edit Booking */}
       {isEditing && selectedBooking && (
-        <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
+        <div className='fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50'>
           <div className='bg-white rounded-lg shadow-xl w-full max-w-lg p-8 transform transition-all'>
             <h3 className='text-2xl font-bold text-center mb-6'>
               Edit Booking
@@ -439,27 +536,37 @@ const MyBookings = () => {
         </div>
       )}
 
-      {/* Cancel Booking Confirmation Modal */}
-      {isConfirming && selectedBooking && (
-        <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
-          <div className='bg-white rounded-lg shadow-xl w-full max-w-md p-8 transform transition-all'>
-            <h3 className='text-2xl font-bold text-center mb-6'>
-              Confirm Cancellation
+      {/* Modal Confirm Cancel */}
+      {isConfirming && (
+        <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50'>
+          <div className='bg-white rounded-xl shadow-xl p-8 max-w-sm w-full'>
+            <h3 className='text-2xl font-semibold text-gray-800 text-center mb-4'>
+              Confirm Cancel
             </h3>
-            <p className='text-center text-gray-700 mb-6'>
-              Are you sure you want to cancel the booking for room "
-              {selectedBooking.roomName}"?
+            <p className='text-center text-gray-600 mb-6'>
+              {selectedBookingIds.length > 0
+                ? 'Are you sure you want to cancel the selected bookings?'
+                : `Are you sure you want to cancel the booking for room "${selectedBooking?.roomName}"?`}
             </p>
             <div className='flex justify-center space-x-4'>
               <button
-                className='bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-2 rounded transition'
-                onClick={cancelBooking}
+                className='px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition'
+                onClick={() => {
+                  if (selectedBookingIds.length > 0) {
+                    cancelMultipleBookings();
+                  } else if (selectedBooking) {
+                    cancelBooking();
+                  }
+                }}
               >
                 Yes
               </button>
               <button
-                className='bg-gray-600 hover:bg-gray-700 text-white font-semibold px-6 py-2 rounded transition'
-                onClick={cancelDelete}
+                className='px-5 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-100 transition'
+                onClick={() => {
+                  setIsConfirming(false);
+                  if (!selectedBookingIds.length) setSelectedBooking(null);
+                }}
               >
                 Cancel
               </button>
@@ -472,4 +579,4 @@ const MyBookings = () => {
   );
 };
 
-export default MyBookings;
+export default MyBookingsPage;

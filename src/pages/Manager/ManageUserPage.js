@@ -10,6 +10,7 @@ import { Eye, EyeOff } from 'lucide-react';
 const UserManagement = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');
@@ -26,6 +27,7 @@ const UserManagement = () => {
   const [showForm, setShowForm] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [showMultiDeleteConfirm, setShowMultiDeleteConfirm] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [formData, setFormData] = useState({
     userName: '',
@@ -73,6 +75,8 @@ const UserManagement = () => {
         if (data.success) {
           setUsers(data.data.content);
           setTotalPages(data.data.totalPages);
+          // Clear the selection if the user list changes
+          setSelectedUserIds([]);
         } else {
           console.error('Error fetching users:', data.error);
         }
@@ -132,6 +136,7 @@ const UserManagement = () => {
       password: '',
       position: '',
       roles: [],
+      enabled: true,
     });
     setShowForm(true);
   };
@@ -261,11 +266,9 @@ const UserManagement = () => {
         filename = `users_${formattedTime}.xlsx`;
       }
       const blob = await response.blob();
-
-      // Tạo một liên kết tạm thời để tải tệp về
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = filename; // Dùng tên tệp đã xử lý
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -275,6 +278,36 @@ const UserManagement = () => {
     }
   };
 
+  const handleDeleteMultipleUsers = () => {
+    if (selectedUserIds.length === 0) {
+      toast.error('Please select at least one user to delete.');
+      return;
+    }
+    setShowMultiDeleteConfirm(true);
+  };
+
+  const confirmDeleteMultiple = () => {
+    fetch(`${API_BASE_URL}/user/delete-multiple`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(selectedUserIds),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          toast.success('Selected users have been deleted successfully.');
+          fetchUsers();
+        } else {
+          toast.error(data.error?.message || 'Error deleting users');
+        }
+      })
+      .catch((err) => {
+        console.error('Error deleting users', err);
+        toast.error(err.message || 'Error deleting users');
+      });
+    setShowMultiDeleteConfirm(false);
+  };
+
   return (
     <div className='min-h-screen flex flex-col bg-gray-50'>
       <Header />
@@ -282,7 +315,7 @@ const UserManagement = () => {
         {/* Filter Sidebar */}
         <div className='w-1/5 bg-white p-6 rounded-2xl shadow-md border border-gray-200 flex flex-col'>
           <h2 className='text-xl font-semibold mb-5 text-gray-800'>Filter</h2>
-          {/* Search by Name*/}
+          {/* Search by Name */}
           <div className='mb-4'>
             <label className='block text-sm font-bold text-gray-700 mb-2'>
               Enter Name
@@ -339,7 +372,6 @@ const UserManagement = () => {
               ))}
             </div>
           </div>
-
           {/* Group Filter */}
           <div className='mb-4'>
             <label className='block text-sm font-bold text-gray-700 mb-2'>
@@ -425,7 +457,12 @@ const UserManagement = () => {
               >
                 Add User
               </button>
-
+              <button
+                onClick={handleDeleteMultipleUsers}
+                className='bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow transition'
+              >
+                Delete Selected
+              </button>
               <button
                 onClick={exportToExcel}
                 className='bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg shadow transition'
@@ -438,6 +475,24 @@ const UserManagement = () => {
             <table className='min-w-full table-fixed'>
               <thead className='bg-gray-200'>
                 <tr>
+                  <th className='px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    <input
+                      type='checkbox'
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          const allIds = users.map((user) => user.userId);
+                          setSelectedUserIds(allIds);
+                        } else {
+                          setSelectedUserIds([]);
+                        }
+                      }}
+                      checked={
+                        users.length > 0 &&
+                        selectedUserIds.length === users.length
+                      }
+                      className='h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500'
+                    />
+                  </th>
                   <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                     No.
                   </th>
@@ -470,9 +525,23 @@ const UserManagement = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody className='bg-white divide-y divide-gray-200'>
+              <tbody className='divide-y divide-gray-200'>
                 {users.map((user, index) => (
                   <tr key={user.userId} className='hover:bg-gray-50 transition'>
+                    <td className='px-6 py-4 whitespace-normal'>
+                      <input
+                        type='checkbox'
+                        checked={selectedUserIds.includes(user.userId)}
+                        onChange={() => {
+                          setSelectedUserIds((prev) =>
+                            prev.includes(user.userId)
+                              ? prev.filter((id) => id !== user.userId)
+                              : [...prev, user.userId],
+                          );
+                        }}
+                        className='h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500'
+                      />
+                    </td>
                     <td className='px-6 py-4 whitespace-normal'>
                       {(currentPage - 1) * usersPerPage + index + 1}
                     </td>
@@ -594,7 +663,7 @@ const UserManagement = () => {
                 saveUser();
               }}
             >
-              {/* Container cho các trường đầu tiên */}
+              {/* Container for the first row of inputs */}
               <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 {/* Name */}
                 <div>
@@ -686,7 +755,7 @@ const UserManagement = () => {
                   </select>
                 </div>
               </div>
-              {/* Container cho Position và Password nằm trong cùng 1 hàng */}
+              {/* Container for Position and Password */}
               <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mt-4'>
                 {/* Position */}
                 <div>
@@ -738,7 +807,7 @@ const UserManagement = () => {
                   </div>
                 </div>
               </div>
-              {/* Toggle Switch cho Enabled */}
+              {/* Toggle for Enabled */}
               <div className='mt-4 flex items-center'>
                 <label
                   htmlFor='toggle-enabled'
@@ -820,22 +889,51 @@ const UserManagement = () => {
           </div>
         </div>
       )}
-
       {showConfirmDelete && (
-        <div className='fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50'>
-          <div className='bg-white p-6 rounded-lg shadow-lg'>
-            <h2 className='text-lg font-bold mb-4'>Confirm Delete</h2>
-            <p>Are you sure you want to delete this user?</p>
-            <div className='flex justify-end mt-4'>
+        <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50'>
+          <div className='bg-white rounded-xl shadow-xl p-8 max-w-sm w-full'>
+            <h3 className='text-2xl font-semibold text-gray-800 text-center mb-4'>
+              Confirm Delete
+            </h3>
+            <p className='text-center text-gray-600 mb-6'>
+              Are you sure you want to delete this user?
+            </p>
+            <div className='flex justify-center space-x-4'>
               <button
                 onClick={confirmDelete}
-                className='border border-red-500 text-red-500 rounded py-2 px-4 hover:bg-red-500 hover:text-white transition mr-2'
+                className='px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition'
               >
                 Delete
               </button>
               <button
                 onClick={cancelDelete}
-                className='border border-gray-300 text-black rounded py-2 px-4 hover:bg-gray-200 transition'
+                className='px-5 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-100 transition'
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showMultiDeleteConfirm && (
+        <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50'>
+          <div className='bg-white rounded-xl shadow-xl p-8 max-w-sm w-full'>
+            <h3 className='text-2xl font-semibold text-gray-800 text-center mb-4'>
+              Confirm Delete
+            </h3>
+            <p className='text-center text-gray-600 mb-6'>
+              Are you sure you want to delete the selected users?
+            </p>
+            <div className='flex justify-center space-x-4'>
+              <button
+                onClick={confirmDeleteMultiple}
+                className='px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition'
+              >
+                Delete
+              </button>
+              <button
+                onClick={() => setShowMultiDeleteConfirm(false)}
+                className='px-5 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-100 transition'
               >
                 Cancel
               </button>

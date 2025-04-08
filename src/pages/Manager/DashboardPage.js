@@ -37,6 +37,7 @@ const Modal = ({ title, data, onClose, columns, rowKey }) => (
           onClick={onClose}
           className='text-gray-600 hover:text-gray-800 transition'
         >
+          {/* Close Icon */}
           <svg
             xmlns='http://www.w3.org/2000/svg'
             className='h-6 w-6'
@@ -53,7 +54,7 @@ const Modal = ({ title, data, onClose, columns, rowKey }) => (
           </svg>
         </button>
       </div>
-      <div className='mt-4'>
+      <div className='mt-4 max-h-[70vh] overflow-y-auto'>
         {data && data.length > 0 ? (
           <div className='overflow-x-auto'>
             <table className='min-w-full'>

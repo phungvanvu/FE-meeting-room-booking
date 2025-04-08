@@ -17,27 +17,19 @@ import API_BASE_URL from '../../config';
 import RoomForm from '../../components/Room/RoomForm';
 import RoomBookingsModal from '../../components/Room/RoomBookingsModal';
 import DeleteConfirmModal from '../../components/Room/DeleteConfirmModal';
-
 const ITEMS_PER_PAGE = 6;
 
 export default function ManageRoomPage() {
-  // Dữ liệu phòng trả về từ API (đã lọc, phân trang, sắp xếp)
   const [roomsData, setRoomsData] = useState([]);
   const [totalPages, setTotalPages] = useState(0);
-
-  // Các state filter (để gửi lên API)
   const [searchRoomName, setSearchRoomName] = useState('');
   const [selectedLocations, setSelectedLocations] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedCapacities, setSelectedCapacities] = useState([]);
   const [selectedDevices, setSelectedDevices] = useState([]);
-
-  // Các state cho danh sách filter option (lấy từ API /room)
   const [allLocations, setAllLocations] = useState([]);
   const [allCapacities, setAllCapacities] = useState([]);
   const [allEquipments, setAllEquipments] = useState([]);
-
-  // Các state khác
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedRooms, setSelectedRooms] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -56,17 +48,13 @@ export default function ManageRoomPage() {
         navigate('/Login');
         return;
       }
-      // Lấy dữ liệu cho filter (địa điểm, sức chứa)
       fetchFilterOptions();
-      // Lấy dữ liệu cho filter thiết bị từ API
       fetchEquipmentOptions();
-      // Lấy danh sách phòng theo filter và phân trang (trang đầu tiên)
       fetchRooms(0);
     };
     initPage();
   }, [navigate]);
 
-  // Hàm lấy danh sách phòng từ API /room để lấy các filter option
   const fetchFilterOptions = async () => {
     const accessToken = sessionStorage.getItem('accessToken');
     try {
@@ -119,7 +107,6 @@ export default function ManageRoomPage() {
     }
   };
 
-  // Hàm gọi API /room/search với các tham số filter và phân trang
   const fetchRooms = async (page) => {
     const accessToken = sessionStorage.getItem('accessToken');
     const params = new URLSearchParams();
@@ -133,7 +120,6 @@ export default function ManageRoomPage() {
       );
     }
     if (selectedStatus) {
-      // API yêu cầu Boolean cho available
       params.append('available', selectedStatus === 'Available');
     }
     if (selectedCapacities.length > 0) {
@@ -237,7 +223,6 @@ export default function ManageRoomPage() {
         available: payload.available,
         equipments: payload.equipments || [],
       };
-      // Nếu không có file upload, sử dụng imageUrl có sẵn
       if (!payload.image && payload.imageUrl) {
         roomData.imageUrl = payload.imageUrl;
       }
@@ -343,14 +328,10 @@ export default function ManageRoomPage() {
       );
 
       if (!response.ok) throw new Error('Error downloading file');
-
-      // Lấy tên tệp từ header Content-Disposition
       const disposition = response.headers.get('Content-Disposition');
       const filenameMatch = disposition && disposition.match(/filename="(.+)"/);
       let filename = filenameMatch && filenameMatch[1];
-
       if (!filename) {
-        // Nếu không có filename trong header, tạo tên tệp mặc định với giờ Việt Nam
         const date = new Date();
         const vietnamTime = new Date(date.getTime() + 7 * 60 * 60 * 1000); // Điều chỉnh múi giờ Việt Nam (GMT+7)
         const formattedTime = vietnamTime
@@ -360,13 +341,10 @@ export default function ManageRoomPage() {
           .split('.')[0]; // Định dạng theo 'yyyy-mm-dd_HH-mm-ss'
         filename = `rooms_${formattedTime}.xlsx`;
       }
-
       const blob = await response.blob();
-
-      // Tạo một liên kết tạm thời để tải tệp về
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = filename; // Dùng tên tệp đã xử lý
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -375,8 +353,6 @@ export default function ManageRoomPage() {
       console.error('Error downloading file:', error);
     }
   };
-
-  // Phân trang: currentPage là chỉ số 0-based
   const handlePreviousPage = () => {
     if (currentPage > 0) {
       fetchRooms(currentPage - 1);
@@ -387,13 +363,9 @@ export default function ManageRoomPage() {
       fetchRooms(currentPage + 1);
     }
   };
-
-  // Gọi API với các tham số filter hiện hành (và reset trang về 0)
   const handleSearch = () => {
     fetchRooms(0);
   };
-
-  // Reset các filter và gọi lại API
   const handleReset = () => {
     setSearchRoomName('');
     setSelectedRooms([]);
@@ -605,7 +577,11 @@ export default function ManageRoomPage() {
               >
                 {room.image ? (
                   <img
-                    src={room.image}
+                    src={
+                      room.image
+                        ? `${room.image}?t=${new Date().getTime()}`
+                        : 'default_image_url'
+                    }
                     alt={room.name}
                     className='w-full h-48 object-cover'
                   />
