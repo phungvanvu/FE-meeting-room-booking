@@ -103,8 +103,6 @@ const Dashboard = () => {
   const [weeklyBookings, setWeeklyBookings] = useState(null);
   const [quarterlyBookings, setQuarterlyBookings] = useState(null);
   const [mostBookedRoom, setMostBookedRoom] = useState(null);
-
-  // State cho modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
   const [modalData, setModalData] = useState([]);

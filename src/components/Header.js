@@ -110,9 +110,6 @@ export default function Header() {
             }}
           >
             <Bell className='h-6 w-6' />
-            <span className='absolute -top-2 -right-2 bg-red-500 text-xs text-white rounded-full px-1'>
-              {notifications.length}
-            </span>
             {isNotifOpen && (
               <div className='absolute right-0 mt-2 w-64 bg-white text-gray-800 shadow-md rounded-lg overflow-hidden z-50'>
                 {notifications.length > 0 ? (
