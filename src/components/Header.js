@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, ChevronDown, UserCircle } from 'lucide-react';
+import {
+  Bell,
+  ChevronDown,
+  UserCircle,
+  Info,
+  AlertTriangle,
+  XCircle,
+} from 'lucide-react';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 import API_BASE_URL from '../config';
@@ -9,6 +16,7 @@ export default function Header() {
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
 
   const token = sessionStorage.getItem('accessToken');
   let roles = [];
@@ -23,6 +31,49 @@ export default function Header() {
       console.error('Invalid token', error);
     }
   }
+
+  // Fetch thông báo của user khi component được mount
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (token) {
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/notification/MyNotification`,
+            {
+              method: 'GET',
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+          const data = await response.json();
+          if (data.success) {
+            setNotifications(data.data);
+          }
+        } catch (error) {
+          console.error('Error fetching notifications:', error);
+        }
+      }
+    };
+
+    fetchNotifications();
+  }, [token]);
+
+  // Hàm trả về icon theo type của notification với kích thước lớn hơn và margin rộng hơn
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'INFO':
+        return <Info className='h-8 w-8 text-blue-500 inline mr-4' />;
+      case 'WARNING':
+        return (
+          <AlertTriangle className='h-8 w-8 text-yellow-500 inline mr-4' />
+        );
+      case 'ERROR':
+        return <XCircle className='h-8 w-8 text-red-500 inline mr-4' />;
+      default:
+        return null;
+    }
+  };
 
   const handleLogout = async () => {
     if (token) {
@@ -49,8 +100,6 @@ export default function Header() {
       console.error('No token found, cannot logout.');
     }
   };
-
-  const notifications = [];
 
   return (
     <header className='bg-gradient-to-r from-teal-500 to-blue-500 text-white shadow-lg'>
@@ -96,6 +145,12 @@ export default function Header() {
               >
                 Manage Users
               </Link>
+              <Link
+                to='/ManageGroupPosition'
+                className='hover:underline hover:text-gray-200'
+              >
+                Groups & Positions
+              </Link>
             </>
           )}
         </nav>
@@ -111,18 +166,19 @@ export default function Header() {
           >
             <Bell className='h-6 w-6' />
             {isNotifOpen && (
-              <div className='absolute right-0 mt-2 w-64 bg-white text-gray-800 shadow-md rounded-lg overflow-hidden z-50'>
+              <div className='absolute right-0 mt-2 w-72 max-h-80 overflow-y-auto bg-white text-gray-800 shadow-md rounded-lg z-50'>
                 {notifications.length > 0 ? (
                   notifications.map((notif, idx) => (
                     <div
                       key={idx}
-                      className='px-4 py-2 border-b last:border-b-0 hover:bg-gray-100'
+                      className='px-4 py-3 border-b last:border-b-0 hover:bg-gray-100 flex items-center'
                     >
-                      {notif}
+                      {getNotificationIcon(notif.type)}
+                      <span className='text-sm'>{notif.content}</span>
                     </div>
                   ))
                 ) : (
-                  <div className='px-4 py-2 text-sm text-gray-500'>
+                  <div className='px-4 py-3 text-sm text-gray-500'>
                     No notifications.
                   </div>
                 )}

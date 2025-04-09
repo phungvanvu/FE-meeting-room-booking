@@ -17,7 +17,7 @@ import CalenderPage from './pages/User/CalenderPage';
 import ManageRoom from './pages/Manager/ManageRoomPage';
 import Dashboard from './pages/Manager/DashboardPage';
 import ManageUser from './pages/Manager/ManageUserPage';
-import ManageGroup from './pages/Manager/ManageGroupPage';
+import ManageGroupPosition from './pages/Manager/ManageGroupPosition';
 import MyBookings from './pages/User/MyBookingsPage';
 import History from './pages/User/HistoryPage';
 import Profile from './pages/User/ProfilePage';
@@ -96,7 +96,10 @@ function App() {
                 <Route path='/ManageRoom' element={<ManageRoom />} />
                 <Route path='/Dashboard' element={<Dashboard />} />
                 <Route path='/ManageUser' element={<ManageUser />} />
-                <Route path='/ManageGroup' element={<ManageGroup />} />
+                <Route
+                  path='/ManageGroupPosition'
+                  element={<ManageGroupPosition />}
+                />
                 <Route path='/BookRoom' element={<BookRoom />} />
                 <Route path='/Calendar/:roomId' element={<CalenderPage />} />
                 <Route path='/MyBookings' element={<MyBookings />} />
