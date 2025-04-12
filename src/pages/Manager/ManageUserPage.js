@@ -75,7 +75,6 @@ const UserManagement = () => {
         if (data.success) {
           setUsers(data.data.content);
           setTotalPages(data.data.totalPages);
-          // Clear the selection if the user list changes
           setSelectedUserIds([]);
         } else {
           console.error('Error fetching users:', data.error);

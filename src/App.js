@@ -12,6 +12,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { isAccessTokenValid } from './components/utils/auth';
 import { jwtDecode } from 'jwt-decode';
 import Login from './pages/Auth/LoginPage';
+import ForgotPassword from './pages/Auth/ForgotPasswordPage';
+import ResetPassword from './pages/Auth/ResetPasswordPage';
 import BookRoom from './pages/User/BookRoomPage';
 import CalenderPage from './pages/User/CalenderPage';
 import ManageRoom from './pages/Manager/ManageRoomPage';
@@ -42,7 +44,13 @@ function App() {
           }
         }
       } else {
-        navigate('/Login');
+        if (
+          location.pathname !== '/Login' &&
+          location.pathname !== '/forgot-password' &&
+          location.pathname !== '/reset-password'
+        ) {
+          navigate('/Login');
+        }
       }
     };
 
@@ -66,6 +74,8 @@ function App() {
     <Routes>
       <Route path='/' element={<Navigate to={getDefaultRedirect()} />} />
       <Route path='/Login' element={<Login />} />
+      <Route path='/forgot-password' element={<ForgotPassword />} />
+      <Route path='/reset-password' element={<ResetPassword />} />
       {/* Quyền cho ROLE_USER */}
       {(() => {
         const token = sessionStorage.getItem('accessToken');

@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Mail, Phone, Building, ShieldCheck } from 'lucide-react'; // ✅ import từ lucide-react
-
+import { Mail, Phone, Building, ShieldCheck } from 'lucide-react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import API_BASE_URL from '../../config';
+import ChangePasswordModal from '../../components/User/ChangePasswordModal';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ProfilePage = () => {
   const [userInfo, setUserInfo] = useState(null);
   const [error, setError] = useState(null);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const accessToken = sessionStorage.getItem('accessToken');
 
   useEffect(() => {
@@ -109,10 +112,33 @@ const ProfilePage = () => {
                 {userInfo.enabled ? 'Active' : 'Inactive'}
               </span>
             </div>
+
+            {/* Button đổi mật khẩu */}
+            <div className='mt-6'>
+              <button
+                onClick={() => setShowPasswordModal(true)}
+                className='px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600'
+              >
+                Change Password
+              </button>
+            </div>
           </div>
         )}
       </main>
       <Footer />
+
+      {/* Toast container hiển thị thông báo */}
+      <ToastContainer position='top-right' autoClose={3000} />
+
+      {/* Render modal đổi mật khẩu với cả onClose và onPasswordChange được truyền vào */}
+      {showPasswordModal && (
+        <ChangePasswordModal
+          onClose={() => setShowPasswordModal(false)}
+          onPasswordChange={() => {
+            console.log('Password changed successfully!');
+          }}
+        />
+      )}
     </div>
   );
 };

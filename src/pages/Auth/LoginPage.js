@@ -110,9 +110,12 @@ export default function Login() {
             {loading ? 'Signing in...' : 'Login'}
           </button>
           <p className='mt-4 text-center text-gray-600'>
-            <a href='#' className='text-blue-500 hover:underline'>
+            <button
+              onClick={() => navigate('/forgot-password')}
+              className='text-blue-500 hover:underline'
+            >
               Forgot password?
-            </a>
+            </button>
           </p>
         </form>
       </div>
