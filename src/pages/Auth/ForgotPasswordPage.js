@@ -28,14 +28,9 @@ export default function ForgotPassword() {
         { method: 'POST' },
       );
       const result = await response.json();
-
-      // Nếu API trả về thành công, nó sẽ trả về thông báo chung:
-      // "If an account with that email exists, an OTP has been sent to your email address."
       if (result.success) {
         setMessage(result.data);
-        // Không điều hướng tự động, chờ người dùng bấm nút chuyển hướng.
       } else {
-        // Hiển thị thông báo lỗi trả về từ API (lỗi này đã được thiết kế không tiết lộ thông tin nhạy cảm)
         setError(result.error?.message || 'An error occurred.');
       }
     } catch (err) {

@@ -114,7 +114,7 @@ export default function Header() {
         {/* Navigation Links */}
         <nav className='hidden md:flex space-x-6'>
           <Link to='/BookRoom' className='hover:underline hover:text-gray-200'>
-            Booking
+            Book Room
           </Link>
           <Link
             to='/MyBookings'
@@ -137,13 +137,19 @@ export default function Header() {
                 to='/ManageRoom'
                 className='hover:underline hover:text-gray-200'
               >
-                Manage Rooms
+                Rooms
+              </Link>
+              <Link
+                to='/ManageBooking'
+                className='hover:underline hover:text-gray-200'
+              >
+                Bookings
               </Link>
               <Link
                 to='/ManageUser'
                 className='hover:underline hover:text-gray-200'
               >
-                Manage Users
+                Users
               </Link>
               <Link to='/Group' className='hover:underline hover:text-gray-200'>
                 Groups

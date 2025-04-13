@@ -15,13 +15,14 @@ import Login from './pages/Auth/LoginPage';
 import ForgotPassword from './pages/Auth/ForgotPasswordPage';
 import ResetPassword from './pages/Auth/ResetPasswordPage';
 import BookRoom from './pages/User/BookRoomPage';
-import CalenderPage from './pages/User/CalenderPage';
+import Calender from './pages/User/CalenderPage';
 import ManageRoom from './pages/Manager/ManageRoomPage';
 import Dashboard from './pages/Manager/DashboardPage';
-import ManageUser from './pages/Manager/ManageUserPage';
-import ManageGroupPage from './pages/Manager/ManageGroupPage';
-import ManagePositionPage from './pages/Manager/ManagePositionPage';
-import ManageEquipmentPage from './pages/Manager/ManageEquipmentPage';
+import ManageUsers from './pages/Manager/ManageUserPage';
+import ManageGroups from './pages/Manager/ManageGroupPage';
+import ManagePositions from './pages/Manager/ManagePositionPage';
+import ManageEquipments from './pages/Manager/ManageEquipmentPage';
+import ManageBookings from './pages/Manager/ManageBookingPage';
 import MyBookings from './pages/User/MyBookingsPage';
 import History from './pages/User/HistoryPage';
 import Profile from './pages/User/ProfilePage';
@@ -87,7 +88,7 @@ function App() {
             return (
               <>
                 <Route path='/BookRoom' element={<BookRoom />} />
-                <Route path='/Calendar/:roomId' element={<CalenderPage />} />
+                <Route path='/Calendar/:roomId' element={<Calender />} />
                 <Route path='/MyBookings' element={<MyBookings />} />
                 <Route path='/History' element={<History />} />
                 <Route path='/Profile' element={<Profile />} />
@@ -107,12 +108,13 @@ function App() {
               <>
                 <Route path='/ManageRoom' element={<ManageRoom />} />
                 <Route path='/Dashboard' element={<Dashboard />} />
-                <Route path='/ManageUser' element={<ManageUser />} />
-                <Route path='/Group' element={<ManageGroupPage />} />
-                <Route path='/Position' element={<ManagePositionPage />} />
-                <Route path='/Equipment' element={<ManageEquipmentPage />} />
+                <Route path='/ManageUser' element={<ManageUsers />} />
+                <Route path='/ManageBooking' element={<ManageBookings />} />
+                <Route path='/Group' element={<ManageGroups />} />
+                <Route path='/Position' element={<ManagePositions />} />
+                <Route path='/Equipment' element={<ManageEquipments />} />
                 <Route path='/BookRoom' element={<BookRoom />} />
-                <Route path='/Calendar/:roomId' element={<CalenderPage />} />
+                <Route path='/Calendar/:roomId' element={<Calender />} />
                 <Route path='/MyBookings' element={<MyBookings />} />
                 <Route path='/History' element={<History />} />
                 <Route path='/Profile' element={<Profile />} />

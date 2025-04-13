@@ -6,7 +6,6 @@ import API_BASE_URL from '../../config';
 export default function ResetPassword() {
   const navigate = useNavigate();
   const location = useLocation();
-  // Lấy email truyền từ ForgotPassword qua state (nếu không có, giá trị mặc định là '')
   const email = location.state?.email || '';
 
   const [otp, setOtp] = useState('');
@@ -24,11 +23,11 @@ export default function ResetPassword() {
     setError('');
 
     if (!email || !otp || !newPassword || !confirmPassword) {
-      setError('Vui lòng điền đầy đủ thông tin.');
+      setError('Please fill in all information.');
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError('Mật khẩu mới không khớp.');
+      setError('New password does not match.');
       return;
     }
     setLoading(true);
@@ -48,10 +47,10 @@ export default function ResetPassword() {
           navigate('/login');
         }, 2000);
       } else {
-        setError(result.error?.message || 'Có lỗi xảy ra.');
+        setError(result.error?.message || 'An error occurred.');
       }
     } catch (err) {
-      setError(err.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
+      setError(err.message || 'An error occurred. Please try again..');
     } finally {
       setLoading(false);
     }
