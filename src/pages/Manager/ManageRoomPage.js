@@ -16,7 +16,7 @@ import { isAccessTokenValid } from '../../components/utils/auth';
 import API_BASE_URL from '../../config';
 import RoomForm from '../../components/Room/RoomForm';
 import RoomBookingsModal from '../../components/Room/RoomBookingsModal';
-import DeleteConfirmModal from '../../components/Room/DeleteConfirmModal';
+import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 const ITEMS_PER_PAGE = 6;
 
 export default function ManageRoomPage() {

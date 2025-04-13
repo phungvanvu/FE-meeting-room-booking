@@ -145,11 +145,20 @@ export default function Header() {
               >
                 Manage Users
               </Link>
+              <Link to='/Group' className='hover:underline hover:text-gray-200'>
+                Groups
+              </Link>
               <Link
-                to='/ManageGroupPosition'
+                to='/Position'
                 className='hover:underline hover:text-gray-200'
               >
-                Groups & Positions
+                Positions
+              </Link>
+              <Link
+                to='/Equipment'
+                className='hover:underline hover:text-gray-200'
+              >
+                Equipments
               </Link>
             </>
           )}
