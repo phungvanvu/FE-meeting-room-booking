@@ -11,7 +11,7 @@ const ITEMS_PER_PAGE = 6;
 export default function BookRoomPage() {
   const [roomsData, setRoomsData] = useState([]);
   const [totalPages, setTotalPages] = useState(0);
-  const [selectedStatus, setSelectedStatus] = useState('');
+  // const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedCapacities, setSelectedCapacities] = useState([]);
   const [selectedDevices, setSelectedDevices] = useState([]);
   const [selectedLocations, setSelectedLocations] = useState([]);
@@ -40,7 +40,7 @@ export default function BookRoomPage() {
   const fetchFilterOptions = async () => {
     const accessToken = sessionStorage.getItem('accessToken');
     try {
-      const response = await fetch(`${API_BASE_URL}/room`, {
+      const response = await fetch(`${API_BASE_URL}/room/available/all`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -95,9 +95,10 @@ export default function BookRoomPage() {
       );
     }
 
-    if (selectedStatus) {
-      params.append('available', selectedStatus === 'Available');
-    }
+    // if (selectedStatus) {
+    //   params.append('available', selectedStatus === 'Available');
+    // }
+
     if (selectedCapacities.length > 0) {
       selectedCapacities.forEach((capacity) =>
         params.append('capacities', capacity),
@@ -113,7 +114,7 @@ export default function BookRoomPage() {
 
     try {
       const response = await fetch(
-        `${API_BASE_URL}/room/search?${params.toString()}`,
+        `${API_BASE_URL}/room/available?${params.toString()}`,
         {
           method: 'GET',
           headers: {
@@ -134,22 +135,26 @@ export default function BookRoomPage() {
       console.error('Fetch error:', error);
     }
   };
+
   const handleSearch = () => {
     fetchRooms(0);
   };
+
   const handleReset = () => {
     setSearchRoomName('');
     setSelectedDevices([]);
-    setSelectedStatus('');
+    // setSelectedStatus('');
     setSelectedCapacities([]);
     setSelectedLocations([]);
     fetchRooms(0);
   };
+
   const handlePreviousPage = () => {
     if (currentPage > 0) {
       fetchRooms(currentPage - 1);
     }
   };
+
   const handleNextPage = () => {
     if (currentPage < totalPages - 1) {
       fetchRooms(currentPage + 1);
@@ -208,8 +213,7 @@ export default function BookRoomPage() {
             </div>
           </div>
 
-          {/* Chọn trạng thái */}
-          <div className='mb-4'>
+          {/* <div className='mb-4'>
             <label className='block text-sm font-bold text-black-700 mb-2'>
               Status
             </label>
@@ -228,7 +232,7 @@ export default function BookRoomPage() {
                 Unavailable
               </option>
             </select>
-          </div>
+          </div> */}
 
           {/* Lọc theo sức chứa */}
           <div className='mb-4'>
@@ -320,11 +324,17 @@ export default function BookRoomPage() {
                 key={room.roomId}
                 className='border rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow bg-white flex flex-col'
               >
-                <img
-                  src={room.imageUrl || ''}
-                  alt={room.roomName}
-                  className='w-full h-48 object-cover'
-                />
+                {room.imageUrl ? (
+                  <img
+                    src={room.imageUrl}
+                    alt={room.roomName}
+                    className='w-full h-48 object-cover'
+                  />
+                ) : (
+                  <div className='w-full h-48 bg-gray-200 flex items-center justify-center'>
+                    No Image Available
+                  </div>
+                )}
                 <div className='p-5 flex flex-col flex-grow'>
                   <div>
                     <h3 className='font-semibold text-xl text-gray-800 truncate'>
@@ -346,12 +356,8 @@ export default function BookRoomPage() {
                         </span>
                       </p>
                     </div>
-                    <p
-                      className={`mt-3 text-sm font-medium ${
-                        room.available ? 'text-green-500' : 'text-red-500'
-                      }`}
-                    >
-                      {room.available ? 'Available' : 'Unavailable'}
+                    <p className={`mt-3 text-sm font-medium text-green-500`}>
+                      Available
                     </p>
                     <div className='font-medium text-sm whitespace-pre-line break-words'>
                       {room.note}
