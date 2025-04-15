@@ -1,31 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
-import API_BASE_URL from '../../config'; // API_BASE_URL cần là "http://localhost:8080/MeetingRoomBooking"
+import API_BASE_URL from '../../config';
 import { toast } from 'react-toastify';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const ManageBookings = () => {
-  // --- States Filter ---
   const [roomName, setRoomName] = useState('');
   const [fromTime, setFromTime] = useState('');
   const [toTime, setToTime] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [bookedByNameFilter, setBookedByNameFilter] = useState('');
-
-  // --- States for pagination & booking data ---
   const [bookings, setBookings] = useState([]);
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [selectedBookingIds, setSelectedBookingIds] = useState([]);
-
-  // --- States for CRUD modal ---
   const [showForm, setShowForm] = useState(false);
   const [currentBooking, setCurrentBooking] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [formData, setFormData] = useState({
-    // Khi tạo mới, bookingId không cần thiết
     roomId: '',
     roomName: '',
     bookedById: '',
@@ -487,7 +481,6 @@ const ManageBookings = () => {
               <button
                 onClick={() => {
                   setCurrentBooking(null);
-                  // Khi tạo mới, không bao gồm bookingId
                   setFormData({
                     roomId: '',
                     roomName: '',
@@ -507,7 +500,7 @@ const ManageBookings = () => {
                 }}
                 className='bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow transition'
               >
-                Add Booking
+                Create Booking
               </button>
               <button
                 onClick={handleBulkCancel}

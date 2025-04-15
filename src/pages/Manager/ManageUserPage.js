@@ -454,7 +454,7 @@ const UserManagement = () => {
                 onClick={handleAddUser}
                 className='bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow transition'
               >
-                Add User
+                Create User
               </button>
               <button
                 onClick={handleDeleteMultipleUsers}
@@ -667,7 +667,7 @@ const UserManagement = () => {
                 {/* Name */}
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Name:<span className='text-red-500 text-2xl'>*</span>
+                    Full name:<span className='text-red-500 text-2xl'>*</span>
                   </label>
                   <input
                     type='text'

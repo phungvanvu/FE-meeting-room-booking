@@ -12,7 +12,6 @@ const ManageEquipmentPage = () => {
   const [equipmentFormData, setEquipmentFormData] = useState({
     equipmentName: '',
     description: '',
-    available: true,
   });
   const [editingEquipment, setEditingEquipment] = useState(null);
   const [showEquipmentForm, setShowEquipmentForm] = useState(false);
@@ -85,7 +84,6 @@ const ManageEquipmentPage = () => {
           setEquipmentFormData({
             equipmentName: '',
             description: '',
-            available: true,
           });
           setEditingEquipment(null);
         } else {
@@ -106,7 +104,6 @@ const ManageEquipmentPage = () => {
     setEquipmentFormData({
       equipmentName: equipment.equipmentName,
       description: equipment.description,
-      available: equipment.available,
     });
     setEquipmentFormErrors('');
     setShowEquipmentForm(true);
@@ -180,7 +177,6 @@ const ManageEquipmentPage = () => {
                   setEquipmentFormData({
                     equipmentName: '',
                     description: '',
-                    available: true,
                   });
                   setEquipmentFormErrors('');
                 }}
@@ -202,9 +198,6 @@ const ManageEquipmentPage = () => {
                     Description
                   </th>
                   <th className='px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                    Available
-                  </th>
-                  <th className='px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider'>
                     Actions
                   </th>
                 </tr>
@@ -218,9 +211,6 @@ const ManageEquipmentPage = () => {
                     >
                       <td className='py-2 px-4'>{equipment.equipmentName}</td>
                       <td className='py-2 px-4'>{equipment.description}</td>
-                      <td className='py-2 px-4 text-center'>
-                        {equipment.available ? 'Yes' : 'No'}
-                      </td>
                       <td className='py-2 px-4'>
                         <div className='flex justify-center items-center gap-2'>
                           <button
@@ -344,28 +334,6 @@ const ManageEquipmentPage = () => {
                   className='w-full border rounded px-3 py-2'
                   rows='3'
                 ></textarea>
-              </div>
-              <div className='mb-4'>
-                <label className='block text-gray-700 mb-1'>Available</label>
-                <div className='flex items-center'>
-                  <label className='relative inline-flex items-center cursor-pointer'>
-                    <input
-                      type='checkbox'
-                      checked={equipmentFormData.available}
-                      onChange={(e) =>
-                        setEquipmentFormData({
-                          ...equipmentFormData,
-                          available: e.target.checked,
-                        })
-                      }
-                      className='sr-only peer'
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer dark:bg-gray-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
-                  </label>
-                  <span className='ml-3 text-sm text-gray-700'>
-                    {equipmentFormData.available ? 'Yes' : 'No'}
-                  </span>
-                </div>
               </div>
               {equipmentFormErrors && (
                 <div className='mb-4 text-red-600 text-sm'>

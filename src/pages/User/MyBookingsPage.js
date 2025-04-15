@@ -160,7 +160,7 @@ const MyBookingsPage = () => {
       );
       const data = await response.json();
       if (data.success) {
-        toast.success('Deleted successfully!');
+        toast.success('Cancel successfully!');
         setBookings(
           bookings.filter((b) => b.bookingId !== selectedBooking.bookingId),
         );
