@@ -59,7 +59,7 @@ export default function ForgotPassword() {
         <form onSubmit={handleForgotPassword}>
           <div className='mb-4'>
             <label className='block text-gray-600 font-medium'>
-              Email<span className='text-red-500 text-2xl'>*</span>
+              Email:<span className='text-red-500 text-2xl'>*</span>
             </label>
             <input
               type='email'

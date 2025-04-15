@@ -154,7 +154,6 @@ export default function ManageRoomPage() {
           capacity: room.capacity || null,
           status: room.available ? 'Available' : 'Unavailable',
           facilities: room.equipments || [],
-          // Ảnh đã có URL đầy đủ từ Localstack, dùng trực tiếp
           image: room.imageUrl || '',
         }));
         setRoomsData(formattedRooms);

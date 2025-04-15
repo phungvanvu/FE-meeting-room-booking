@@ -75,7 +75,7 @@ export default function ResetPassword() {
         <form onSubmit={handleResetPassword}>
           <div className='mb-4'>
             <label className='block text-gray-600 font-medium'>
-              OTP<span className='text-red-500 text-2xl'>*</span>
+              OTP:<span className='text-red-500 text-2xl'>*</span>
             </label>
             <input
               type='text'
@@ -87,7 +87,7 @@ export default function ResetPassword() {
           </div>
           <div className='mb-4 relative'>
             <label className='block text-gray-600 font-medium'>
-              New password<span className='text-red-500 text-2xl'>*</span>
+              New password:<span className='text-red-500 text-2xl'>*</span>
             </label>
             <input
               type={showNewPassword ? 'text' : 'password'}
@@ -107,7 +107,7 @@ export default function ResetPassword() {
           </div>
           <div className='mb-4 relative'>
             <label className='block text-gray-600 font-medium'>
-              Confirm password<span className='text-red-500 text-2xl'>*</span>
+              Confirm password:<span className='text-red-500 text-2xl'>*</span>
             </label>
             <input
               type={showConfirmPassword ? 'text' : 'password'}

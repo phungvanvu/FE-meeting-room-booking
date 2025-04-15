@@ -69,7 +69,7 @@ const ChangePasswordModal = ({ onClose, onPasswordChange }) => {
             {/* Old Password */}
             <div className='mb-4'>
               <label className='block text-sm font-medium text-gray-700 mb-1'>
-                Old Password
+                Old Password:<span className='text-red-500 text-2xl'>*</span>
               </label>
               <div className='relative'>
                 <input
@@ -92,7 +92,7 @@ const ChangePasswordModal = ({ onClose, onPasswordChange }) => {
             {/* New Password */}
             <div className='mb-4'>
               <label className='block text-sm font-medium text-gray-700 mb-1'>
-                New Password
+                New Password:<span className='text-red-500 text-2xl'>*</span>
               </label>
               <div className='relative'>
                 <input
@@ -115,7 +115,8 @@ const ChangePasswordModal = ({ onClose, onPasswordChange }) => {
             {/* Confirm New Password */}
             <div className='mb-4'>
               <label className='block text-sm font-medium text-gray-700 mb-1'>
-                Confirm New Password
+                Confirm New Password:
+                <span className='text-red-500 text-2xl'>*</span>
               </label>
               <div className='relative'>
                 <input
