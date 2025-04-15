@@ -40,6 +40,14 @@ const ManageBookings = () => {
   // --- State for confirm bulk cancel ---
   const [showBulkCancelConfirm, setShowBulkCancelConfirm] = useState(false);
 
+  // Hàm helper lấy thời gian hiện tại theo local định dạng "YYYY-MM-DDTHH:mm"
+  const getLocalDateTime = () => {
+    const now = new Date();
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16);
+  };
+
   const accessToken = sessionStorage.getItem('accessToken');
   const getAuthHeaders = () => ({
     'Content-Type': 'application/json',
@@ -775,6 +783,7 @@ const ManageBookings = () => {
                     name='startTime'
                     value={formData.startTime}
                     onChange={handleInputChange}
+                    min={getLocalDateTime()}
                     className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
                   />
                 </div>
@@ -788,6 +797,7 @@ const ManageBookings = () => {
                     name='endTime'
                     value={formData.endTime}
                     onChange={handleInputChange}
+                    min={formData.startTime || getLocalDateTime()}
                     className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
                   />
                 </div>

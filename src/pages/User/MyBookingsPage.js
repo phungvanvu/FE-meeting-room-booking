@@ -451,6 +451,7 @@ const MyBookingsPage = () => {
                 <input
                   type='datetime-local'
                   value={selectedBooking.startTime}
+                  min={getLocalDateTime()}
                   onChange={(e) =>
                     setSelectedBooking({
                       ...selectedBooking,
@@ -467,6 +468,7 @@ const MyBookingsPage = () => {
                 <input
                   type='datetime-local'
                   value={selectedBooking.endTime}
+                  min={selectedBooking.startTime || getLocalDateTime()}
                   onChange={(e) =>
                     setSelectedBooking({
                       ...selectedBooking,

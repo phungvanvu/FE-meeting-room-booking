@@ -878,7 +878,10 @@ const UserManagement = () => {
                 </button>
                 <button
                   type='button'
-                  onClick={() => setShowForm(false)}
+                  onClick={() => {
+                    setErrorMessage('');
+                    setShowForm(false);
+                  }}
                   className='px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-200 transition'
                 >
                   Cancel
