@@ -294,14 +294,12 @@ const ManageBookings = () => {
   const handleExportExcel = async () => {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/statistical/export-bookings-excel`,
+        `${API_BASE_URL}/roombooking/export-bookings-excel`,
         {
           headers: getAuthHeaders(),
         },
       );
       if (!response.ok) throw new Error('Error downloading file');
-
-      // Lấy header Content-Disposition và parse tên file nếu có.
       const disposition = response.headers.get('Content-Disposition');
       let filename = 'bookings.xlsx';
       if (disposition && disposition.indexOf('filename=') !== -1) {

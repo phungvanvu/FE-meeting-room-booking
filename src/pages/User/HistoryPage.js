@@ -3,13 +3,24 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import API_BASE_URL from '../../config';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 const History = () => {
+  // 1) State cho input form
   const [searchTerm, setSearchTerm] = useState('');
   const [startDateTime, setStartDateTime] = useState('');
   const [endDateTime, setEndDateTime] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
 
+  // 2) State filters thực tế để call API
+  const [filters, setFilters] = useState({
+    roomName: '',
+    fromTime: '',
+    toTime: '',
+    status: '',
+  });
+
+  // 3) State cho data và phân trang
   const [bookings, setBookings] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
@@ -17,58 +28,63 @@ const History = () => {
 
   const accessToken = sessionStorage.getItem('accessToken');
 
-  const fetchBookings = async () => {
-    try {
-      const queryParams = new URLSearchParams();
-      if (searchTerm) queryParams.append('roomName', searchTerm);
-      if (startDateTime) queryParams.append('fromTime', startDateTime);
-      if (endDateTime) queryParams.append('toTime', endDateTime);
-      if (selectedStatus) queryParams.append('status', selectedStatus);
-      // API phân trang bắt đầu từ 0
-      queryParams.append('page', currentPage - 1);
-      queryParams.append('size', itemsPerPage);
-
-      const response = await fetch(
-        `${API_BASE_URL}/roombooking/search-my?${queryParams.toString()}`,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
-          },
-        },
-      );
-      const data = await response.json();
-      if (data.success) {
-        // API trả về dữ liệu dạng Page: { content, totalPages, ... }
-        setBookings(data.data.content);
-        setTotalPages(data.data.totalPages);
-      } else {
-        console.error('Error fetching bookings:', data.error);
-      }
-    } catch (error) {
-      console.error('Error fetching bookings:', error);
-    }
-  };
-
-  // Gọi API mỗi khi các tham số lọc hoặc trang hiện tại thay đổi
+  // Fetch bookings mỗi khi filters hoặc currentPage thay đổi
   useEffect(() => {
-    fetchBookings();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, startDateTime, endDateTime, selectedStatus, currentPage]);
+    const fetchBookings = async () => {
+      try {
+        const queryParams = new URLSearchParams();
+        if (filters.roomName) queryParams.append('roomName', filters.roomName);
+        if (filters.fromTime) queryParams.append('fromTime', filters.fromTime);
+        if (filters.toTime) queryParams.append('toTime', filters.toTime);
+        if (filters.status) queryParams.append('status', filters.status);
+        queryParams.append('page', currentPage - 1);
+        queryParams.append('size', itemsPerPage);
 
-  const handleSearch = () => {
-    // Khi thực hiện tìm kiếm, reset currentPage về 1
-    setCurrentPage(1);
+        const response = await fetch(
+          `${API_BASE_URL}/roombooking/search-my?${queryParams.toString()}`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${accessToken}`,
+            },
+          },
+        );
+        const data = await response.json();
+        if (data.success) {
+          setBookings(data.data.content);
+          setTotalPages(data.data.totalPages);
+        } else {
+          console.error('Error fetching bookings:', data.error);
+          toast.error('Error fetching booking history.');
+        }
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
+        toast.error('Network error when fetching booking history.');
+      }
+    };
+
     fetchBookings();
+  }, [filters, currentPage, accessToken]);
+
+  // Khi nhấn Search: cập nhật filters và reset page
+  const handleSearch = () => {
+    setCurrentPage(1);
+    setFilters({
+      roomName: searchTerm.trim(),
+      fromTime: startDateTime,
+      toTime: endDateTime,
+      status: selectedStatus,
+    });
   };
 
+  // Khi nhấn Reset: clear inputs và filters, reset page
   const resetFilters = () => {
     setSearchTerm('');
     setStartDateTime('');
     setEndDateTime('');
     setSelectedStatus('');
     setCurrentPage(1);
-    fetchBookings();
+    setFilters({ roomName: '', fromTime: '', toTime: '', status: '' });
   };
 
   return (
@@ -77,8 +93,8 @@ const History = () => {
       <main className='flex-grow'>
         <div className='flex flex-col p-6 w-full space-y-6'>
           <div className='flex space-x-6'>
-            {/* Filter Sidebar */}
-            <div className='w-1/5 bg-white p-6 rounded-2xl shadow-md border border-gray-200 h-full flex-shrink-0 flex flex-col'>
+            {/* Sidebar Filter */}
+            <div className='w-1/5 bg-white p-6 rounded-2xl shadow-md border border-gray-200 h-full flex flex-col'>
               <h2 className='text-xl font-semibold mb-5 text-gray-800'>
                 Filter
               </h2>
@@ -96,7 +112,6 @@ const History = () => {
                 />
               </div>
 
-              {/* DateTime Range Filter */}
               <div className='mb-4'>
                 <label className='block text-sm font-bold text-gray-700 mb-2'>
                   From
@@ -158,7 +173,7 @@ const History = () => {
               </div>
             </div>
 
-            {/* Booking Table */}
+            {/* Booking History Table */}
             <div className='w-4/5 overflow-hidden'>
               <h2 className='text-center text-2xl font-bold mb-4'>
                 Booking History
@@ -207,7 +222,7 @@ const History = () => {
                 </tbody>
               </table>
 
-              {/* Pagination (giao diện đồng nhất với các trang khác) */}
+              {/* Pagination */}
               {totalPages > 1 && (
                 <div className='flex justify-center items-center mt-8 gap-2'>
                   <button
@@ -223,19 +238,21 @@ const History = () => {
                   >
                     <ChevronLeft size={18} />
                   </button>
-                  {Array.from({ length: totalPages }, (_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentPage(index + 1)}
-                      className={`w-10 h-10 flex items-center justify-center rounded-full font-medium transition-all ${
-                        currentPage === index + 1
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-blue-100'
-                      }`}
-                    >
-                      {index + 1}
-                    </button>
-                  ))}
+                  {Array.from({ length: totalPages }, (_, idx) => idx + 1).map(
+                    (page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-10 h-10 flex items-center justify-center rounded-full font-medium transition-all ${
+                          currentPage === page
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-blue-100'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ),
+                  )}
                   <button
                     onClick={() =>
                       setCurrentPage((prev) => Math.min(prev + 1, totalPages))

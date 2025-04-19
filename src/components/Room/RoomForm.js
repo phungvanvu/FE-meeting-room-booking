@@ -7,12 +7,12 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
   const [capacity, setCapacity] = useState('');
   const [available, setAvailable] = useState(false);
   const [note, setNote] = useState('');
-  const [facilities, setFacilities] = useState([]);
-  const [imageUrl, setImageUrl] = useState('');
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [equipments, setEquipments] = useState([]);
   const [equipmentOptions, setEquipmentOptions] = useState([]);
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [existingImageUrls, setExistingImageUrls] = useState([]);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     // Fetch equipment data when the component mounts
@@ -39,39 +39,35 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
     if (initialData) {
       setRoomName(initialData.roomName || '');
       setLocation(initialData.location || '');
-      setCapacity(initialData.capacity ? String(initialData.capacity) : '');
+      setCapacity(initialData.capacity?.toString() || '');
       setAvailable(initialData.available ?? false);
       setNote(initialData.note || '');
-      setFacilities(initialData.equipments || []);
-      setImageUrl(initialData.imageUrl || '');
-      setImagePreview(initialData.imageUrl ? initialData.imageUrl : '');
+      setEquipments(initialData.equipments || []);
+      setExistingImageUrls(initialData.existingImageUrls || []);
+      setImageFiles([]);
+      setImagePreviews([]);
     } else {
       setRoomName('');
       setLocation('');
       setCapacity('');
       setAvailable(false);
       setNote('');
-      setFacilities([]);
-      setImageUrl('');
-      setImageFile(null);
-      setImagePreview('');
+      setEquipments([]);
+      setExistingImageUrls([]);
+      setImageFiles([]);
+      setImagePreviews([]);
     }
   }, [initialData]);
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreview(previewUrl);
-    }
+    const files = Array.from(e.target.files || []);
+    setImageFiles(files);
+    setImagePreviews(files.map((file) => URL.createObjectURL(file)));
   };
 
-  const toggleEquipment = (device) => {
-    setFacilities((prev) =>
-      prev.includes(device)
-        ? prev.filter((d) => d !== device)
-        : [...prev, device],
+  const toggleEquipment = (name) => {
+    setEquipments((prev) =>
+      prev.includes(name) ? prev.filter((x) => x !== name) : [...prev, name],
     );
   };
 
@@ -81,28 +77,22 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
     const payload = {
       roomName,
       location,
-      capacity: capacity === '' ? null : Number(capacity),
+      capacity: capacity ? Number(capacity) : null,
       available,
       note,
-      equipments: facilities,
-      image: imageFile,
+      equipments,
+      imageFiles,
+      imageUrl: existingImageUrls,
     };
-    if (initialData && initialData.id) {
-      payload.id = initialData.id;
-    }
-    if (!imageFile && initialData && initialData.imageUrl) {
-      payload.imageUrl = initialData.imageUrl;
-    }
+    if (initialData?.id) payload.id = initialData.id;
 
     try {
       const result = await onSubmit(payload);
       if (!result.success) {
-        setErrorMessage(
-          result.error?.message || 'An error occurred while saving the room',
-        );
+        setErrorMessage(result.error?.message || 'Error saving room');
       }
-    } catch (error) {
-      setErrorMessage(error.message || 'Connection error');
+    } catch (err) {
+      setErrorMessage(err.message || 'Connection error');
     }
   };
 
@@ -231,7 +221,7 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
                 type='button'
                 onClick={() => toggleEquipment(device.equipmentName)}
                 className={`px-3 py-1 rounded-full text-sm border transition-all ${
-                  facilities.includes(device.equipmentName)
+                  equipments.includes(device.equipmentName)
                     ? 'bg-blue-500 text-white border-blue-500'
                     : 'border-gray-300 text-gray-600 hover:bg-gray-100'
                 }`}
@@ -242,49 +232,35 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
           </div>
         </div>
 
-        {/* Image Upload */}
+        {/* Multi-image Upload */}
         <div>
           <label className='block text-sm font-medium text-gray-700 mb-1'>
-            Room Image
+            Room Images
           </label>
-          <div className='flex items-center justify-center w-full'>
-            <label
-              htmlFor='file-upload'
-              className='flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-md cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors'
-            >
-              {imagePreview ? (
-                <img
-                  src={imagePreview}
-                  alt='Preview'
-                  className='object-cover w-full h-full rounded-md'
-                />
-              ) : (
-                <div className='flex flex-col items-center justify-center pt-5 pb-6'>
-                  <svg
-                    className='w-8 h-8 mb-3 text-gray-400'
-                    aria-hidden='true'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth='2'
-                      d='M7 16V4m0 0l-3 3m3-3l3 3M17 16v-8m0 0l3 3m-3-3l-3 3'
-                    />
-                  </svg>
-                  <p className='text-sm text-gray-500'>Click to upload</p>
-                </div>
-              )}
-            </label>
-            <input
-              id='file-upload'
-              type='file'
-              accept='image/*'
-              onChange={handleImageChange}
-              className='hidden'
-            />
+          <input
+            type='file'
+            accept='image/*'
+            multiple
+            onChange={handleImageChange}
+            className='block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'
+          />
+          <div className='mt-2 flex flex-wrap gap-2'>
+            {existingImageUrls.map((url, i) => (
+              <img
+                key={i}
+                src={url}
+                alt='existing'
+                className='w-20 h-20 object-cover rounded'
+              />
+            ))}
+            {imagePreviews.map((src, i) => (
+              <img
+                key={i}
+                src={src}
+                alt='new'
+                className='w-20 h-20 object-cover rounded'
+              />
+            ))}
           </div>
         </div>
 

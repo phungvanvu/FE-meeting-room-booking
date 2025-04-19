@@ -5,6 +5,7 @@ import Footer from '../../components/Footer';
 import { ChevronLeft, ChevronRight, MapPin, Users } from 'lucide-react';
 import { isAccessTokenValid } from '../../components/utils/auth';
 import API_BASE_URL from '../../config';
+import Slider from 'react-slick';
 
 const ITEMS_PER_PAGE = 6;
 
@@ -159,6 +160,16 @@ export default function BookRoomPage() {
     if (currentPage < totalPages - 1) {
       fetchRooms(currentPage + 1);
     }
+  };
+
+  const sliderSettings = {
+    dots: true,
+    arrows: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    adaptiveHeight: true,
   };
 
   return (
@@ -324,17 +335,24 @@ export default function BookRoomPage() {
                 key={room.roomId}
                 className='border rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow bg-white flex flex-col'
               >
-                {room.imageUrl ? (
-                  <img
-                    src={room.imageUrl}
-                    alt={room.roomName}
-                    className='w-full h-48 object-cover'
-                  />
+                {Array.isArray(room.imageUrls) && room.imageUrls.length > 0 ? (
+                  <Slider {...sliderSettings} className='w-full h-48'>
+                    {room.imageUrls.map((url, idx) => (
+                      <div key={idx} className='w-full h-48'>
+                        <img
+                          src={url}
+                          alt={`${room.roomName} - ${idx + 1}`}
+                          className='object-cover w-full h-full'
+                        />
+                      </div>
+                    ))}
+                  </Slider>
                 ) : (
                   <div className='w-full h-48 bg-gray-200 flex items-center justify-center'>
                     No Image Available
                   </div>
                 )}
+
                 <div className='p-5 flex flex-col flex-grow'>
                   <div>
                     <h3 className='font-semibold text-xl text-gray-800 truncate'>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, User, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { setRefreshToken } from '../../components/utils/auth';
 import { jwtDecode } from 'jwt-decode';
@@ -60,64 +60,92 @@ export default function Login() {
   };
 
   return (
-    <div className='flex min-h-screen items-center justify-center bg-gray-100'>
-      <div className='w-full max-w-md bg-white p-8 shadow-lg rounded-xl'>
-        <h2 className='text-3xl font-bold text-center text-gray-700'>Login</h2>
+    <div className='min-h-screen flex'>
+      {/* Left panel: illustration chiếm 3/4 */}
+      <div className='hidden lg:flex w-3/4 relative overflow-hidden bg-gradient-to-tr from-blue-100 to-blue-200'>
+        {/* Shape decor */}
+        <div className='absolute -top-16 -left-16 w-72 h-72 bg-white opacity-20 rounded-full'></div>
+        <div className='absolute -bottom-16 -right-16 w-96 h-96 bg-white opacity-10 rounded-full'></div>
 
-        {error && (
-          <p className='bg-red-100 border-l-4 border-red-500 text-red-700 p-3 rounded-md text-sm mt-4 text-center'>
-            {error}
-          </p>
-        )}
+        <img
+          src='/picture1.png'
+          alt='Illustration'
+          className='m-auto object-cover w-full h-full'
+        />
+      </div>
 
-        <form className='mt-6' onSubmit={handleLogin}>
-          <div className='mb-4'>
-            <label className='block text-gray-600 font-medium'>Username</label>
-            <input
-              type='text'
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder='Enter username'
-              className='w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all'
-            />
-          </div>
+      {/* Right panel: form chiếm 1/4 */}
+      <div className='flex w-full lg:w-1/4 items-center justify-center bg-white'>
+        <div className='relative bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm'>
+          {/* Light shape behind card */}
+          <div className='absolute -top-6 -right-6 w-20 h-20 bg-blue-100 rounded-full opacity-50'></div>
 
-          <div className='mb-4 relative'>
-            <label className='block text-gray-600 font-medium'>Password</label>
-            <input
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder='Enter password'
-              className='w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all'
-              autoComplete='off'
-            />
+          <h2 className='text-2xl font-bold text-gray-800 text-center mb-6'>
+            Welcome Back
+          </h2>
+
+          {error && (
+            <div className='text-red-600 bg-red-100 p-3 rounded-lg mb-4 text-center'>
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleLogin} className='space-y-5'>
+            {/* Username field */}
+            <div className='relative'>
+              <User className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' />
+              <input
+                type='text'
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder='Username'
+                className='w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition'
+              />
+            </div>
+
+            {/* Password field */}
+            <div className='relative'>
+              <Lock className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder='Password'
+                className='w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition'
+              />
+              <button
+                type='button'
+                onClick={() => setShowPassword((v) => !v)}
+                className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500'
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+
+            {/* Submit */}
             <button
-              type='button'
-              className='absolute right-3 top-9 text-gray-500 hover:text-gray-700'
-              onClick={() => setShowPassword(!showPassword)}
+              type='submit'
+              disabled={loading}
+              className={`w-full py-3 text-white font-semibold rounded-xl transition ${
+                loading
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700'
+              }`}
             >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
-          </div>
-          <button
-            type='submit'
-            disabled={loading}
-            className={`w-full ${
-              loading ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'
-            } text-white font-semibold py-2 rounded-lg transition-all active:scale-95`}
-          >
-            {loading ? 'Signing in...' : 'Login'}
-          </button>
-          <p className='mt-4 text-center text-gray-600'>
+          </form>
+
+          {/* Forgot link */}
+          <p className='mt-4 text-center text-sm text-gray-500'>
             <button
               onClick={() => navigate('/forgot-password')}
-              className='text-blue-500 hover:underline'
+              className='underline hover:text-gray-700'
             >
               Forgot password?
             </button>
           </p>
-        </form>
+        </div>
       </div>
     </div>
   );

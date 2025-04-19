@@ -112,6 +112,7 @@ const MyBookingsPage = () => {
       endTime: selectedBooking.endTime,
       purpose: selectedBooking.purpose,
       description: selectedBooking.description,
+      status: selectedBooking.status,
     };
 
     try {
@@ -492,7 +493,6 @@ const MyBookingsPage = () => {
                   }
                   className='w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
                 >
-                  <option value=''>-- Select Purpose --</option>
                   <option value='INTERVIEW'>Interview</option>
                   <option value='MEETING'>Meeting</option>
                   <option value='TRAINING'>Training</option>

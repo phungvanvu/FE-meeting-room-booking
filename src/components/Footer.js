@@ -6,7 +6,7 @@ export default function Footer() {
       <div className='container mx-auto px-4 flex flex-col md:flex-row items-center justify-between'>
         {/* Logo & Branding */}
         <div className='flex items-center space-x-2 mb-3 md:mb-0'>
-          <img src='logo512.png' alt='Logo' className='h-8 w-auto' />
+          <img src='logo.png' alt='Logo' className='h-8 w-auto' />
           <span className='text-lg font-bold'>Meeting Room</span>
         </div>
 

@@ -243,12 +243,9 @@ const UserManagement = () => {
 
   const exportToExcel = async () => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/statistical/export-users-excel`,
-        {
-          headers: getAuthHeaders(),
-        },
-      );
+      const response = await fetch(`${API_BASE_URL}/user/export-users-excel`, {
+        headers: getAuthHeaders(),
+      });
       if (!response.ok) throw new Error('Error downloading file');
       const disposition = response.headers.get('Content-Disposition');
       const filenameMatch = disposition && disposition.match(/filename="(.+)"/);

@@ -17,6 +17,7 @@ import API_BASE_URL from '../../config';
 import RoomForm from '../../components/Room/RoomForm';
 import RoomBookingsModal from '../../components/Room/RoomBookingsModal';
 import DeleteConfirmModal from '../../components/DeleteConfirmModal';
+import Slider from 'react-slick';
 const ITEMS_PER_PAGE = 6;
 
 export default function ManageRoomPage() {
@@ -154,7 +155,7 @@ export default function ManageRoomPage() {
           capacity: room.capacity || null,
           status: room.available ? 'Available' : 'Unavailable',
           facilities: room.equipments || [],
-          image: room.imageUrl || '',
+          imageUrls: room.imageUrls || '',
         }));
         setRoomsData(formattedRooms);
         setTotalPages(result.data.totalPages);
@@ -169,87 +170,87 @@ export default function ManageRoomPage() {
 
   // Hàm thêm phòng (addRoom)
   const addRoom = async (payload) => {
-    const accessToken = sessionStorage.getItem('accessToken');
+    const token = sessionStorage.getItem('accessToken');
+    const formData = new FormData();
+    const roomBody = {
+      roomName: payload.roomName,
+      location: payload.location,
+      capacity: payload.capacity,
+      available: payload.available,
+      note: payload.note || '',
+      active: payload.active ?? true,
+      equipments: payload.equipments || [],
+    };
+    formData.append(
+      'room',
+      new Blob([JSON.stringify(roomBody)], { type: 'application/json' }),
+    );
+    payload.imageFiles?.forEach((file) => {
+      if (file instanceof File) formData.append('files', file, file.name);
+    });
+
     try {
-      const formData = new FormData();
-      const roomData = {
-        roomName: payload.roomName,
-        location: payload.location,
-        note: payload.note || '',
-        capacity: payload.capacity,
-        available: payload.available,
-        equipments: payload.equipments || [],
-      };
-      const roomBlob = new Blob([JSON.stringify(roomData)], {
-        type: 'application/json',
-      });
-      formData.append('room', roomBlob);
-      if (payload.image && payload.image instanceof File) {
-        formData.append('file', payload.image, payload.image.name);
-      }
-      const response = await fetch(`${API_BASE_URL}/room`, {
+      const res = await fetch(`${API_BASE_URL}/room`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
-      const result = await response.json();
+      const result = await res.json();
       if (result.success) {
         toast.success('Room added successfully!');
         fetchRooms(currentPage);
       } else {
-        console.error('Error adding room:', result.error?.message);
+        toast.error(result.error?.message || 'Error adding room');
       }
       return result;
-    } catch (error) {
-      console.error('Add room error:', error);
-      return { success: false, error: { message: error.message } };
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message);
+      return { success: false, error: { message: err.message } };
     }
   };
 
   // Hàm cập nhật phòng (updateRoom)
   const updateRoom = async (payload, roomId) => {
-    const accessToken = sessionStorage.getItem('accessToken');
+    const token = sessionStorage.getItem('accessToken');
+    const formData = new FormData();
+    const roomBody = {
+      roomId: payload.id,
+      roomName: payload.roomName,
+      location: payload.location,
+      capacity: payload.capacity,
+      available: payload.available,
+      note: payload.note || '',
+      active: payload.active ?? true,
+      equipments: payload.equipments || [],
+    };
+    formData.append(
+      'room',
+      new Blob([JSON.stringify(roomBody)], { type: 'application/json' }),
+    );
+    // chỉ append files mới
+    payload.imageFiles?.forEach((file) => {
+      if (file instanceof File) formData.append('files', file, file.name);
+    });
+
     try {
-      const formData = new FormData();
-      const roomData = {
-        roomId: payload.id,
-        roomName: payload.roomName,
-        location: payload.location,
-        note: payload.note || '',
-        capacity: payload.capacity,
-        available: payload.available,
-        equipments: payload.equipments || [],
-      };
-      if (!payload.image && payload.imageUrl) {
-        roomData.imageUrl = payload.imageUrl;
-      }
-      const roomBlob = new Blob([JSON.stringify(roomData)], {
-        type: 'application/json',
-      });
-      formData.append('room', roomBlob);
-      if (payload.image && payload.image instanceof File) {
-        formData.append('file', payload.image, payload.image.name);
-      }
-      const response = await fetch(`${API_BASE_URL}/room/${roomId}`, {
+      const res = await fetch(`${API_BASE_URL}/room/${roomId}`, {
         method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
-      const result = await response.json();
+      const result = await res.json();
       if (result.success) {
         toast.success('Room updated successfully!');
         fetchRooms(currentPage);
       } else {
-        console.error('Error updating room:', result.error?.message);
+        toast.error(result.error?.message || 'Error updating room');
       }
       return result;
-    } catch (error) {
-      console.error('Update room error:', error);
-      return { success: false, error: { message: error.message } };
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message);
+      return { success: false, error: { message: err.message } };
     }
   };
 
@@ -267,7 +268,7 @@ export default function ManageRoomPage() {
       available: room.status === 'Available',
       note: room.note,
       equipments: room.facilities,
-      imageUrl: room.image || '',
+      existingImageUrls: room.images,
       id: room.id,
     };
     setFormInitialData(roomData);
@@ -282,6 +283,16 @@ export default function ManageRoomPage() {
   const openDeleteModal = (roomId) => {
     setDeleteRoomId(roomId);
     setShowDeleteModal(true);
+  };
+
+  const sliderSettings = {
+    dots: true,
+    arrows: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    adaptiveHeight: true,
   };
 
   const handleDelete = async (roomId) => {
@@ -317,14 +328,11 @@ export default function ManageRoomPage() {
 
   const downloadFile = async () => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/statistical/export-rooms-excel`,
-        {
-          headers: {
-            Authorization: `Bearer ${sessionStorage.getItem('accessToken')}`,
-          },
+      const response = await fetch(`${API_BASE_URL}/room/export-rooms-excel`, {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem('accessToken')}`,
         },
-      );
+      });
 
       if (!response.ok) throw new Error('Error downloading file');
       const disposition = response.headers.get('Content-Disposition');
@@ -572,18 +580,21 @@ export default function ManageRoomPage() {
             {roomsData.map((room) => (
               <div
                 key={room.id}
-                className='border rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow bg-white flex flex-col'
+                className='border rounded-xl shadow-lg flex flex-col bg-white'
               >
-                {room.image ? (
-                  <img
-                    src={
-                      room.image
-                        ? `${room.image}?t=${new Date().getTime()}`
-                        : 'default_image_url'
-                    }
-                    alt={room.name}
-                    className='w-full h-48 object-cover'
-                  />
+                {/* Slider ảnh */}
+                {room.imageUrls && room.imageUrls.length > 0 ? (
+                  <Slider {...sliderSettings} className='w-full h-48'>
+                    {room.imageUrls.map((url, idx) => (
+                      <div key={idx} className='w-full h-48'>
+                        <img
+                          src={url}
+                          alt={`${room.name} ${idx + 1}`}
+                          className='object-cover w-full h-full'
+                        />
+                      </div>
+                    ))}
+                  </Slider>
                 ) : (
                   <div className='w-full h-48 flex items-center justify-center bg-gray-200'>
                     No image available

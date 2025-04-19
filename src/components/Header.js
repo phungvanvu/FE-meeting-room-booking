@@ -18,13 +18,15 @@ export default function Header() {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
 
-  const token = sessionStorage.getItem('accessToken');
+  const accessToken = sessionStorage.getItem('accessToken');
+  const refreshToken = Cookies.get('refreshToken');
+
   let roles = [];
   let userName = 'User';
 
-  if (token) {
+  if (accessToken) {
     try {
-      const decoded = jwtDecode(token);
+      const decoded = jwtDecode(accessToken);
       roles = decoded.scope || [];
       userName = decoded.name || decoded.sub;
     } catch (error) {
@@ -35,14 +37,14 @@ export default function Header() {
   // Fetch thông báo của user khi component được mount
   useEffect(() => {
     const fetchNotifications = async () => {
-      if (token) {
+      if (accessToken) {
         try {
           const response = await fetch(
             `${API_BASE_URL}/notification/MyNotification`,
             {
               method: 'GET',
               headers: {
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${accessToken}`,
               },
             },
           );
@@ -57,7 +59,7 @@ export default function Header() {
     };
 
     fetchNotifications();
-  }, [token]);
+  }, [accessToken]);
 
   // Hàm trả về icon theo type của notification với kích thước lớn hơn và margin rộng hơn
   const getNotificationIcon = (type) => {
@@ -76,28 +78,35 @@ export default function Header() {
   };
 
   const handleLogout = async () => {
-    if (token) {
+    if (accessToken && refreshToken) {
       try {
         const response = await fetch(`${API_BASE_URL}/auth/logout`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ token: token }),
+          body: JSON.stringify({
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+          }),
         });
+
         if (response.ok) {
           sessionStorage.removeItem('accessToken');
           Cookies.remove('refreshToken');
           navigate('/Login');
         } else {
           const errorData = await response.json();
-          console.error('Logout failed:', errorData.error.message);
+          console.error(
+            'Logout failed:',
+            errorData.error?.message || errorData,
+          );
         }
       } catch (error) {
         console.error('Error during logout:', error);
       }
     } else {
-      console.error('No token found, cannot logout.');
+      console.error('Missing token(s), cannot logout.');
     }
   };
 
@@ -107,7 +116,7 @@ export default function Header() {
         {/* Logo & Branding */}
         <div className='flex items-center'>
           <Link to='/Home' className='flex items-center'>
-            <img src='logo512.png' alt='Logo' className='h-10 w-auto mr-3' />
+            <img src='logo.png' alt='Logo' className='h-12 w-auto mr-3' />
             <span className='text-2xl font-bold'>Meeting Room</span>
           </Link>
         </div>
