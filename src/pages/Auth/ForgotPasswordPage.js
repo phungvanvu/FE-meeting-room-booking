@@ -65,7 +65,7 @@ export default function ForgotPassword() {
 
         {/* Right: Form */}
         <div className='relative w-full md:w-1/2 p-12 flex flex-col justify-center'>
-          <h2 className='text-4xl font-extrabold text-gray-800 mb-12 text-center'>
+          <h2 className='text-3xl font-medium tracking-normal text-gray-800 text-center mb-8'>
             Forgot Password
           </h2>
 

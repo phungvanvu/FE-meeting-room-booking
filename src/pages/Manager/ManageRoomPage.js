@@ -285,15 +285,15 @@ export default function ManageRoomPage() {
     setShowDeleteModal(true);
   };
 
-  const sliderSettings = {
-    dots: true,
+  const sliderSettings = (imagesLength) => ({
+    dots: false,
     arrows: true,
     infinite: true,
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
     adaptiveHeight: true,
-  };
+  });
 
   const handleDelete = async (roomId) => {
     const accessToken = sessionStorage.getItem('accessToken');

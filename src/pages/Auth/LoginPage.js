@@ -63,7 +63,7 @@ export default function Login() {
     <div className='min-h-screen bg-gray-100 flex items-center justify-center px-6 py-12'>
       {/* 1. Ảnh nền đặt behind everything */}
       <img
-        src='/picture1.png'
+        src='/1W8A8149.jpg'
         alt='Background'
         className='absolute inset-0 w-full h-full object-cover'
       />
@@ -86,7 +86,7 @@ export default function Login() {
 
         {/* 3. Phần Right: Form (1/2) */}
         <div className='relative w-full md:w-1/2 p-12 flex flex-col justify-center'>
-          <h2 className='text-4xl font-extrabold text-gray-800 mb-12 text-center'>
+          <h2 className='text-3xl font-medium tracking-normal text-gray-800 text-center mb-8'>
             Welcome Back
           </h2>
 
@@ -132,7 +132,7 @@ export default function Login() {
             <div className='flex justify-end'>
               <button
                 onClick={() => navigate('/forgot-password')}
-                className='text-sm text-blue-600 hover:underline'
+                className='text-blue-600 hover:underline'
                 type='button'
               >
                 Forgot password?

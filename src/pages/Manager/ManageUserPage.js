@@ -23,7 +23,12 @@ const UserManagement = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 10;
-
+  const baseLabel =
+    'relative inline-block text-sm font-medium text-gray-700 mb-1 pr-2';
+  const requiredLabel = `${baseLabel}
+    after:content-["*"] after:absolute
+    after:top-1/2 after:-translate-y-1/2
+    after:right-0 after:text-red-500 after:text-base`;
   const [showForm, setShowForm] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
@@ -663,9 +668,7 @@ const UserManagement = () => {
               <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 {/* Name */}
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Full name:<span className='text-red-500 text-2xl'>*</span>
-                  </label>
+                  <label className={requiredLabel}>Full name:</label>
                   <input
                     type='text'
                     name='fullName'
@@ -677,9 +680,7 @@ const UserManagement = () => {
                 </div>
                 {/* Username */}
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Username:<span className='text-red-500 text-2xl'>*</span>
-                  </label>
+                  <label className={requiredLabel}>Username:</label>
                   <input
                     type='text'
                     name='userName'
@@ -691,9 +692,7 @@ const UserManagement = () => {
                 </div>
                 {/* Email */}
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Email:<span className='text-red-500 text-2xl'>*</span>
-                  </label>
+                  <label className={requiredLabel}>Email:</label>
                   <input
                     type='email'
                     name='email'
@@ -705,9 +704,7 @@ const UserManagement = () => {
                 </div>
                 {/* Phone */}
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Phone:
-                  </label>
+                  <label className={baseLabel}>Phone:</label>
                   <input
                     type='text'
                     name='phoneNumber'
@@ -719,9 +716,7 @@ const UserManagement = () => {
                 </div>
                 {/* Department */}
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Department:<span className='text-red-500 text-2xl'>*</span>
-                  </label>
+                  <label className={requiredLabel}>Department</label>
                   <input
                     type='text'
                     name='department'
@@ -733,9 +728,7 @@ const UserManagement = () => {
                 </div>
                 {/* Group */}
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Group:<span className='text-red-500 text-2xl'>*</span>
-                  </label>
+                  <label className={requiredLabel}>Group:</label>
                   <select
                     name='group'
                     value={formData.group}
@@ -755,9 +748,7 @@ const UserManagement = () => {
               <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mt-4'>
                 {/* Position */}
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Position:<span className='text-red-500 text-2xl'>*</span>
-                  </label>
+                  <label className={requiredLabel}>Position:</label>
                   <select
                     name='position'
                     value={formData.position}
@@ -774,11 +765,8 @@ const UserManagement = () => {
                 </div>
                 {/* Password */}
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                  <label className={currentUser ? baseLabel : requiredLabel}>
                     Password:
-                    {!currentUser && (
-                      <span className='text-red-500 text-2xl'>*</span>
-                    )}
                   </label>
                   <div className='relative'>
                     <input
@@ -841,8 +829,8 @@ const UserManagement = () => {
               </div>
               {/* Role */}
               <div className='mt-4'>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
-                  Role:<span className='text-red-500 text-2xl'>*</span>
+                <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
+                  Role:
                 </label>
                 <div className='flex flex-wrap gap-2'>
                   {roleOptions.map((role) => (

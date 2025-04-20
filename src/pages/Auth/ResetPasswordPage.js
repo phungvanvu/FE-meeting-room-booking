@@ -66,7 +66,7 @@ export default function ResetPassword() {
 
       <div className='relative bg-white rounded-3xl shadow-2xl overflow-hidden flex w-full max-w-4xl'>
         {/* Left Illustration */}
-        <div className='relative w-1/2 hidden md:block'>
+        <div className='relative w-1/2 hidden md:block max-h-[600px] overflow-hidden self-center'>
           <div className='absolute -top-12 -left-12 w-32 h-32 bg-blue-200 opacity-20 rounded-full' />
           <div className='absolute -bottom-16 -right-10 w-48 h-48 bg-blue-100 opacity-10 rounded-full' />
           <div className='absolute inset-0 bg-gradient-to-tr from-blue-600 via-blue-400 to-transparent mix-blend-multiply' />
@@ -79,7 +79,7 @@ export default function ResetPassword() {
 
         {/* Right: Form */}
         <div className='relative w-full md:w-1/2 p-12 flex flex-col justify-center'>
-          <h2 className='text-4xl font-extrabold text-gray-800 mb-12 text-center'>
+          <h2 className='text-3xl font-medium tracking-normal text-gray-800 text-center mb-8'>
             Reset Password
           </h2>
 
@@ -109,48 +109,66 @@ export default function ResetPassword() {
               />
             </div>
 
-            <div className='relative'>
+            {/* New Password */}
+            <div className='mb-6'>
               <label className='block text-gray-600 font-medium mb-2'>
                 New Password <span className='text-red-500'>*</span>
               </label>
-              <input
-                type={showNewPassword ? 'text' : 'password'}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder='Enter new password'
-                required
-                autoComplete='off'
-                className='w-full pl-4 pr-12 py-4 border border-gray-300 rounded-2xl bg-white placeholder-gray-400 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 transition'
-              />
-              <button
-                type='button'
-                onClick={() => setShowNewPassword(!showNewPassword)}
-                className='absolute right-4 top-12 transform -translate-y-1/2 text-gray-500 hover:text-gray-700'
-              >
-                {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
+              <div className='relative'>
+                <input
+                  type={showNewPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder='Enter new password'
+                  required
+                  autoComplete='off'
+                  className='w-full pl-4 pr-12 py-4 border border-gray-300 
+                 rounded-2xl bg-white placeholder-gray-400 
+                 text-gray-800 focus:outline-none focus:ring-2 
+                 focus:ring-blue-400 transition'
+                />
+                <button
+                  type='button'
+                  onClick={() => setShowNewPassword((v) => !v)}
+                  className='absolute inset-y-0 right-4 flex items-center px-2 
+                 text-gray-500 hover:text-gray-700'
+                >
+                  {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
 
-            <div className='relative'>
+            {/* Confirm Password */}
+            <div className='mb-6'>
               <label className='block text-gray-600 font-medium mb-2'>
                 Confirm Password <span className='text-red-500'>*</span>
               </label>
-              <input
-                type={showConfirmPassword ? 'text' : 'password'}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder='Confirm new password'
-                required
-                autoComplete='off'
-                className='w-full pl-4 pr-12 py-4 border border-gray-300 rounded-2xl bg-white placeholder-gray-400 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 transition'
-              />
-              <button
-                type='button'
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className='absolute right-4 top-12 transform -translate-y-1/2 text-gray-500 hover:text-gray-700'
-              >
-                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
+              <div className='relative'>
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder='Confirm new password'
+                  required
+                  autoComplete='off'
+                  className='w-full pl-4 pr-12 py-4 border border-gray-300 
+                 rounded-2xl bg-white placeholder-gray-400 
+                 text-gray-800 focus:outline-none focus:ring-2 
+                 focus:ring-blue-400 transition'
+                />
+                <button
+                  type='button'
+                  onClick={() => setShowConfirmPassword((v) => !v)}
+                  className='absolute inset-y-0 right-4 flex items-center px-2 
+                 text-gray-500 hover:text-gray-700'
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff size={20} />
+                  ) : (
+                    <Eye size={20} />
+                  )}
+                </button>
+              </div>
             </div>
 
             <button

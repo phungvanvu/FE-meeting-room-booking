@@ -111,8 +111,8 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
       <form onSubmit={handleSubmit} className='space-y-3'>
         {/* Room Name */}
         <div>
-          <label className='block text-sm font-medium text-gray-700 mb-1'>
-            Room Name <span className='text-red-500 text-2xl'>*</span>
+          <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
+            Room Name
           </label>
           <input
             type='text'
@@ -125,8 +125,8 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
 
         {/* Location */}
         <div>
-          <label className='block text-sm font-medium text-gray-700 mb-1'>
-            Location <span className='text-red-500 text-2xl'>*</span>
+          <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
+            Location
           </label>
           <input
             type='text'
@@ -139,8 +139,8 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
 
         {/* Capacity */}
         <div>
-          <label className='block text-sm font-medium text-gray-700 mb-1'>
-            Capacity <span className='text-red-500 text-2xl'>*</span>
+          <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
+            Room Name
           </label>
           <div className='flex items-center space-x-4'>
             {['6', '8', '10', '12'].map((option) => (

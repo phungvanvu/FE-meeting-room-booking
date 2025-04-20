@@ -690,8 +690,8 @@ const ManageBookings = () => {
               <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 {/* Select Room (searchable) */}
                 <div className='relative'>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Select Room <span className='text-red-500'>*</span>
+                  <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
+                    Select Room
                   </label>
                   <input
                     type='text'
@@ -727,8 +727,8 @@ const ManageBookings = () => {
                 </div>
                 {/* Select User (searchable) */}
                 <div className='relative'>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Select User <span className='text-red-500'>*</span>
+                  <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
+                    Select User
                   </label>
                   <input
                     type='text'
@@ -773,8 +773,8 @@ const ManageBookings = () => {
                 </div>
                 {/* Start Time */}
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Start Time <span className='text-red-500'>*</span>
+                  <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
+                    Start Time
                   </label>
                   <input
                     type='datetime-local'
@@ -787,8 +787,8 @@ const ManageBookings = () => {
                 </div>
                 {/* End Time */}
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    End Time <span className='text-red-500'>*</span>
+                  <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
+                    End Time
                   </label>
                   <input
                     type='datetime-local'
@@ -801,8 +801,8 @@ const ManageBookings = () => {
                 </div>
                 {/* Purpose */}
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Purpose <span className='text-red-500'>*</span>
+                  <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
+                    Purpose
                   </label>
                   <select
                     name='purpose'
@@ -818,8 +818,8 @@ const ManageBookings = () => {
                 </div>
                 {/* Status Toggle */}
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Status <span className='text-red-500'>*</span>
+                  <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
+                    Status
                   </label>
                   <select
                     name='status'

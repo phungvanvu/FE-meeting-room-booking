@@ -291,9 +291,8 @@ const ManagePositionPage = () => {
                 </div>
               ) : (
                 <div className='mb-4'>
-                  <label className='block text-gray-700'>
+                  <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
                     Position Name
-                    <span className='text-red-500 text-2xl'>*</span>
                   </label>
                   <input
                     type='text'
