@@ -96,8 +96,8 @@ export default function ResetPassword() {
 
           <form onSubmit={handleResetPassword} className='space-y-8'>
             <div className='relative'>
-              <label className='block text-gray-600 font-medium mb-2'>
-                OTP <span className='text-red-500'>*</span>
+              <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
+                OTP:
               </label>
               <input
                 type='text'
@@ -111,8 +111,8 @@ export default function ResetPassword() {
 
             {/* New Password */}
             <div className='mb-6'>
-              <label className='block text-gray-600 font-medium mb-2'>
-                New Password <span className='text-red-500'>*</span>
+              <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
+                New Password:
               </label>
               <div className='relative'>
                 <input
@@ -140,8 +140,8 @@ export default function ResetPassword() {
 
             {/* Confirm Password */}
             <div className='mb-6'>
-              <label className='block text-gray-600 font-medium mb-2'>
-                Confirm Password <span className='text-red-500'>*</span>
+              <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
+                Confirm Password:
               </label>
               <div className='relative'>
                 <input

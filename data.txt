@@ -1,0 +1,309 @@
+//equipment
+[
+  {
+    "equipmentName": "Projector",
+    "description": "Projector for meeting rooms and presentations"
+  },
+  {
+    "equipmentName": "Monitor",
+    "description": "Display monitor for conferences and training"
+  },
+  {
+    "equipmentName": "HDMI",
+    "description": "HDMI cable to connect devices to monitors"
+  },
+  {
+    "equipmentName": "Whiteboard",
+    "description": "Whiteboard for brainstorming and teaching"
+  },
+  {
+    "equipmentName": "Microphone",
+    "description": "Microphone for online meetings and presentations"
+  },
+  {
+    "equipmentName": "Speaker",
+    "description": "Speaker for conference audio and events"
+  }
+]
+
+
+
+//group
+[
+  {
+    "groupName": "DXC",
+    "createdDate": "2025-04-20T09:00:00",
+    "division": "IT",
+    "location": "Hanoi"
+  },
+  {
+    "groupName": "DJ2",
+    "createdDate": "2025-04-20T09:00:00",
+    "division": "IT",
+    "location": "Hanoi"
+  },
+  {
+    "groupName": "DU1.3",
+    "createdDate": "2025-04-20T09:00:00",
+    "division": "IT",
+    "location": "Hanoi"
+  },
+  {
+    "groupName": "DU3.11",
+    "createdDate": "2025-04-20T09:00:00",
+    "division": "IT",
+    "location": "Hanoi"
+  },
+  {
+    "groupName": "DKR1",
+    "createdDate": "2025-04-20T09:00:00",
+    "division": "HR",
+    "location": "Ho Chi Minh City"
+  }
+]
+
+
+//position
+[
+  {
+    "positionName": "Intern",
+    "description": "Internship position"
+  },
+  {
+    "positionName": "C&B",
+    "description": "Compensation & Benefits Department"
+  },
+  {
+    "positionName": "Software Engineer",
+    "description": "Software development engineer"
+  },
+  {
+    "positionName": "System Admin",
+    "description": "System administrator"
+  },
+  {
+    "positionName": "DevOps Engineer",
+    "description": "DevOps engineer"
+  },
+  {
+    "positionName": "QA Engineer",
+    "description": "Quality assurance engineer"
+  },
+  {
+    "positionName": "HR Manager",
+    "description": "Human resources manager"
+  },
+  {
+    "positionName": "HR Executive",
+    "description": "Human resources executive"
+  },
+  {
+    "positionName": "Recruiter",
+    "description": "Recruitment specialist"
+  },
+  {
+    "positionName": "Accountant",
+    "description": "Accountant"
+  },
+  {
+    "positionName": "Finance Manager",
+    "description": "Finance manager"
+  },
+  {
+    "positionName": "Marketing Specialist",
+    "description": "Marketing specialist"
+  },
+  {
+    "positionName": "Content Writer",
+    "description": "Content creator and writer"
+  },
+  {
+    "positionName": "Sales Executive",
+    "description": "Sales executive"
+  },
+  {
+    "positionName": "Sales Manager",
+    "description": "Sales manager"
+  }
+]
+
+
+
+//role
+[
+{
+    "roleName": "USER",
+    "description": "User role with basic access",
+    "permissions": [
+        "READ_DATA", 
+        "BOOKING",
+        "UPDATE_DATA",
+        "DELETE_DATA"
+    ]
+}
+]
+
+
+//rooms
+[
+  {
+    "available": true,
+    "capacity": 4,
+    "image_url": "room1.jpg",
+    "location": "789 Tower",
+    "note": "Phòng họp nhỏ",
+    "room_name": "Meeting Room A1"
+  },
+  {
+    "available": true,
+    "capacity": 6,
+    "image_url": "room2.jpg",
+    "location": "789 Tower",
+    "note": "Phòng họp vừa",
+    "room_name": "Conference Room B2"
+  },
+  {
+    "available": true,
+    "capacity": 8,
+    "image_url": "room3.jpg",
+    "location": "789 Tower",
+    "note": "Phòng đào tạo",
+    "room_name": "Training Room C3"
+  },
+  {
+    "available": true,
+    "capacity": 4,
+    "image_url": "room4.jpg",
+    "location": "Thanh Cong Building",
+    "note": "Phòng phỏng vấn",
+    "room_name": "Interview Room D1"
+  },
+  {
+    "available": true,
+    "capacity": 6,
+    "image_url": "room5.jpg",
+    "location": "Thanh Cong Building",
+    "note": "Phòng họp nhóm",
+    "room_name": "Brainstorming Room D2"
+  },
+  {
+    "available": true,
+    "capacity": 10,
+    "image_url": "room6.jpg",
+    "location": "Thanh Cong Building",
+    "note": "Phòng hội nghị lớn",
+    "room_name": "Executive Room D3"
+  },
+  {
+    "available": true,
+    "capacity": 6,
+    "image_url": "room7.jpg",
+    "location": "The West Tower",
+    "note": "Phòng làm việc nhóm",
+    "room_name": "Team Meeting Room E1"
+  },
+  {
+    "available": true,
+    "capacity": 8,
+    "image_url": "room8.jpg",
+    "location": "The West Tower",
+    "note": "Phòng đào tạo",
+    "room_name": "Training Room E2"
+  },
+  {
+    "available": true,
+    "capacity": 12,
+    "image_url": "room9.jpg",
+    "location": "The West Tower",
+    "note": "Phòng hội thảo",
+    "room_name": "Conference Hall E3"
+  },
+  {
+    "available": true,
+    "capacity": 4,
+    "image_url": "room10.jpg",
+    "location": "CMC Corporation",
+    "note": "Phòng họp nhỏ",
+    "room_name": "Discussion Room F1"
+  },
+  {
+    "available": true,
+    "capacity": 6,
+    "image_url": "room11.jpg",
+    "location": "CMC Corporation",
+    "note": "Phòng họp trung",
+    "room_name": "Board Room F2"
+  },
+  {
+    "available": true,
+    "capacity": 10,
+    "image_url": "room12.jpg",
+    "location": "CMC Corporation",
+    "note": "Phòng hội nghị",
+    "room_name": "Executive Meeting Room F3"
+  },
+  {
+    "available": true,
+    "capacity": 4,
+    "image_url": "room13.jpg",
+    "location": "789 Tower",
+    "note": "Phòng gặp khách hàng",
+    "room_name": "Client Meeting Room G1"
+  },
+  {
+    "available": true,
+    "capacity": 8,
+    "image_url": "room14.jpg",
+    "location": "Thanh Cong Building",
+    "note": "Phòng thuyết trình",
+    "room_name": "Presentation Room G2"
+  },
+  {
+    "available": true,
+    "capacity": 12,
+    "image_url": "room15.jpg",
+    "location": "The West Tower",
+    "note": "Phòng hội nghị lớn",
+    "room_name": "Grand Conference Room G3"
+  },
+  {
+    "available": true,
+    "capacity": 6,
+    "image_url": "room16.jpg",
+    "location": "CMC Corporation",
+    "note": "Phòng đào tạo",
+    "room_name": "Training Hall H1"
+  },
+  {
+    "available": true,
+    "capacity": 8,
+    "image_url": "room17.jpg",
+    "location": "CMC Corporation",
+    "note": "Phòng họp nhóm",
+    "room_name": "Project Room H2"
+  },
+  {
+    "available": true,
+    "capacity": 10,
+    "image_url": "room18.jpg",
+    "location": "The West Tower",
+    "note": "Phòng họp chiến lược",
+    "room_name": "Strategy Room H3"
+  },
+  {
+    "available": true,
+    "capacity": 12,
+    "image_url": "room19.jpg",
+    "location": "Thanh Cong Building",
+    "note": "Phòng hội thảo lớn",
+    "room_name": "Summit Hall H4"
+  },
+  {
+    "available": true,
+    "capacity": 4,
+    "image_url": "room20.jpg",
+    "location": "789 Tower",
+    "note": "Phòng họp nhóm nhỏ",
+    "room_name": "Small Team Room H5"
+  }
+]

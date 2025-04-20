@@ -301,37 +301,19 @@ const ManageBookings = () => {
       );
       if (!response.ok) throw new Error('Error downloading file');
       const disposition = response.headers.get('Content-Disposition');
-      let filename = 'bookings.xlsx';
-      if (disposition && disposition.indexOf('filename=') !== -1) {
-        const filenameMatch = disposition.match(/filename="(.+)"/);
-        if (filenameMatch && filenameMatch[1]) {
-          filename = filenameMatch[1];
-        }
-      } else {
-        // Nếu không có filename từ header, tạo tên file dựa theo ngày giờ (điều chỉnh múi giờ Việt Nam GMT+7)
-        const date = new Date();
-        const vietnamTime = new Date(date.getTime() + 7 * 60 * 60 * 1000); // GMT+7
-        const formattedTime = vietnamTime
-          .toISOString()
-          .replace(/T/, '_')
-          .replace(/:/g, '-')
-          .split('.')[0];
-        filename = `bookings_${formattedTime}.xlsx`;
-      }
-
-      // Xử lý blob và thực hiện download
+      const filenameMatch =
+        disposition && disposition.match(/filename=([^;]+)/);
+      let filename = filenameMatch && filenameMatch[1];
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-      toast.success('Export successful');
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(link.href);
     } catch (error) {
-      console.error('Error exporting excel:', error);
+      console.error('Error downloading file:', error);
       toast.error('Error exporting excel');
     }
   };

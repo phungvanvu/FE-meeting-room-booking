@@ -2,7 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
-import { ChevronLeft, ChevronRight, MapPin, Users } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
+  Users,
+  LayoutGrid,
+  List,
+} from 'lucide-react';
 import { isAccessTokenValid } from '../../components/utils/auth';
 import API_BASE_URL from '../../config';
 import Slider from 'react-slick';
@@ -20,7 +27,7 @@ export default function BookRoomPage() {
   const [allLocations, setAllLocations] = useState([]);
   const [allCapacities, setAllCapacities] = useState([]);
   const [equipmentsData, setEquipmentsData] = useState([]);
-
+  const [viewMode, setViewMode] = useState('grid'); // hoặc 'list'
   const [currentPage, setCurrentPage] = useState(0);
   const navigate = useNavigate();
 
@@ -326,89 +333,212 @@ export default function BookRoomPage() {
         <div className='w-3/4 flex-grow bg-gray-50 p-6 rounded-2xl shadow-md border border-gray-200'>
           <div className='flex justify-between items-center mb-6'>
             <h2 className='text-2xl font-bold'>Book a Meeting Room</h2>
+            <div className='flex gap-2'>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded ${
+                  viewMode === 'grid' ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                }`}
+              >
+                <LayoutGrid className='w-5 h-5' />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded ${
+                  viewMode === 'list' ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                }`}
+              >
+                <List className='w-5 h-5' />
+              </button>
+            </div>
           </div>
 
           {/* Hiển thị danh sách phòng họp */}
-          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8'>
+          <div
+            className={`${
+              viewMode === 'grid'
+                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8'
+                : 'flex flex-col gap-4'
+            }`}
+          >
             {roomsData.map((room) => (
               <div
                 key={room.roomId}
-                className='border rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow bg-white flex flex-col'
+                className={`border rounded-xl shadow-lg overflow-hidden bg-white hover:shadow-xl transition-shadow ${
+                  viewMode === 'list'
+                    ? 'flex flex-row items-stretch h-64'
+                    : 'flex flex-col'
+                } hover:shadow-xl transition-shadow`}
               >
+                {/* Hình ảnh */}
                 {Array.isArray(room.imageUrls) && room.imageUrls.length > 0 ? (
-                  <Slider {...sliderSettings} className='w-full h-48'>
-                    {room.imageUrls.map((url, idx) => (
-                      <div key={idx} className='w-full h-48'>
-                        <img
-                          src={url}
-                          alt={`${room.roomName} - ${idx + 1}`}
-                          className='object-cover w-full h-full'
-                        />
-                      </div>
-                    ))}
-                  </Slider>
+                  // Wrapper list vs grid mode
+                  <div
+                    className={`overflow-hidden ${
+                      viewMode === 'list'
+                        ? 'w-1/3 h-64 flex-shrink-0'
+                        : 'w-full h-64'
+                    }`}
+                  >
+                    {room.imageUrls.length > 1 ? (
+                      // Dùng Slider khi có >1 ảnh
+                      <Slider
+                        {...sliderSettings(room.imageUrls.length)}
+                        className='w-full h-64'
+                      >
+                        {room.imageUrls.map((url, idx) => (
+                          <div
+                            key={idx}
+                            className='w-full h-64 overflow-hidden'
+                          >
+                            <img
+                              src={url}
+                              alt={`${room.roomName} - ${idx + 1}`}
+                              className='object-cover w-full h-full'
+                            />
+                          </div>
+                        ))}
+                      </Slider>
+                    ) : (
+                      // Trường hợp đúng 1 ảnh: render thẳng, không clone, không crop
+                      <img
+                        src={room.imageUrls[0]}
+                        alt={room.roomName}
+                        className='object-cover w-full h-full'
+                      />
+                    )}
+                  </div>
                 ) : (
-                  <div className='w-full h-48 bg-gray-200 flex items-center justify-center'>
-                    No Image Available
+                  // No Image
+                  <div
+                    className={`bg-gray-200 flex items-center justify-center ${
+                      viewMode === 'list' ? 'w-1/3 h-64' : 'w-full h-64'
+                    }`}
+                  >
+                    No Image
                   </div>
                 )}
 
-                <div className='p-5 flex flex-col flex-grow'>
-                  <div>
-                    <h3 className='font-semibold text-xl text-gray-800 truncate'>
-                      {room.roomName}
-                    </h3>
-                    <div className='mt-2 space-y-1 text-gray-600'>
-                      <p className='flex items-center'>
-                        <MapPin size={18} className='mr-2 text-blue-500' />
-                        Location:{' '}
-                        <span className='font-medium ml-1'>
-                          {room.location}
-                        </span>
-                      </p>
-                      <p className='flex items-center'>
-                        <Users size={18} className='mr-2 text-red-500' />
-                        Capacity:{' '}
-                        <span className='font-medium ml-1'>
-                          {room.capacity}
-                        </span>
-                      </p>
+                {/* Phần nội dung và nút */}
+                {viewMode === 'list' ? (
+                  <>
+                    {/* Phần thông tin (giữa) */}
+                    <div className='w-1/2 p-5 flex flex-col justify-between h-full'>
+                      <div>
+                        <h3 className='font-semibold text-xl text-gray-800 truncate'>
+                          {room.roomName}
+                        </h3>
+                        <div className='mt-2 space-y-1 text-gray-600'>
+                          <p className='flex items-center'>
+                            <MapPin size={18} className='mr-2 text-blue-500' />
+                            Location:{' '}
+                            <span className='font-medium ml-1'>
+                              {room.location}
+                            </span>
+                          </p>
+                          <p className='flex items-center'>
+                            <Users size={18} className='mr-2 text-red-500' />
+                            Capacity:{' '}
+                            <span className='font-medium ml-1'>
+                              {room.capacity}
+                            </span>
+                          </p>
+                        </div>
+                        <p className='mt-3 text-sm font-medium text-green-500'>
+                          Available
+                        </p>
+                        <div className='font-medium text-sm whitespace-pre-line break-words'>
+                          {room.note}
+                        </div>
+                        <div className='flex flex-wrap gap-2 mt-3'>
+                          {(room.equipments || []).map((facility, index) => (
+                            <span
+                              key={`${facility}-${index}`}
+                              className='text-xs bg-gray-100 px-3 py-1 rounded-full border border-gray-300'
+                            >
+                              {facility}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                    <p className={`mt-3 text-sm font-medium text-green-500`}>
-                      Available
-                    </p>
-                    <div className='font-medium text-sm whitespace-pre-line break-words'>
-                      {room.note}
-                    </div>
-                    <div className='flex flex-wrap gap-2 mt-3 mb-4'>
-                      {(room.equipments || []).map((facility, index) => (
-                        <span
-                          key={`${facility}-${index}`}
-                          className='text-xs bg-gray-100 px-3 py-1 rounded-full border border-gray-300'
+
+                    {/* Phần nút Book Room (bên phải) */}
+                    <div className='w-1/6 p-5 flex items-center justify-center h-full'>
+                      {room.available ? (
+                        <Link to={`/Calendar/${room.roomId}`}>
+                          <button className='bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-5 rounded-xl'>
+                            Book Room
+                          </button>
+                        </Link>
+                      ) : (
+                        <button
+                          className='bg-gray-300 text-gray-600 font-medium py-2 px-5 rounded-xl cursor-not-allowed'
+                          disabled
                         >
-                          {facility}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  {/* Nút Book Room */}
-                  <div className='mt-auto'>
-                    {room.available ? (
-                      <Link to={`/Calendar/${room.roomId}`}>
-                        <button className='w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 rounded-xl transition-all'>
                           Book Room
                         </button>
-                      </Link>
-                    ) : (
-                      <button
-                        className='w-full bg-gray-300 text-gray-600 font-medium py-2 rounded-xl cursor-not-allowed'
-                        disabled
-                      >
-                        Book Room
-                      </button>
-                    )}
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  // GRID MODE
+                  <div className='p-5 flex flex-col flex-grow'>
+                    <div>
+                      <h3 className='font-semibold text-xl text-gray-800 truncate'>
+                        {room.roomName}
+                      </h3>
+                      <div className='mt-2 space-y-1 text-gray-600'>
+                        <p className='flex items-center'>
+                          <MapPin size={18} className='mr-2 text-blue-500' />
+                          Location:{' '}
+                          <span className='font-medium ml-1'>
+                            {room.location}
+                          </span>
+                        </p>
+                        <p className='flex items-center'>
+                          <Users size={18} className='mr-2 text-red-500' />
+                          Capacity:{' '}
+                          <span className='font-medium ml-1'>
+                            {room.capacity}
+                          </span>
+                        </p>
+                      </div>
+                      <p className='mt-3 text-sm font-medium text-green-500'>
+                        Available
+                      </p>
+                      <div className='font-medium text-sm whitespace-pre-line break-words'>
+                        {room.note}
+                      </div>
+                      <div className='flex flex-wrap gap-2 mt-3 mb-4'>
+                        {(room.equipments || []).map((facility, index) => (
+                          <span
+                            key={`${facility}-${index}`}
+                            className='text-xs bg-gray-100 px-3 py-1 rounded-full border border-gray-300'
+                          >
+                            {facility}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className='mt-auto'>
+                      {room.available ? (
+                        <Link to={`/Calendar/${room.roomId}`}>
+                          <button className='w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 rounded-xl transition-all'>
+                            Book Room
+                          </button>
+                        </Link>
+                      ) : (
+                        <button
+                          className='w-full bg-gray-300 text-gray-600 font-medium py-2 rounded-xl cursor-not-allowed'
+                          disabled
+                        >
+                          Book Room
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             ))}
           </div>

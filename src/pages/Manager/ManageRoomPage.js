@@ -336,18 +336,9 @@ export default function ManageRoomPage() {
 
       if (!response.ok) throw new Error('Error downloading file');
       const disposition = response.headers.get('Content-Disposition');
-      const filenameMatch = disposition && disposition.match(/filename="(.+)"/);
+      const filenameMatch =
+        disposition && disposition.match(/filename=([^;]+)/);
       let filename = filenameMatch && filenameMatch[1];
-      if (!filename) {
-        const date = new Date();
-        const vietnamTime = new Date(date.getTime() + 7 * 60 * 60 * 1000); // Điều chỉnh múi giờ Việt Nam (GMT+7)
-        const formattedTime = vietnamTime
-          .toISOString()
-          .replace(/T/, '_')
-          .replace(/:/g, '-')
-          .split('.')[0]; // Định dạng theo 'yyyy-mm-dd_HH-mm-ss'
-        filename = `rooms_${formattedTime}.xlsx`;
-      }
       const blob = await response.blob();
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
@@ -358,8 +349,10 @@ export default function ManageRoomPage() {
       URL.revokeObjectURL(link.href);
     } catch (error) {
       console.error('Error downloading file:', error);
+      toast.error('Error exporting excel');
     }
   };
+
   const handlePreviousPage = () => {
     if (currentPage > 0) {
       fetchRooms(currentPage - 1);
@@ -583,7 +576,7 @@ export default function ManageRoomPage() {
                 className='border rounded-xl shadow-lg flex flex-col bg-white'
               >
                 {/* Slider ảnh */}
-                {room.imageUrls && room.imageUrls.length > 0 ? (
+                {room.imageUrls && room.imageUrls.length > 1 ? (
                   <Slider {...sliderSettings} className='w-full h-48'>
                     {room.imageUrls.map((url, idx) => (
                       <div key={idx} className='w-full h-48'>
@@ -595,6 +588,14 @@ export default function ManageRoomPage() {
                       </div>
                     ))}
                   </Slider>
+                ) : room.imageUrls && room.imageUrls.length === 1 ? (
+                  <div className='w-full h-48'>
+                    <img
+                      src={room.imageUrls[0]}
+                      alt={room.name}
+                      className='object-cover w-full h-full'
+                    />
+                  </div>
                 ) : (
                   <div className='w-full h-48 flex items-center justify-center bg-gray-200'>
                     No image available
@@ -672,12 +673,12 @@ export default function ManageRoomPage() {
                       Edit
                     </button>
 
-                    {/* Nút Booking */}
+                    {/* Nút Reservations */}
                     <button
                       onClick={() => openBookingModal(room.id)}
                       className='py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-xl transition-all w-full'
                     >
-                      Booking
+                      Reservations
                     </button>
 
                     {/* Nút Delete */}

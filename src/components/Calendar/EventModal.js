@@ -188,8 +188,8 @@ export default function EventModal({ onBookingSuccess }) {
 
           {/* Purpose */}
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
-              Purpose<span className='text-red-500 text-2xl'>*</span>
+            <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
+              Purpose:
             </label>
             <select
               name='purpose'
@@ -207,8 +207,8 @@ export default function EventModal({ onBookingSuccess }) {
 
           {/* Start Time */}
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
-              Start Time<span className='text-red-500 text-2xl'>*</span>
+            <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
+              Start Time:
             </label>
             <input
               type='datetime-local'
@@ -222,8 +222,8 @@ export default function EventModal({ onBookingSuccess }) {
 
           {/* End Time */}
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
-              End Time<span className='text-red-500 text-2xl'>*</span>
+            <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
+              End Time
             </label>
             <input
               type='datetime-local'

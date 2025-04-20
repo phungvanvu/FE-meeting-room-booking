@@ -251,21 +251,17 @@ const UserManagement = () => {
       const response = await fetch(`${API_BASE_URL}/user/export-users-excel`, {
         headers: getAuthHeaders(),
       });
-      if (!response.ok) throw new Error('Error downloading file');
-      const disposition = response.headers.get('Content-Disposition');
-      const filenameMatch = disposition && disposition.match(/filename="(.+)"/);
-      let filename = filenameMatch && filenameMatch[1];
 
-      if (!filename) {
-        const date = new Date();
-        const vietnamTime = new Date(date.getTime() + 7 * 60 * 60 * 1000);
-        const formattedTime = vietnamTime
-          .toISOString()
-          .replace(/T/, '_')
-          .replace(/:/g, '-')
-          .split('.')[0];
-        filename = `users_${formattedTime}.xlsx`;
+      if (!response.ok) throw new Error('Error downloading file');
+
+      const disposition = response.headers.get('Content-Disposition');
+      const filenameMatch =
+        disposition && disposition.match(/filename=([^;]+)/);
+
+      if (!filenameMatch || !filenameMatch[1]) {
+        throw new Error('Could not get file name from Content-Disposition');
       }
+      const filename = filenameMatch[1];
       const blob = await response.blob();
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
@@ -276,6 +272,7 @@ const UserManagement = () => {
       URL.revokeObjectURL(link.href);
     } catch (error) {
       console.error('Error downloading file:', error);
+      toast.error('Error exporting excel');
     }
   };
 

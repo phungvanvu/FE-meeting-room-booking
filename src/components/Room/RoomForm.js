@@ -15,7 +15,6 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
-    // Fetch equipment data when the component mounts
     const fetchEquipment = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/equipment`, {
