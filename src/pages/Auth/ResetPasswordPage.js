@@ -23,16 +23,17 @@ export default function ResetPassword() {
     setError('');
 
     if (!email || !otp || !newPassword || !confirmPassword) {
-      setError('Please fill in all information.');
+      setError('Please fill in all fields.');
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError('New password does not match.');
+      setError('New password and confirmation do not match.');
       return;
     }
+
     setLoading(true);
     try {
-      const response = await fetch(
+      const res = await fetch(
         `${API_BASE_URL}/auth/reset-password?email=${encodeURIComponent(
           email,
         )}&otp=${encodeURIComponent(otp)}&newPassword=${encodeURIComponent(
@@ -40,110 +41,141 @@ export default function ResetPassword() {
         )}`,
         { method: 'POST' },
       );
-      const result = await response.json();
+      const result = await res.json();
       if (result.success) {
-        setMessage(result.data);
-        setTimeout(() => {
-          navigate('/login');
-        }, 2000);
+        setMessage(result.data || 'Your password has been reset successfully.');
+        setTimeout(() => navigate('/login'), 2000);
       } else {
         setError(result.error?.message || 'An error occurred.');
       }
     } catch (err) {
-      setError(err.message || 'An error occurred. Please try again..');
+      setError(err.message || 'An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className='flex min-h-screen items-center justify-center bg-gray-100'>
-      <div className='w-full max-w-md bg-white p-8 shadow-lg rounded-xl'>
-        <h2 className='text-3xl font-bold text-center text-gray-700 mb-4'>
-          Reset password
-        </h2>
-        {error && (
-          <p className='bg-red-100 border-l-4 border-red-500 text-red-700 p-3 rounded-md text-sm mb-4 text-center'>
-            {error}
-          </p>
-        )}
-        {message && (
-          <p className='bg-green-100 border-l-4 border-green-500 text-green-700 p-3 rounded-md text-sm mb-4 text-center'>
-            {message}
-          </p>
-        )}
-        <form onSubmit={handleResetPassword}>
-          <div className='mb-4'>
-            <label className='block text-gray-600 font-medium'>
-              OTP:<span className='text-red-500 text-2xl'>*</span>
-            </label>
-            <input
-              type='text'
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              placeholder='Enter OTP'
-              className='w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all'
-            />
-          </div>
-          <div className='mb-4 relative'>
-            <label className='block text-gray-600 font-medium'>
-              New password:<span className='text-red-500 text-2xl'>*</span>
-            </label>
-            <input
-              type={showNewPassword ? 'text' : 'password'}
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder='Enter new password'
-              className='w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all'
-              autoComplete='off'
-            />
+    <div className='min-h-screen bg-gray-100 flex items-center justify-center px-6 py-12'>
+      {/* Background Image */}
+      <img
+        src='/picture1.png'
+        alt='Background'
+        className='absolute inset-0 w-full h-full object-cover'
+      />
+
+      <div className='relative bg-white rounded-3xl shadow-2xl overflow-hidden flex w-full max-w-4xl'>
+        {/* Left Illustration */}
+        <div className='relative w-1/2 hidden md:block'>
+          <div className='absolute -top-12 -left-12 w-32 h-32 bg-blue-200 opacity-20 rounded-full' />
+          <div className='absolute -bottom-16 -right-10 w-48 h-48 bg-blue-100 opacity-10 rounded-full' />
+          <div className='absolute inset-0 bg-gradient-to-tr from-blue-600 via-blue-400 to-transparent mix-blend-multiply' />
+          <img
+            src='/50683d57-14c7-4a71-9c53-52ed7f27560b.jpg'
+            alt='Illustration Reset Password'
+            className='relative object-cover w-full h-full'
+          />
+        </div>
+
+        {/* Right: Form */}
+        <div className='relative w-full md:w-1/2 p-12 flex flex-col justify-center'>
+          <h2 className='text-4xl font-extrabold text-gray-800 mb-12 text-center'>
+            Reset Password
+          </h2>
+
+          {error && (
+            <div className='text-red-600 bg-red-100 p-4 rounded-lg mb-8 text-center'>
+              {error}
+            </div>
+          )}
+          {message && (
+            <div className='text-green-600 bg-green-100 p-4 rounded-lg mb-8 text-center'>
+              {message}
+            </div>
+          )}
+
+          <form onSubmit={handleResetPassword} className='space-y-8'>
+            <div className='relative'>
+              <label className='block text-gray-600 font-medium mb-2'>
+                OTP <span className='text-red-500'>*</span>
+              </label>
+              <input
+                type='text'
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                placeholder='Enter OTP'
+                required
+                className='w-full pl-4 pr-4 py-4 border border-gray-300 rounded-2xl bg-white placeholder-gray-400 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 transition'
+              />
+            </div>
+
+            <div className='relative'>
+              <label className='block text-gray-600 font-medium mb-2'>
+                New Password <span className='text-red-500'>*</span>
+              </label>
+              <input
+                type={showNewPassword ? 'text' : 'password'}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder='Enter new password'
+                required
+                autoComplete='off'
+                className='w-full pl-4 pr-12 py-4 border border-gray-300 rounded-2xl bg-white placeholder-gray-400 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 transition'
+              />
+              <button
+                type='button'
+                onClick={() => setShowNewPassword(!showNewPassword)}
+                className='absolute right-4 top-12 transform -translate-y-1/2 text-gray-500 hover:text-gray-700'
+              >
+                {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+
+            <div className='relative'>
+              <label className='block text-gray-600 font-medium mb-2'>
+                Confirm Password <span className='text-red-500'>*</span>
+              </label>
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder='Confirm new password'
+                required
+                autoComplete='off'
+                className='w-full pl-4 pr-12 py-4 border border-gray-300 rounded-2xl bg-white placeholder-gray-400 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 transition'
+              />
+              <button
+                type='button'
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className='absolute right-4 top-12 transform -translate-y-1/2 text-gray-500 hover:text-gray-700'
+              >
+                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+
+            <button
+              type='submit'
+              disabled={loading}
+              className={`w-full py-4 text-white font-semibold rounded-2xl transition ${
+                loading
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700'
+              }`}
+            >
+              {loading ? 'Processing...' : 'Reset Password'}
+            </button>
+          </form>
+
+          <p className='mt-4 text-center text-gray-600'>
             <button
               type='button'
-              onClick={() => setShowNewPassword(!showNewPassword)}
-              className='absolute right-3 top-9 text-gray-500 hover:text-gray-700'
+              onClick={() => navigate('/login')}
+              className='text-blue-600 hover:underline'
             >
-              {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              Back to Sign In
             </button>
-          </div>
-          <div className='mb-4 relative'>
-            <label className='block text-gray-600 font-medium'>
-              Confirm password:<span className='text-red-500 text-2xl'>*</span>
-            </label>
-            <input
-              type={showConfirmPassword ? 'text' : 'password'}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder='Confirm new password'
-              className='w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all'
-              autoComplete='off'
-            />
-            <button
-              type='button'
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className='absolute right-3 top-9 text-gray-500 hover:text-gray-700'
-            >
-              {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-          </div>
-          <button
-            type='submit'
-            disabled={loading}
-            className={`w-full ${
-              loading ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'
-            } text-white font-semibold py-2 rounded-lg transition-all active:scale-95`}
-          >
-            {loading ? 'Processing...' : 'Reset password'}
-          </button>
-        </form>
-        <p className='mt-4 text-center text-gray-600'>
-          <button
-            type='button'
-            onClick={() => navigate('/login')}
-            className='text-blue-500 hover:underline'
-          >
-            Back to login
-          </button>
-        </p>
+          </p>
+        </div>
       </div>
     </div>
   );

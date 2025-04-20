@@ -114,12 +114,15 @@ export default function Header() {
     <header className='bg-gradient-to-r from-teal-500 to-blue-500 text-white shadow-lg'>
       <div className='container mx-auto px-4 py-4 flex items-center justify-between'>
         {/* Logo & Branding */}
-        <div className='flex items-center'>
-          <Link to='/Home' className='flex items-center'>
-            <img src='logo.png' alt='Logo' className='h-12 w-auto mr-3' />
-            <span className='text-2xl font-bold'>Meeting Room</span>
+        <div className='flex items-center space-x-2'>
+          <Link to='/Home' className='flex items-center space-x-2'>
+            <img src='logo.png' alt='Logo' className='h-12 w-auto' />
+            <span className='text-xl font-semibold tracking-wide'>
+              Meeting Room
+            </span>
           </Link>
         </div>
+
         {/* Navigation Links */}
         <nav className='hidden md:flex space-x-6'>
           <Link to='/BookRoom' className='hover:underline hover:text-gray-200'>

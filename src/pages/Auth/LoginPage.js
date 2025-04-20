@@ -60,65 +60,82 @@ export default function Login() {
   };
 
   return (
-    <div className='min-h-screen flex'>
-      {/* Left panel: illustration chiếm 3/4 */}
-      <div className='hidden lg:flex w-3/4 relative overflow-hidden bg-gradient-to-tr from-blue-100 to-blue-200'>
-        {/* Shape decor */}
-        <div className='absolute -top-16 -left-16 w-72 h-72 bg-white opacity-20 rounded-full'></div>
-        <div className='absolute -bottom-16 -right-16 w-96 h-96 bg-white opacity-10 rounded-full'></div>
+    <div className='min-h-screen bg-gray-100 flex items-center justify-center px-6 py-12'>
+      {/* 1. Ảnh nền đặt behind everything */}
+      <img
+        src='/picture1.png'
+        alt='Background'
+        className='absolute inset-0 w-full h-full object-cover'
+      />
+      <div className='relative bg-white rounded-3xl shadow-2xl overflow-hidden flex w-full max-w-4xl'>
+        {/* 2. Phần Left: Illustration (1/2) */}
+        <div className='relative w-1/2 hidden md:block'>
+          {/* Shape décor */}
+          <div className='absolute -top-12 -left-12 w-32 h-32 bg-blue-200 opacity-20 rounded-full' />
+          <div className='absolute -bottom-16 -right-10 w-48 h-48 bg-blue-100 opacity-10 rounded-full' />
 
-        <img
-          src='/picture1.png'
-          alt='Illustration'
-          className='m-auto object-cover w-full h-full'
-        />
-      </div>
+          {/* Gradient overlay */}
+          <div className='absolute inset-0 bg-gradient-to-tr from-blue-600 via-blue-400 to-transparent mix-blend-multiply' />
 
-      {/* Right panel: form chiếm 1/4 */}
-      <div className='flex w-full lg:w-1/4 items-center justify-center bg-white'>
-        <div className='relative bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm'>
-          {/* Light shape behind card */}
-          <div className='absolute -top-6 -right-6 w-20 h-20 bg-blue-100 rounded-full opacity-50'></div>
+          <img
+            src='/50683d57-14c7-4a71-9c53-52ed7f27560b.jpg'
+            alt='Illustration'
+            className='relative object-cover w-full h-full'
+          />
+        </div>
 
-          <h2 className='text-2xl font-bold text-gray-800 text-center mb-6'>
+        {/* 3. Phần Right: Form (1/2) */}
+        <div className='relative w-full md:w-1/2 p-12 flex flex-col justify-center'>
+          <h2 className='text-4xl font-extrabold text-gray-800 mb-12 text-center'>
             Welcome Back
           </h2>
 
           {error && (
-            <div className='text-red-600 bg-red-100 p-3 rounded-lg mb-4 text-center'>
+            <div className='text-red-600 bg-red-100 p-4 rounded-lg mb-8 text-center'>
               {error}
             </div>
           )}
 
-          <form onSubmit={handleLogin} className='space-y-5'>
-            {/* Username field */}
+          <form onSubmit={handleLogin} className='space-y-8'>
+            {/* Username */}
             <div className='relative'>
-              <User className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' />
+              <User className='absolute left-4 top-1/2 -translate-y-1/2 text-gray-400' />
               <input
                 type='text'
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder='Username'
-                className='w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition'
+                className='w-full pl-12 pr-4 py-4 border border-gray-300 rounded-2xl bg-white placeholder-gray-400 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 transition'
               />
             </div>
 
-            {/* Password field */}
+            {/* Password */}
             <div className='relative'>
-              <Lock className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' />
+              <Lock className='absolute left-4 top-1/2 -translate-y-1/2 text-gray-400' />
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder='Password'
-                className='w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition'
+                className='w-full pl-12 pr-12 py-4 border border-gray-300 rounded-2xl bg-white placeholder-gray-400 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 transition'
               />
               <button
                 type='button'
                 onClick={() => setShowPassword((v) => !v)}
-                className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500'
+                className='absolute right-4 top-1/2 -translate-y-1/2 text-gray-500'
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+
+            {/* Forgot link */}
+            <div className='flex justify-end'>
+              <button
+                onClick={() => navigate('/forgot-password')}
+                className='text-sm text-blue-600 hover:underline'
+                type='button'
+              >
+                Forgot password?
               </button>
             </div>
 
@@ -126,7 +143,7 @@ export default function Login() {
             <button
               type='submit'
               disabled={loading}
-              className={`w-full py-3 text-white font-semibold rounded-xl transition ${
+              className={`w-full py-4 text-white font-semibold rounded-2xl transition ${
                 loading
                   ? 'bg-gray-400 cursor-not-allowed'
                   : 'bg-blue-600 hover:bg-blue-700'
@@ -135,16 +152,6 @@ export default function Login() {
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
-
-          {/* Forgot link */}
-          <p className='mt-4 text-center text-sm text-gray-500'>
-            <button
-              onClick={() => navigate('/forgot-password')}
-              className='underline hover:text-gray-700'
-            >
-              Forgot password?
-            </button>
-          </p>
         </div>
       </div>
     </div>
