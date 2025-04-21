@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import API_BASE_URL from '../../config';
@@ -6,6 +7,7 @@ import { toast } from 'react-toastify';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const ManageBookings = () => {
+  // --- Filters & data ---
   const [roomName, setRoomName] = useState('');
   const [fromTime, setFromTime] = useState('');
   const [toTime, setToTime] = useState('');
@@ -15,7 +17,11 @@ const ManageBookings = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  // --- Bulk selection ---
   const [selectedBookingIds, setSelectedBookingIds] = useState([]);
+
+  // --- Edit/Create Form ---
   const [showForm, setShowForm] = useState(false);
   const [currentBooking, setCurrentBooking] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
@@ -31,13 +37,17 @@ const ManageBookings = () => {
     status: 'CONFIRMED',
   });
 
-  // --- States for search (auto-complete) in modal ---
+  // --- Search autocomplete ---
   const [roomSearchQuery, setRoomSearchQuery] = useState('');
   const [roomSuggestions, setRoomSuggestions] = useState([]);
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [userSuggestions, setUserSuggestions] = useState([]);
 
-  // --- State for confirm bulk cancel ---
+  // --- Confirm modals state ---
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [pendingCancelId, setPendingCancelId] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const [showBulkCancelConfirm, setShowBulkCancelConfirm] = useState(false);
 
   // Hàm helper lấy thời gian hiện tại theo local định dạng "YYYY-MM-DDTHH:mm"
@@ -194,62 +204,72 @@ const ManageBookings = () => {
     }
   };
 
-  // --- Cancel a single booking: endpoint /roombooking/cancel/{bookingId} ---
-  const handleCancelBooking = async (bookingId) => {
-    if (window.confirm('Are you sure you want to cancel this booking?')) {
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/roombooking/cancel/${bookingId}`,
-          {
-            method: 'PUT',
-            headers: getAuthHeaders(),
-          },
+  // --- Prompt modals ---
+  const promptCancelBooking = (id) => {
+    setPendingCancelId(id);
+    setShowCancelModal(true);
+  };
+  const promptDeleteBooking = (id) => {
+    setPendingDeleteId(id);
+    setShowDeleteModal(true);
+  };
+
+  // --- Confirm cancellation ---
+  const handleConfirmCancel = async () => {
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/roombooking/cancel/${pendingCancelId}`,
+        { method: 'PUT', headers: getAuthHeaders() },
+      );
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Booking cancelled successfully');
+      } else {
+        toast.error(
+          data.error?.message || data.error || 'Error cancelling booking',
         );
-        const data = await response.json();
-        if (data.success) {
-          toast.success('Booking cancelled successfully');
-          fetchBookings();
-        } else {
-          const errorMsg =
-            data.error && typeof data.error === 'object'
-              ? data.error.message
-              : data.error;
-          toast.error(errorMsg);
-        }
-      } catch (error) {
-        console.error('Error cancelling booking:', error);
-        toast.error('Error cancelling booking');
       }
+      fetchBookings();
+    } catch (err) {
+      console.error('Error cancelling booking:', err);
+      toast.error('Error cancelling booking');
+    } finally {
+      setShowCancelModal(false);
+      setPendingCancelId(null);
     }
   };
 
-  // --- Delete a booking: DELETE endpoint ---
-  const handleDeleteBooking = async (bookingId) => {
-    if (window.confirm('Are you sure you want to delete this booking?')) {
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/roombooking/${bookingId}`,
-          {
-            method: 'DELETE',
-            headers: getAuthHeaders(),
-          },
+  // --- Confirm delete ---
+  const handleConfirmDelete = async () => {
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/roombooking/${pendingDeleteId}`,
+        { method: 'DELETE', headers: getAuthHeaders() },
+      );
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Booking deleted successfully');
+      } else {
+        toast.error(
+          data.error?.message || data.error || 'Error deleting booking',
         );
-        const data = await response.json();
-        if (data.success) {
-          toast.success('Booking deleted successfully');
-          fetchBookings();
-        } else {
-          const errorMsg =
-            data.error && typeof data.error === 'object'
-              ? data.error.message
-              : data.error;
-          toast.error(errorMsg);
-        }
-      } catch (error) {
-        console.error('Error deleting booking:', error);
-        toast.error('Error deleting booking');
       }
+      fetchBookings();
+    } catch (err) {
+      console.error('Error deleting booking:', err);
+      toast.error('Error deleting booking');
+    } finally {
+      setShowDeleteModal(false);
+      setPendingDeleteId(null);
     }
+  };
+
+  // --- Cancel modal handler ---
+  const handleCancelModal = () => {
+    setShowCancelModal(false);
+    setShowDeleteModal(false);
+    setPendingCancelId(null);
+    setPendingDeleteId(null);
   };
 
   // --- Bulk Cancel ---
@@ -260,34 +280,28 @@ const ManageBookings = () => {
     }
     setShowBulkCancelConfirm(true);
   };
-
   const confirmBulkCancel = async () => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/roombooking/cancel-multiple`,
-        {
-          method: 'PUT',
-          headers: getAuthHeaders(),
-          body: JSON.stringify(selectedBookingIds),
-        },
-      );
-      const data = await response.json();
+      const res = await fetch(`${API_BASE_URL}/roombooking/cancel-multiple`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(selectedBookingIds),
+      });
+      const data = await res.json();
       if (data.success) {
         toast.success('Selected bookings cancelled successfully');
-        setSelectedBookingIds([]);
         fetchBookings();
       } else {
-        const errorMsg =
-          data.error && typeof data.error === 'object'
-            ? data.error.message
-            : data.error;
-        toast.error(errorMsg);
+        toast.error(
+          data.error?.message || data.error || 'Error cancelling bookings',
+        );
       }
-    } catch (error) {
-      console.error('Error in bulk cancellation:', error);
+    } catch (err) {
+      console.error('Error in bulk cancellation:', err);
       toast.error('Error in bulk cancellation');
+    } finally {
+      setShowBulkCancelConfirm(false);
     }
-    setShowBulkCancelConfirm(false);
   };
 
   // --- Export Excel ---
@@ -590,13 +604,13 @@ const ManageBookings = () => {
                         Edit
                       </button>
                       <button
-                        onClick={() => handleCancelBooking(booking.bookingId)}
+                        onClick={() => promptCancelBooking(booking.bookingId)}
                         className='text-orange-500 hover:text-orange-600 text-sm font-medium'
                       >
                         Cancel
                       </button>
                       <button
-                        onClick={() => handleDeleteBooking(booking.bookingId)}
+                        onClick={() => promptDeleteBooking(booking.bookingId)}
                         className='text-red-500 hover:text-red-700 text-sm font-medium'
                       >
                         Delete
@@ -701,7 +715,8 @@ const ManageBookings = () => {
                             setRoomSuggestions([]);
                           }}
                         >
-                          {room.roomName} (Capacity: {room.capacity}, Location: {room.location})
+                          {room.roomName} (Capacity: {room.capacity}, Location:{' '}
+                          {room.location})
                         </li>
                       ))}
                     </ul>
@@ -848,32 +863,31 @@ const ManageBookings = () => {
         </div>
       )}
 
-      {/* Modal Confirm Bulk Cancel */}
+      {/* Bulk‑cancel modal */}
       {showBulkCancelConfirm && (
-        <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50'>
-          <div className='bg-white rounded-xl shadow-xl p-8 max-w-sm w-full'>
-            <h3 className='text-2xl font-semibold text-gray-800 text-center mb-4'>
-              Confirm Bulk Cancel
-            </h3>
-            <p className='text-center text-gray-600 mb-6'>
-              Are you sure you want to cancel the selected bookings?
-            </p>
-            <div className='flex justify-center space-x-4'>
-              <button
-                onClick={confirmBulkCancel}
-                className='px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition'
-              >
-                Cancel Bookings
-              </button>
-              <button
-                onClick={() => setShowBulkCancelConfirm(false)}
-                className='px-5 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-100 transition'
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
+        <DeleteConfirmModal
+          message='Are you sure you want to cancel the selected bookings?'
+          onConfirm={confirmBulkCancel}
+          onCancel={() => setShowBulkCancelConfirm(false)}
+        />
+      )}
+
+      {/* Single‑cancel modal */}
+      {showCancelModal && (
+        <DeleteConfirmModal
+          message='Are you sure you want to cancel this booking?'
+          onConfirm={handleConfirmCancel}
+          onCancel={handleCancelModal}
+        />
+      )}
+
+      {/* Single‑delete modal */}
+      {showDeleteModal && (
+        <DeleteConfirmModal
+          message='Are you sure you want to delete this booking?'
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelModal}
+        />
       )}
 
       <Footer />

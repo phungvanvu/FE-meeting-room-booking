@@ -5,6 +5,7 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Eye, EyeOff } from 'lucide-react';
+import Select from 'react-select';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -295,6 +296,7 @@ const UserManagement = () => {
           fetchUsers();
         } else {
           toast.error(data.error?.message || 'Error deleting users');
+          fetchUsers();
         }
       })
       .catch((err) => {
@@ -724,19 +726,28 @@ const UserManagement = () => {
                 {/* Group */}
                 <div>
                   <label className={requiredLabel}>Group:</label>
-                  <select
+                  <Select
                     name='group'
-                    value={formData.group}
-                    onChange={handleInputChange}
-                    className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
-                  >
-                    <option value=''>Select group</option>
-                    {groupOptions.map((group) => (
-                      <option key={group.groupName} value={group.groupName}>
-                        {group.groupName}
-                      </option>
-                    ))}
-                  </select>
+                    options={groupOptions.map((group) => ({
+                      value: group.groupName,
+                      label: group.groupName,
+                    }))}
+                    value={
+                      formData.group
+                        ? {
+                            value: formData.group,
+                            label: formData.group,
+                          }
+                        : null
+                    }
+                    onChange={(selectedOption) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        group: selectedOption ? selectedOption.value : '',
+                      }));
+                    }}
+                    className='block w-full'
+                  />
                 </div>
               </div>
               {/* Container for Position and Password */}
@@ -744,20 +755,30 @@ const UserManagement = () => {
                 {/* Position */}
                 <div>
                   <label className={requiredLabel}>Position:</label>
-                  <select
+                  <Select
                     name='position'
-                    value={formData.position}
-                    onChange={handleInputChange}
-                    className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
-                  >
-                    <option value=''>Select position</option>
-                    {positionOptions.map((pos) => (
-                      <option key={pos.positionName} value={pos.positionName}>
-                        {pos.positionName}
-                      </option>
-                    ))}
-                  </select>
+                    options={positionOptions.map((pos) => ({
+                      value: pos.positionName,
+                      label: pos.positionName,
+                    }))}
+                    value={
+                      formData.position
+                        ? {
+                            value: formData.position,
+                            label: formData.position,
+                          }
+                        : null
+                    }
+                    onChange={(selectedOption) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        position: selectedOption ? selectedOption.value : '',
+                      }));
+                    }}
+                    className='block w-full'
+                  />
                 </div>
+
                 {/* Password */}
                 <div>
                   <label className={currentUser ? baseLabel : requiredLabel}>
