@@ -170,7 +170,7 @@ export default function BookRoomPage() {
   };
 
   const sliderSettings = (imagesLength) => ({
-    dots: false,
+    dots: true,
     arrows: true,
     infinite: true,
     speed: 500,
@@ -374,7 +374,7 @@ export default function BookRoomPage() {
                 {Array.isArray(room.imageUrls) && room.imageUrls.length > 0 ? (
                   // Wrapper list vs grid mode
                   <div
-                    className={`overflow-hidden ${
+                    className={`overflow-visible ${
                       viewMode === 'list'
                         ? 'w-1/3 h-64 flex-shrink-0'
                         : 'w-full h-64'

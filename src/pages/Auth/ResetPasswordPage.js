@@ -59,7 +59,7 @@ export default function ResetPassword() {
     <div className='min-h-screen bg-gray-100 flex items-center justify-center px-6 py-12'>
       {/* Background Image */}
       <img
-        src='/picture1.png'
+        src='/1W8A8149.jpg'
         alt='Background'
         className='absolute inset-0 w-full h-full object-cover'
       />
