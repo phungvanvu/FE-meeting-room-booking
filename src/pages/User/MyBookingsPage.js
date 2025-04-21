@@ -207,11 +207,6 @@ const MyBookingsPage = () => {
     }
   };
 
-  const cancelDelete = () => {
-    setIsConfirming(false);
-    setSelectedBooking(null);
-  };
-
   const closeEditForm = () => {
     setIsEditing(false);
     setSelectedBooking(null);

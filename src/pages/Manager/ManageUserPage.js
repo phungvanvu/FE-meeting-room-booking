@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../../config';
 import { toast } from 'react-toastify';
 import Header from '../../components/Header';
@@ -8,7 +7,6 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Eye, EyeOff } from 'lucide-react';
 
 const UserManagement = () => {
-  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
@@ -701,7 +699,7 @@ const UserManagement = () => {
                 </div>
                 {/* Phone */}
                 <div>
-                  <label className={baseLabel}>Phone:</label>
+                  <label className={requiredLabel}>Phone:</label>
                   <input
                     type='text'
                     name='phoneNumber'

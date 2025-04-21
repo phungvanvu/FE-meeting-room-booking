@@ -381,7 +381,6 @@ export default function BookRoomPage() {
                     }`}
                   >
                     {room.imageUrls.length > 1 ? (
-                      // Dùng Slider khi có >1 ảnh
                       <Slider
                         {...sliderSettings(room.imageUrls.length)}
                         className='w-full h-64'
@@ -400,7 +399,6 @@ export default function BookRoomPage() {
                         ))}
                       </Slider>
                     ) : (
-                      // Trường hợp đúng 1 ảnh: render thẳng, không clone, không crop
                       <img
                         src={room.imageUrls[0]}
                         alt={room.roomName}

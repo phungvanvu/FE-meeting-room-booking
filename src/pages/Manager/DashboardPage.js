@@ -179,7 +179,7 @@ const Dashboard = () => {
     if (cardType === 'totalRooms') {
       navigate('/ManageRoom');
     } else if (cardType === 'totalBookings') {
-      navigate('/ManageRoom');
+      navigate('/ManageBooking');
     } else if (stats) {
       switch (cardType) {
         case 'availableRooms':

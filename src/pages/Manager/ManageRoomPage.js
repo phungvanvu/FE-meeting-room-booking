@@ -10,6 +10,8 @@ import {
   CheckCircle,
   XCircle,
   FileText,
+  LayoutGrid,
+  List,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { isAccessTokenValid } from '../../components/utils/auth';
@@ -39,6 +41,7 @@ export default function ManageRoomPage() {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteRoomId, setDeleteRoomId] = useState(null);
+  const [viewMode, setViewMode] = useState('grid'); // hoặc 'list'
 
   const navigate = useNavigate();
 
@@ -562,43 +565,91 @@ export default function ManageRoomPage() {
         <div className='w-3/4 flex-grow bg-gray-50 p-6 rounded-2xl shadow-md border border-gray-200'>
           <div className='flex justify-between items-center mb-6'>
             <h2 className='text-2xl font-bold'>Meeting Room Management</h2>
-            <button
-              onClick={() => downloadFile()}
-              className='bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg shadow transition'
-            >
-              Export Excel
-            </button>
+            <div className='flex gap-2'>
+              <button
+                onClick={() => downloadFile()}
+                className='bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg shadow transition'
+              >
+                Export Excel
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded ${
+                  viewMode === 'grid' ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                }`}
+              >
+                <LayoutGrid className='w-5 h-5' />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded ${
+                  viewMode === 'list' ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                }`}
+              >
+                <List className='w-5 h-5' />
+              </button>
+            </div>
           </div>
-          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8'>
+          <div
+            className={`${
+              viewMode === 'grid'
+                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8'
+                : 'flex flex-col gap-4'
+            }`}
+          >
             {roomsData.map((room) => (
               <div
-                key={room.id}
-                className='border rounded-xl shadow-lg flex flex-col bg-white'
+                key={room.roomId}
+                className={`border rounded-xl shadow-lg overflow-hidden bg-white hover:shadow-xl transition-shadow ${
+                  viewMode === 'list'
+                    ? 'flex flex-row items-stretch h-64'
+                    : 'flex flex-col'
+                } hover:shadow-xl transition-shadow`}
               >
-                {/* Slider ảnh */}
-                {room.imageUrls && room.imageUrls.length > 1 ? (
-                  <Slider {...sliderSettings} className='w-full h-48'>
-                    {room.imageUrls.map((url, idx) => (
-                      <div key={idx} className='w-full h-48'>
-                        <img
-                          src={url}
-                          alt={`${room.name} ${idx + 1}`}
-                          className='object-cover w-full h-full'
-                        />
-                      </div>
-                    ))}
-                  </Slider>
-                ) : room.imageUrls && room.imageUrls.length === 1 ? (
-                  <div className='w-full h-48'>
-                    <img
-                      src={room.imageUrls[0]}
-                      alt={room.name}
-                      className='object-cover w-full h-full'
-                    />
+                {/* Hình ảnh */}
+                {Array.isArray(room.imageUrls) && room.imageUrls.length > 0 ? (
+                  // Wrapper list vs grid mode
+                  <div
+                    className={`overflow-hidden ${
+                      viewMode === 'list'
+                        ? 'w-1/3 h-64 flex-shrink-0'
+                        : 'w-full h-64'
+                    }`}
+                  >
+                    {room.imageUrls.length > 1 ? (
+                      <Slider
+                        {...sliderSettings(room.imageUrls.length)}
+                        className='w-full h-64'
+                      >
+                        {room.imageUrls.map((url, idx) => (
+                          <div
+                            key={idx}
+                            className='w-full h-64 overflow-hidden'
+                          >
+                            <img
+                              src={url}
+                              alt={`${room.roomName} - ${idx + 1}`}
+                              className='object-cover w-full h-full'
+                            />
+                          </div>
+                        ))}
+                      </Slider>
+                    ) : (
+                      <img
+                        src={room.imageUrls[0]}
+                        alt={room.roomName}
+                        className='object-cover w-full h-full'
+                      />
+                    )}
                   </div>
                 ) : (
-                  <div className='w-full h-48 flex items-center justify-center bg-gray-200'>
-                    No image available
+                  // No Image
+                  <div
+                    className={`bg-gray-200 flex items-center justify-center ${
+                      viewMode === 'list' ? 'w-1/3 h-64' : 'w-full h-64'
+                    }`}
+                  >
+                    No Image
                   </div>
                 )}
                 <div className='p-5 flex flex-col flex-grow'>

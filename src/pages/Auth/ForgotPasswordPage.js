@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Lock } from 'lucide-react';
+import { User } from 'lucide-react';
 import API_BASE_URL from '../../config';
 
 export default function ForgotPassword() {

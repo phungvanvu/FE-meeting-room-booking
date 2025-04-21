@@ -701,7 +701,7 @@ const ManageBookings = () => {
                             setRoomSuggestions([]);
                           }}
                         >
-                          {room.roomName} (Capacity: {room.capacity})
+                          {room.roomName} (Capacity: {room.capacity}, Location: {room.location})
                         </li>
                       ))}
                     </ul>
