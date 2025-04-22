@@ -41,7 +41,7 @@ export default function ManageRoomPage() {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteRoomId, setDeleteRoomId] = useState(null);
-  const [viewMode, setViewMode] = useState('grid'); // hoặc 'list'
+  const [viewMode, setViewMode] = useState('grid');
 
   const navigate = useNavigate();
 
@@ -597,7 +597,7 @@ export default function ManageRoomPage() {
                   viewMode === 'list'
                     ? 'flex flex-row items-stretch h-64'
                     : 'flex flex-col'
-                } hover:shadow-xl transition-shadow`}
+                } border rounded-xl shadow-lg overflow-hidden bg-white hover:shadow-xl transition-shadow`}
               >
                 {/* Hình ảnh */}
                 {Array.isArray(room.imageUrls) && room.imageUrls.length > 0 ? (

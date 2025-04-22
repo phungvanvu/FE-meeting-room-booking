@@ -9,14 +9,20 @@ export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [validationErrors, setValidationErrors] = useState({});
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setValidationErrors({});
+    setError('');
     setLoading(true);
+
+    if (!username || !password) {
+      setError('Please enter complete information!');
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -25,23 +31,16 @@ export default function Login() {
         body: JSON.stringify({ username, password }),
       });
 
-      const result = await response.json();
-
       if (!response.ok) {
-        // Gán lỗi trả về từ API nếu có
-        if (result.data && typeof result.data === 'object') {
-          setValidationErrors(result.data);
-        }
+        const result = await response.json();
 
         const errorMessage =
           result.error && typeof result.error === 'object'
             ? result.error.message || 'Incorrect username or password.'
             : 'Incorrect username or password.';
-
-        console.error('Login error:', errorMessage);
-        return;
+        throw new Error(errorMessage);
       }
-
+      const result = await response.json();
       if (result.success) {
         sessionStorage.setItem('accessToken', result.data.accessToken);
         setRefreshToken(result.data.refreshToken);
@@ -53,7 +52,9 @@ export default function Login() {
         }
       }
     } catch (err) {
-      console.error('Unexpected error during login:', err);
+      setError(
+        err.message || 'An error occurred while logging in. Please try again!',
+      );
     } finally {
       setLoading(false);
     }
@@ -82,6 +83,11 @@ export default function Login() {
           <h2 className='text-3xl font-medium tracking-normal text-gray-800 text-center mb-8'>
             Welcome Back
           </h2>
+          {error && (
+            <div className='text-red-600 bg-red-100 p-4 rounded-lg mb-8 text-center'>
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className='space-y-6'>
             {/* Username */}
@@ -95,13 +101,6 @@ export default function Login() {
                   placeholder='Username'
                   className='w-full pl-12 pr-4 py-4 border border-gray-300 rounded-2xl bg-white placeholder-gray-400 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 transition'
                 />
-              </div>
-              <div className='min-h-[24px]'>
-                {validationErrors.username && (
-                  <p className='text-red-500 text-sm'>
-                    {validationErrors.username[0]}
-                  </p>
-                )}
               </div>
             </div>
 
@@ -123,13 +122,6 @@ export default function Login() {
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
-              </div>
-              <div className='min-h-[24px]'>
-                {validationErrors.password && (
-                  <p className='text-red-500 text-sm'>
-                    {validationErrors.password[0]}
-                  </p>
-                )}
               </div>
             </div>
 

@@ -763,7 +763,6 @@ const ManageBookings = () => {
                 </div>
 
                 {/* Select User (searchable) */}
-                {/* Select User (searchable) */}
                 <div className='relative'>
                   <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
                     Select User
