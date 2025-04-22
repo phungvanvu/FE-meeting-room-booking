@@ -23,6 +23,7 @@ const ManageBookings = () => {
 
   // --- Edit/Create Form ---
   const [showForm, setShowForm] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
   const [currentBooking, setCurrentBooking] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [formData, setFormData] = useState({
@@ -130,6 +131,7 @@ const ManageBookings = () => {
   // --- CRUD: Create / Update Booking ---
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    setValidationErrors((prev) => ({ ...prev, [name]: undefined }));
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -154,20 +156,25 @@ const ManageBookings = () => {
     setShowForm(true);
   };
 
-  // Submit form để tạo hoặc cập nhật booking
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setValidationErrors({});
+    setErrorMessage('');
+
     try {
       const method = currentBooking ? 'PUT' : 'POST';
       const url = currentBooking
         ? `${API_BASE_URL}/roombooking/${currentBooking.bookingId}`
         : `${API_BASE_URL}/roombooking`;
+
       const response = await fetch(url, {
         method,
         headers: getAuthHeaders(),
         body: JSON.stringify(formData),
       });
+
       const data = await response.json();
+
       if (data.success) {
         toast.success(
           currentBooking
@@ -176,7 +183,6 @@ const ManageBookings = () => {
         );
         setShowForm(false);
         setCurrentBooking(null);
-        // Reset formData (loại bỏ bookingId ở trường hợp tạo mới)
         setFormData({
           roomId: '',
           roomName: '',
@@ -192,6 +198,10 @@ const ManageBookings = () => {
         setUserSearchQuery('');
         fetchBookings();
       } else {
+        if (data.data) {
+          setValidationErrors(data.data);
+          return;
+        }
         const errorMsg =
           data.error && typeof data.error === 'object'
             ? data.error.message
@@ -388,6 +398,26 @@ const ManageBookings = () => {
     } catch (error) {
       console.error('Error fetching user suggestions:', error);
     }
+  };
+
+  const handleCloseForm = () => {
+    setShowForm(false);
+    setValidationErrors({});
+    setErrorMessage('');
+    setCurrentBooking(null);
+    setRoomSearchQuery('');
+    setUserSearchQuery('');
+    setFormData({
+      roomId: '',
+      roomName: '',
+      bookedById: '',
+      userName: '',
+      startTime: '',
+      endTime: '',
+      purpose: 'MEETING',
+      description: '',
+      status: 'CONFIRMED',
+    });
   };
 
   return (
@@ -697,7 +727,11 @@ const ManageBookings = () => {
                       setRoomSearchQuery(e.target.value);
                       fetchRoomSuggestions(e.target.value);
                     }}
-                    className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
+                    className={`block w-full rounded-md shadow-sm focus:ring-2 ${
+                      validationErrors.roomId
+                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+                    }`}
                   />
                   {roomSuggestions.length > 0 && (
                     <ul className='absolute bg-white w-full border border-gray-300 rounded-md mt-1 max-h-40 overflow-y-auto z-10'>
@@ -721,7 +755,14 @@ const ManageBookings = () => {
                       ))}
                     </ul>
                   )}
+                  {validationErrors.roomId && (
+                    <p className='mt-1 text-sm text-red-600'>
+                      {validationErrors.roomId[0]}
+                    </p>
+                  )}
                 </div>
+
+                {/* Select User (searchable) */}
                 {/* Select User (searchable) */}
                 <div className='relative'>
                   <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
@@ -735,7 +776,11 @@ const ManageBookings = () => {
                       setUserSearchQuery(e.target.value);
                       fetchUserSuggestions(e.target.value);
                     }}
-                    className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
+                    className={`block w-full rounded-md shadow-sm focus:ring-2 ${
+                      validationErrors.bookedById
+                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+                    }`}
                   />
                   {userSuggestions.length > 0 && (
                     <ul className='absolute bg-white w-full border border-gray-300 rounded-md mt-1 max-h-40 overflow-y-auto z-10'>
@@ -767,10 +812,15 @@ const ManageBookings = () => {
                       ))}
                     </ul>
                   )}
+                  {validationErrors.bookedById && (
+                    <p className='mt-1 text-sm text-red-600'>
+                      {validationErrors.bookedById[0]}
+                    </p>
+                  )}
                 </div>
-                {/* Start Time */}
+
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
+                  <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500'>
                     Start Time
                   </label>
                   <input
@@ -779,8 +829,17 @@ const ManageBookings = () => {
                     value={formData.startTime}
                     onChange={handleInputChange}
                     min={getLocalDateTime()}
-                    className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
+                    className={`block w-full rounded-md py-2 px-3 focus:ring-2 ${
+                      validationErrors.startTime
+                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+                    }`}
                   />
+                  {validationErrors.startTime && (
+                    <p className='mt-1 text-sm text-red-600'>
+                      {validationErrors.startTime[0]}
+                    </p>
+                  )}
                 </div>
                 {/* End Time */}
                 <div>
@@ -793,9 +852,19 @@ const ManageBookings = () => {
                     value={formData.endTime}
                     onChange={handleInputChange}
                     min={formData.startTime || getLocalDateTime()}
-                    className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
+                    className={`block w-full rounded-md shadow-sm py-2 px-3 focus:ring-2 ${
+                      validationErrors.endTime
+                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+                    }`}
                   />
+                  {validationErrors.endTime && (
+                    <p className='mt-1 text-sm text-red-600'>
+                      {validationErrors.endTime[0]}
+                    </p>
+                  )}
                 </div>
+
                 {/* Purpose */}
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
@@ -805,14 +874,24 @@ const ManageBookings = () => {
                     name='purpose'
                     value={formData.purpose}
                     onChange={handleInputChange}
-                    className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
+                    className={`block w-full rounded-md shadow-sm py-2 px-3 focus:ring-2 ${
+                      validationErrors.purpose
+                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+                    }`}
                   >
                     <option value='INTERVIEW'>INTERVIEW</option>
                     <option value='MEETING'>MEETING</option>
                     <option value='TRAINING'>TRAINING</option>
                     <option value='CLIENT_MEETING'>CLIENT_MEETING</option>
                   </select>
+                  {validationErrors.purpose && (
+                    <p className='mt-1 text-sm text-red-600'>
+                      {validationErrors.purpose[0]}
+                    </p>
+                  )}
                 </div>
+
                 {/* Status Toggle */}
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
@@ -822,12 +901,22 @@ const ManageBookings = () => {
                     name='status'
                     value={formData.status}
                     onChange={handleInputChange}
-                    className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
+                    className={`block w-full rounded-md shadow-sm py-2 px-3 focus:ring-2 ${
+                      validationErrors.status
+                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+                    }`}
                   >
                     <option value='CONFIRMED'>CONFIRMED</option>
                     <option value='CANCELLED'>CANCELLED</option>
                   </select>
+                  {validationErrors.status && (
+                    <p className='mt-1 text-sm text-red-600'>
+                      {validationErrors.status[0]}
+                    </p>
+                  )}
                 </div>
+
                 {/* Description */}
                 <div className='md:col-span-2'>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
@@ -839,8 +928,17 @@ const ManageBookings = () => {
                     onChange={handleInputChange}
                     placeholder='Enter description...'
                     rows={4}
-                    className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
+                    className={`block w-full rounded-md shadow-sm py-2 px-3 focus:ring-2 ${
+                      validationErrors.description
+                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+                    }`}
                   ></textarea>
+                  {validationErrors.description && (
+                    <p className='mt-1 text-sm text-red-600'>
+                      {validationErrors.description[0]}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className='flex justify-end mt-6'>
@@ -852,7 +950,7 @@ const ManageBookings = () => {
                 </button>
                 <button
                   type='button'
-                  onClick={() => setShowForm(false)}
+                  onClick={handleCloseForm}
                   className='px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-200 transition'
                 >
                   Cancel

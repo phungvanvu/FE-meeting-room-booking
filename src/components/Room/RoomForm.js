@@ -13,8 +13,27 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
   const [imagePreviews, setImagePreviews] = useState([]);
   const [existingImageUrls, setExistingImageUrls] = useState([]);
   const [errorMessage, setErrorMessage] = useState('');
+  const [validationErrors, setValidationErrors] = useState({});
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setValidationErrors((prev) => ({
+      ...prev,
+      [name]: undefined,
+    }));
+    if (name === 'roomName') {
+      setRoomName(value);
+    } else if (name === 'location') {
+      setLocation(value);
+    } else if (name === 'capacity') {
+      setCapacity(value);
+    } else if (name === 'note') {
+      setNote(value);
+    }
+  };
 
   useEffect(() => {
+    // Fetch equipment options
     const fetchEquipment = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/equipment`, {
@@ -35,6 +54,7 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
 
     fetchEquipment();
 
+    // Initialize form fields
     if (initialData) {
       setRoomName(initialData.roomName || '');
       setLocation(initialData.location || '');
@@ -56,6 +76,10 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
       setImageFiles([]);
       setImagePreviews([]);
     }
+
+    // Clear previous errors
+    setErrorMessage('');
+    setValidationErrors({});
   }, [initialData]);
 
   const handleImageChange = (e) => {
@@ -73,6 +97,7 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
+    setValidationErrors({});
     const payload = {
       roomName,
       location,
@@ -88,7 +113,11 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
     try {
       const result = await onSubmit(payload);
       if (!result.success) {
+        if (result.data && typeof result.data === 'object') {
+          setValidationErrors(result.data);
+        }
         setErrorMessage(result.error?.message || 'Error saving room');
+        return;
       }
     } catch (err) {
       setErrorMessage(err.message || 'Connection error');
@@ -101,7 +130,8 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
         {initialData ? 'Edit Room' : 'Add Room'}
       </h2>
 
-      {errorMessage && (
+      {/* Global error message */}
+      {errorMessage && Object.keys(validationErrors).length === 0 && (
         <div className='p-3 bg-red-100 text-red-700 mb-3 rounded text-sm'>
           {errorMessage}
         </div>
@@ -115,11 +145,23 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
           </label>
           <input
             type='text'
+            name='roomName'
             value={roomName}
-            onChange={(e) => setRoomName(e.target.value)}
-            className='w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-2 focus:ring-blue-400'
+            onChange={handleInputChange}
+            className={
+              `w-full border rounded-md py-2 px-3 focus:ring-2 ` +
+              (validationErrors.roomName
+                ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400')
+            }
             placeholder='e.g., Team Collaboration Space'
           />
+
+          {validationErrors.roomName && (
+            <p className='mt-1 text-sm text-red-600'>
+              {validationErrors.roomName[0]}
+            </p>
+          )}
         </div>
 
         {/* Location */}
@@ -129,17 +171,28 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
           </label>
           <input
             type='text'
+            name='location'
             value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            className='w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-2 focus:ring-blue-400'
+            onChange={handleInputChange}
+            className={
+              `w-full border rounded-md py-2 px-3 focus:ring-2 ` +
+              (validationErrors.location
+                ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400')
+            }
             placeholder='e.g., Building B, Floor 3'
           />
+          {validationErrors.location && (
+            <p className='mt-1 text-sm text-red-600'>
+              {validationErrors.location[0]}
+            </p>
+          )}
         </div>
 
         {/* Capacity */}
         <div>
           <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
-            Room Name
+            Capacity
           </label>
           <div className='flex items-center space-x-4'>
             {['6', '8', '10', '12'].map((option) => (
@@ -149,7 +202,7 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
                   name='capacity'
                   value={option}
                   checked={capacity === option}
-                  onChange={(e) => setCapacity(e.target.value)}
+                  onChange={handleInputChange}
                   className='h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-400'
                 />
                 <span className='ml-1 text-sm text-gray-700'>
@@ -158,6 +211,11 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
               </label>
             ))}
           </div>
+          {validationErrors.capacity && (
+            <p className='mt-1 text-sm text-red-600'>
+              {validationErrors.capacity[0]}
+            </p>
+          )}
         </div>
 
         {/* Available Toggle Switch */}
@@ -174,14 +232,16 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
               className='opacity-0 w-0 h-0'
             />
             <span
-              className={`absolute inset-0 cursor-pointer rounded-full transition-colors duration-200 ${
-                available ? 'bg-blue-500' : 'bg-gray-300'
-              }`}
+              className={
+                `absolute inset-0 cursor-pointer rounded-full transition-colors duration-200 ` +
+                (available ? 'bg-blue-500' : 'bg-gray-300')
+              }
             ></span>
             <span
-              className={`absolute left-0 top-0 bg-white w-6 h-6 rounded-full transition-transform duration-200 ease-in-out transform ${
-                available ? 'translate-x-6' : 'translate-x-0'
-              }`}
+              className={
+                `absolute left-0 top-0 bg-white w-6 h-6 rounded-full transition-transform duration-200 ease-in-out transform ` +
+                (available ? 'translate-x-6' : 'translate-x-0')
+              }
             ></span>
           </label>
           <span className='ml-3 text-sm font-medium text-gray-700'>
@@ -199,13 +259,24 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
           </label>
           <textarea
             value={note}
-            onChange={(e) => setNote(e.target.value)}
-            className='w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-2 focus:ring-blue-400 h-28 resize-y'
+            name='note'
+            onChange={handleInputChange}
+            className={
+              `w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-2 h-28 resize-y` +
+              (validationErrors.note
+                ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400')
+            }
             placeholder='e.g., Flexible seating arrangement, special instructions, etc.'
-          ></textarea>
+          />
           <p className='mt-1 text-xs text-gray-500'>
             Enter detailed notes if needed.
           </p>
+          {validationErrors.note && (
+            <p className='mt-1 text-sm text-red-600'>
+              {validationErrors.note[0]}
+            </p>
+          )}
         </div>
 
         {/* Equipments */}
@@ -219,11 +290,12 @@ export default function RoomForm({ initialData, onSubmit, onCancel }) {
                 key={device.equipmentName}
                 type='button'
                 onClick={() => toggleEquipment(device.equipmentName)}
-                className={`px-3 py-1 rounded-full text-sm border transition-all ${
-                  equipments.includes(device.equipmentName)
+                className={
+                  `px-3 py-1 rounded-full text-sm border transition-all ` +
+                  (equipments.includes(device.equipmentName)
                     ? 'bg-blue-500 text-white border-blue-500'
-                    : 'border-gray-300 text-gray-600 hover:bg-gray-100'
-                }`}
+                    : 'border-gray-300 text-gray-600 hover:bg-gray-100')
+                }
               >
                 {device.equipmentName}
               </button>

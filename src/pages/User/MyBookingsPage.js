@@ -6,22 +6,27 @@ import API_BASE_URL from '../../config';
 import { toast } from 'react-toastify';
 
 const MyBookingsPage = () => {
-  // State quản lý booking và thao tác liên quan
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [selectedBookingIds, setSelectedBookingIds] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [bookings, setBookings] = useState([]);
+  const [validationErrors, setValidationErrors] = useState({});
   const [editError, setEditError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [startDateTime, setStartDateTime] = useState('');
   const [endDateTime, setEndDateTime] = useState('');
-  // Các state phân trang và sắp xếp
   const [currentPage, setCurrentPage] = useState(1);
   const [size] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
   const [sort] = useState('startTime,asc');
   const accessToken = sessionStorage.getItem('accessToken');
+
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setValidationErrors((prev) => ({ ...prev, [name]: undefined }));
+    setSelectedBooking((prev) => ({ ...prev, [name]: value }));
+  };
 
   // Hàm trả về thời gian hiện tại định dạng "YYYY-MM-DDTHH:mm" theo local time
   const getLocalDateTime = () => {
@@ -104,6 +109,8 @@ const MyBookingsPage = () => {
 
   const saveBooking = async () => {
     setEditError(null);
+    setValidationErrors({});
+
     const updatedBooking = {
       bookingId: selectedBooking.bookingId,
       roomId: selectedBooking.roomId,
@@ -128,10 +135,12 @@ const MyBookingsPage = () => {
         },
       );
       const data = await response.json();
+
       if (data.success) {
+        setValidationErrors({});
         toast.success('Update successfully!');
-        setBookings(
-          bookings.map((b) =>
+        setBookings((prev) =>
+          prev.map((b) =>
             b.bookingId === data.data.bookingId ? data.data : b,
           ),
         );
@@ -139,7 +148,11 @@ const MyBookingsPage = () => {
         setIsEditing(false);
         setSelectedBooking(null);
       } else {
-        setEditError(data.error.message);
+        if (data.data && typeof data.data === 'object') {
+          setValidationErrors(data.data);
+        } else {
+          setEditError(data.error?.message || 'Error updating booking');
+        }
       }
     } catch (error) {
       console.error('Error updating booking:', error);
@@ -211,6 +224,7 @@ const MyBookingsPage = () => {
     setIsEditing(false);
     setSelectedBooking(null);
     setEditError(null);
+    setValidationErrors({});
   };
 
   return (
@@ -434,59 +448,74 @@ const MyBookingsPage = () => {
             <h3 className='text-2xl font-bold text-center mb-6'>
               Edit Booking
             </h3>
-            {editError && (
+            {editError && Object.keys(validationErrors).length === 0 && (
               <div className='bg-red-100 text-red-600 p-3 rounded mb-4 text-center'>
                 {editError}
               </div>
             )}
+
             <form>
+              {/* Start Time */}
               <div className='mb-4'>
                 <label className='block text-gray-700 font-medium mb-2'>
                   Start Time:
                 </label>
                 <input
                   type='datetime-local'
+                  name='startTime'
                   value={selectedBooking.startTime}
                   min={getLocalDateTime()}
-                  onChange={(e) =>
-                    setSelectedBooking({
-                      ...selectedBooking,
-                      startTime: e.target.value,
-                    })
-                  }
-                  className='w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  onChange={handleEditInputChange}
+                  className={`block w-full rounded-md shadow-sm px-3 py-2 ${
+                    validationErrors.startTime
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                      : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+                  }`}
                 />
+                {validationErrors.startTime?.map((msg, i) => (
+                  <p key={i} className='mt-1 text-sm text-red-600'>
+                    {msg}
+                  </p>
+                ))}
               </div>
+
+              {/* End Time */}
               <div className='mb-4'>
                 <label className='block text-gray-700 font-medium mb-2'>
                   End Time:
                 </label>
                 <input
+                  name='endTime'
                   type='datetime-local'
                   value={selectedBooking.endTime}
                   min={selectedBooking.startTime || getLocalDateTime()}
-                  onChange={(e) =>
-                    setSelectedBooking({
-                      ...selectedBooking,
-                      endTime: e.target.value,
-                    })
-                  }
-                  className='w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  onChange={handleEditInputChange}
+                  className={`block w-full rounded-md shadow-sm px-3 py-2 ${
+                    validationErrors.endTime
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                      : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+                  }`}
                 />
+                {validationErrors.endTime?.map((msg, i) => (
+                  <p key={i} className='mt-1 text-sm text-red-600'>
+                    {msg}
+                  </p>
+                ))}
               </div>
+              {/* Purpose */}
               <div className='mb-4'>
                 <label className='block text-gray-700 font-medium mb-2'>
                   Purpose:
                 </label>
                 <select
+                  name='purpose'
                   value={selectedBooking.purpose}
-                  onChange={(e) =>
-                    setSelectedBooking({
-                      ...selectedBooking,
-                      purpose: e.target.value,
-                    })
-                  }
-                  className='w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  onChange={handleEditInputChange}
+                  className={`block w-full rounded-md shadow-sm px-3 py-2 ${
+                    validationErrors.purpose
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                      : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+                  }`}
                 >
                   <option value='INTERVIEW'>Interview</option>
                   <option value='MEETING'>Meeting</option>
@@ -495,23 +524,35 @@ const MyBookingsPage = () => {
                     Meet customers/partners
                   </option>
                 </select>
+                {validationErrors.purpose?.map((msg, i) => (
+                  <p key={i} className='mt-1 text-sm text-red-600'>
+                    {msg}
+                  </p>
+                ))}
               </div>
+              {/* Description */}
               <div className='mb-4'>
                 <label className='block text-gray-700 font-medium mb-2'>
                   Description:
                 </label>
-                <input
-                  type='text'
+                <textarea
+                  name='description'
+                  rows={4}
                   value={selectedBooking.description}
-                  onChange={(e) =>
-                    setSelectedBooking({
-                      ...selectedBooking,
-                      description: e.target.value,
-                    })
-                  }
-                  className='w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  onChange={handleEditInputChange}
+                  className={`block w-full rounded-md shadow-sm px-3 py-2 resize-y ${
+                    validationErrors.description
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                      : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+                  }`}
                 />
+                {validationErrors.description?.map((msg, i) => (
+                  <p key={i} className='mt-1 text-sm text-red-600'>
+                    {msg}
+                  </p>
+                ))}
               </div>
+
               <div className='flex justify-center space-x-4 mt-6'>
                 <button
                   type='button'

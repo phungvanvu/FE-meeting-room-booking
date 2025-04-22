@@ -9,9 +9,6 @@ export default function EventModal({ onBookingSuccess }) {
     useContext(GlobalContext);
   const { roomId } = useParams();
   const accessToken = sessionStorage.getItem('accessToken');
-  const [successMessage, setSuccessMessage] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const defaultEventData = {
     roomId: '',
@@ -22,7 +19,12 @@ export default function EventModal({ onBookingSuccess }) {
     description: '',
   };
 
-  // Hàm helper lấy thời gian hiện tại theo local định dạng "YYYY-MM-DDTHH:mm"
+  // state mới để chứa lỗi từ API
+  const [validationErrors, setValidationErrors] = useState({});
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // helper lấy local datetime
   const getLocalDateTime = () => {
     const now = new Date();
     return new Date(now.getTime() - now.getTimezoneOffset() * 60000)
@@ -30,6 +32,7 @@ export default function EventModal({ onBookingSuccess }) {
       .slice(0, 16);
   };
 
+  // khởi tạo roomId, bookedById
   useEffect(() => {
     if (roomId) {
       setEventData((prev) => ({ ...prev, roomId }));
@@ -39,24 +42,16 @@ export default function EventModal({ onBookingSuccess }) {
   useEffect(() => {
     const fetchUserInfo = async () => {
       setLoading(true);
-      setError('');
       try {
-        const response = await fetch(`${API_BASE_URL}/user/my-info`, {
-          method: 'GET',
+        const res = await fetch(`${API_BASE_URL}/user/my-info`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
-        if (response.ok) {
-          const userData = await response.json();
-          if (userData?.data?.userId) {
-            setEventData((prev) => ({
-              ...prev,
-              bookedById: userData.data.userId,
-            }));
-          } else {
-            console.error('User ID not found in response');
-          }
-        } else {
-          console.error('Failed to fetch user info');
+        const data = await res.json();
+        if (data.success && data.data?.userId) {
+          setEventData((prev) => ({
+            ...prev,
+            bookedById: data.data.userId,
+          }));
         }
       } catch (err) {
         console.error(err);
@@ -65,78 +60,66 @@ export default function EventModal({ onBookingSuccess }) {
       }
     };
     fetchUserInfo();
-  }, [setEventData, accessToken]);
+  }, [accessToken, setEventData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (error) setError('');
+    // clear lỗi của field này khi user thay đổi
+    setValidationErrors((prev) => ({ ...prev, [name]: undefined }));
+    setError('');
     setEventData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleClose = () => {
     setShowEventModal(false);
     setEventData({ ...defaultEventData });
+    setValidationErrors({});
+    setError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setValidationErrors({});
+    setError('');
 
-    if (!eventData.startTime || !eventData.endTime) {
-      setError('Please select both start time and end time.');
-      return;
-    }
-
-    const startTimeObj = new Date(eventData.startTime);
-    const endTimeObj = new Date(eventData.endTime);
-
-    if (isNaN(startTimeObj.getTime()) || isNaN(endTimeObj.getTime())) {
-      setError('Invalid time value. Please check your input.');
-      return;
-    }
-
-    if (startTimeObj >= endTimeObj) {
-      setError('Start time must be before end time!');
-      return;
-    }
-
-    // Điều chỉnh múi giờ
-    startTimeObj.setHours(
-      startTimeObj.getHours() - startTimeObj.getTimezoneOffset() / 60,
-    );
-    endTimeObj.setHours(
-      endTimeObj.getHours() - endTimeObj.getTimezoneOffset() / 60,
-    );
-
-    const formattedData = {
+    // build payload
+    const payload = {
       roomId: eventData.roomId || null,
       bookedById: eventData.bookedById || null,
-      startTime: startTimeObj.toISOString(),
-      endTime: endTimeObj.toISOString(),
-      purpose: eventData.purpose === '' ? null : eventData.purpose,
+      startTime: eventData.startTime
+        ? new Date(eventData.startTime).toISOString()
+        : null,
+      endTime: eventData.endTime
+        ? new Date(eventData.endTime).toISOString()
+        : null,
+      purpose: eventData.purpose || null,
       description: eventData.description || '',
     };
 
     try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/roombooking`, {
+      const res = await fetch(`${API_BASE_URL}/roombooking`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify(formattedData),
+        body: JSON.stringify(payload),
       });
+      const result = await res.json();
 
-      const result = await response.json();
       if (result.success) {
         toast.success('Booking successful!');
         onBookingSuccess();
-        setEventData({ ...defaultEventData });
-        setShowEventModal(false);
-        setSuccessMessage('');
+        handleClose();
       } else {
-        const errorMessage = result.error?.message || 'Unknown error';
-        setError(errorMessage);
+        // nếu có validation errors từ API
+        if (result.data && typeof result.data === 'object') {
+          setValidationErrors(result.data);
+        }
+        // nếu có lỗi chung (không nằm trong result.data)
+        const msg = result.error?.message || 'Unknown error';
+        setError(msg);
       }
     } catch (err) {
       console.error('Error during booking:', err);
@@ -148,54 +131,50 @@ export default function EventModal({ onBookingSuccess }) {
 
   return (
     <div
-      className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity'
+      className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'
       onClick={handleClose}
     >
       <div
-        className='bg-white w-full max-w-lg rounded-xl shadow-xl p-8 relative transform transition-all scale-100'
+        className='bg-white w-full max-w-lg rounded-xl shadow-xl p-8 relative'
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Close icon */}
         <button
-          className='absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition'
+          className='absolute top-4 right-4 text-gray-500 hover:text-gray-700'
           onClick={handleClose}
         >
-          <svg
-            className='w-6 h-6'
-            fill='none'
-            stroke='currentColor'
-            viewBox='0 0 24 24'
-          >
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth='2'
-              d='M6 18L18 6M6 6l12 12'
-            />
-          </svg>
+          ×
         </button>
+
         <h2 className='text-2xl font-bold text-gray-800 mb-6 text-center'>
           Book a Room
         </h2>
-        {error && <p className='text-red-500 text-center mb-4'>{error}</p>}
-        {successMessage && (
-          <p className='text-green-500 text-center mb-4'>{successMessage}</p>
+
+        {/* lỗi chung nếu có */}
+        {error && !Object.keys(validationErrors).length && (
+          <p className='text-red-500 text-center mb-4'>{error}</p>
         )}
         {loading && (
           <p className='text-blue-500 text-center mb-4'>Processing...</p>
         )}
+
         <form className='space-y-5' onSubmit={handleSubmit}>
           <input type='hidden' name='roomId' value={eventData.roomId || ''} />
 
           {/* Purpose */}
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
-              Purpose:
+            <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500'>
+              Purpose
             </label>
             <select
               name='purpose'
-              value={eventData.purpose || ''}
+              value={eventData.purpose}
               onChange={handleChange}
-              className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400'
+              className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                validationErrors.purpose
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+              }`}
             >
               <option value=''>Choose Purpose</option>
               <option value='INTERVIEW'>Interview</option>
@@ -203,12 +182,17 @@ export default function EventModal({ onBookingSuccess }) {
               <option value='TRAINING'>Training</option>
               <option value='CLIENT_MEETING'>Meet customers/partners</option>
             </select>
+            {validationErrors.purpose && (
+              <p className='mt-1 text-sm text-red-600'>
+                {validationErrors.purpose[0]}
+              </p>
+            )}
           </div>
 
           {/* Start Time */}
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
-              Start Time:
+            <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500'>
+              Start Time
             </label>
             <input
               type='datetime-local'
@@ -216,13 +200,22 @@ export default function EventModal({ onBookingSuccess }) {
               value={eventData.startTime || ''}
               onChange={handleChange}
               min={getLocalDateTime()}
-              className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400'
+              className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                validationErrors.startTime
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+              }`}
             />
+            {validationErrors.startTime && (
+              <p className='mt-1 text-sm text-red-600'>
+                {validationErrors.startTime[0]}
+              </p>
+            )}
           </div>
 
           {/* End Time */}
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
+            <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500'>
               End Time
             </label>
             <input
@@ -231,8 +224,17 @@ export default function EventModal({ onBookingSuccess }) {
               value={eventData.endTime || ''}
               onChange={handleChange}
               min={eventData.startTime || getLocalDateTime()}
-              className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400'
+              className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                validationErrors.endTime
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+              }`}
             />
+            {validationErrors.endTime && (
+              <p className='mt-1 text-sm text-red-600'>
+                {validationErrors.endTime[0]}
+              </p>
+            )}
           </div>
 
           {/* Description */}
@@ -244,12 +246,22 @@ export default function EventModal({ onBookingSuccess }) {
               name='description'
               value={eventData.description || ''}
               onChange={handleChange}
-              className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400'
               rows='3'
               placeholder='Additional details...'
-            ></textarea>
+              className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                validationErrors.description
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+              }`}
+            />
+            {validationErrors.description && (
+              <p className='mt-1 text-sm text-red-600'>
+                {validationErrors.description[0]}
+              </p>
+            )}
           </div>
 
+          {/* Buttons */}
           <div className='flex justify-end gap-4 pt-4'>
             <button
               type='submit'

@@ -15,7 +15,8 @@ const ManageEquipmentPage = () => {
   });
   const [editingEquipment, setEditingEquipment] = useState(null);
   const [showEquipmentForm, setShowEquipmentForm] = useState(false);
-  const [equipmentFormErrors, setEquipmentFormErrors] = useState('');
+  const [validationErrors, setValidationErrors] = useState({});
+  const [formErrorMessage, setFormErrorMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -59,44 +60,45 @@ const ManageEquipmentPage = () => {
   }, [currentPage, searchTerm]);
 
   // Handler thêm / cập nhật equipment
-  const handleEquipmentFormSubmit = (e) => {
+  const handleEquipmentFormSubmit = async (e) => {
     e.preventDefault();
-    setEquipmentFormErrors('');
+    setValidationErrors({});
+    setFormErrorMessage('');
+
     const method = editingEquipment ? 'PUT' : 'POST';
     const url = editingEquipment
       ? `${API_BASE_URL}/equipment/${editingEquipment.equipmentName}`
       : `${API_BASE_URL}/equipment`;
-    fetch(url, {
-      method,
-      headers: getAuthHeaders(),
-      body: JSON.stringify(equipmentFormData),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          toast.success(
-            editingEquipment
-              ? 'Equipment updated successfully!'
-              : 'Equipment added successfully!',
-          );
-          fetchEquipments();
-          setShowEquipmentForm(false);
-          setEquipmentFormData({
-            equipmentName: '',
-            description: '',
-          });
-          setEditingEquipment(null);
-        } else {
-          setEquipmentFormErrors(
-            data.error?.message || 'Error saving equipment',
-          );
-          toast.error('Equipment operation failed');
-        }
-      })
-      .catch((err) => {
-        setEquipmentFormErrors(err.message || 'Server connection error');
-        toast.error('Equipment operation failed');
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: getAuthHeaders(),
+        body: JSON.stringify(equipmentFormData),
       });
+      const data = await res.json();
+
+      if (data.success) {
+        toast.success(
+          editingEquipment
+            ? 'Equipment updated successfully!'
+            : 'Equipment added successfully!',
+        );
+        fetchEquipments();
+        setShowEquipmentForm(false);
+        setEditingEquipment(null);
+        setEquipmentFormData({ equipmentName: '', description: '' });
+      } else {
+        // Không hiển thị toast ở đây
+        if (data.data && typeof data.data === 'object') {
+          setValidationErrors(data.data);
+        }
+        setFormErrorMessage(data.error?.message || 'Error saving equipment');
+      }
+    } catch (err) {
+      // Không hiển thị toast ở đây
+      setFormErrorMessage(err.message || 'Server connection error');
+    }
   };
 
   const handleEditEquipment = (equipment) => {
@@ -105,7 +107,7 @@ const ManageEquipmentPage = () => {
       equipmentName: equipment.equipmentName,
       description: equipment.description,
     });
-    setEquipmentFormErrors('');
+    setFormErrorMessage('');
     setShowEquipmentForm(true);
   };
 
@@ -178,7 +180,7 @@ const ManageEquipmentPage = () => {
                     equipmentName: '',
                     description: '',
                   });
-                  setEquipmentFormErrors('');
+                  setFormErrorMessage('');
                 }}
                 className='bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl shadow transition'
               >
@@ -276,9 +278,9 @@ const ManageEquipmentPage = () => {
               </button>
             </div>
           )}
-          {equipmentFormErrors && (
+          {setFormErrorMessage && (
             <div className='mt-2 text-red-600 text-sm'>
-              {equipmentFormErrors}
+              {setFormErrorMessage}
             </div>
           )}
         </div>
@@ -292,51 +294,76 @@ const ManageEquipmentPage = () => {
               {editingEquipment ? 'Edit Equipment' : 'Add Equipment'}
             </h2>
             <form onSubmit={handleEquipmentFormSubmit}>
-              {editingEquipment ? (
-                <div className='mb-4'>
-                  <label className='block text-gray-700'>Equipment Name</label>
+              {/* Equipment Name */}
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-1 after:content-"*" after:ml-0.5 after:text-red-500'>
+                  Equipment Name
+                </label>
+                {editingEquipment ? (
                   <span className='block bg-gray-100 p-2 rounded'>
                     {editingEquipment.equipmentName}
                   </span>
-                </div>
-              ) : (
-                <div className='mb-4'>
-                  <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
-                    Equipment Name
-                  </label>
+                ) : (
                   <input
                     type='text'
                     name='equipmentName'
                     value={equipmentFormData.equipmentName}
-                    onChange={(e) =>
-                      setEquipmentFormData({
-                        ...equipmentFormData,
+                    onChange={(e) => {
+                      setValidationErrors((prev) => ({
+                        ...prev,
+                        equipmentName: undefined,
+                      }));
+                      setEquipmentFormData((prev) => ({
+                        ...prev,
                         equipmentName: e.target.value,
-                      })
-                    }
-                    className='w-full border rounded px-3 py-2'
-                    required
+                      }));
+                    }}
+                    className={`w-full border rounded px-3 py-2 focus:ring-2 ${
+                      validationErrors.equipmentName
+                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+                    }`}
                   />
-                </div>
-              )}
+                )}
+                {validationErrors.equipmentName && (
+                  <p className='mt-1 text-sm text-red-600'>
+                    {validationErrors.equipmentName[0]}
+                  </p>
+                )}
+              </div>
+
+              {/* Description */}
               <div className='mb-4'>
-                <label className='block text-gray-700'>Description</label>
+                <label className='block text-gray-700 mb-1'>Description</label>
                 <textarea
                   name='description'
                   value={equipmentFormData.description}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    setValidationErrors((prev) => ({
+                      ...prev,
+                      description: undefined,
+                    }));
                     setEquipmentFormData({
                       ...equipmentFormData,
                       description: e.target.value,
-                    })
-                  }
-                  className='w-full border rounded px-3 py-2'
+                    });
+                  }}
+                  className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
+                    validationErrors.description
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                      : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+                  }`}
                   rows='3'
                 ></textarea>
+                {validationErrors.description && (
+                  <p className='mt-1 text-sm text-red-600'>
+                    {validationErrors.description[0]}
+                  </p>
+                )}
               </div>
-              {equipmentFormErrors && (
+              {formErrorMessage && !Object.keys(validationErrors).length && (
                 <div className='mb-4 text-red-600 text-sm'>
-                  {equipmentFormErrors}
+                  {formErrorMessage}
                 </div>
               )}
               <div className='flex justify-end'>

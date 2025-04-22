@@ -33,6 +33,7 @@ const UserManagement = () => {
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [showMultiDeleteConfirm, setShowMultiDeleteConfirm] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [validationErrors, setValidationErrors] = useState({});
   const [formData, setFormData] = useState({
     userName: '',
     fullName: '',
@@ -45,6 +46,24 @@ const UserManagement = () => {
     roles: [],
     enabled: true,
   });
+
+  const resetForm = () => {
+    setFormData({
+      userName: '',
+      fullName: '',
+      email: '',
+      phoneNumber: '',
+      department: '',
+      group: '',
+      password: '',
+      position: '',
+      roles: [],
+      enabled: true,
+    });
+    setValidationErrors({});
+    setErrorMessage('');
+    setCurrentUser(null);
+  };
 
   const getAuthHeaders = () => {
     const accessToken = sessionStorage.getItem('accessToken');
@@ -129,23 +148,14 @@ const UserManagement = () => {
 
   const handleAddUser = () => {
     setCurrentUser(null);
-    setFormData({
-      userName: '',
-      fullName: '',
-      email: '',
-      phoneNumber: '',
-      department: '',
-      group: '',
-      password: '',
-      position: '',
-      roles: [],
-      enabled: true,
-    });
+    resetForm();
     setShowForm(true);
   };
 
   const handleEditUser = (user) => {
     setCurrentUser(user);
+    setValidationErrors({});
+    setErrorMessage('');
     setFormData({
       userName: user.userName,
       fullName: user.fullName,
@@ -198,7 +208,10 @@ const UserManagement = () => {
           fetchUsers();
           setShowForm(false);
         } else {
-          setErrorMessage(data.error?.message || 'Error saving user');
+          if (data.data && typeof data.data === 'object') {
+            setValidationErrors(data.data);
+          }
+          setErrorMessage(data.error?.message || '');
         }
       })
       .catch((err) =>
@@ -242,6 +255,11 @@ const UserManagement = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    setValidationErrors((prev) => {
+      const copy = { ...prev };
+      delete copy[name];
+      return copy;
+    });
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -305,6 +323,21 @@ const UserManagement = () => {
       });
     setShowMultiDeleteConfirm(false);
   };
+
+  const getSelectStyles = (hasError) => ({
+    control: (base, state) => ({
+      ...base,
+      borderColor: hasError ? '#f87171' : base.borderColor,
+      boxShadow: hasError
+        ? '0 0 0 1px #f87171'
+        : state.isFocused
+        ? '0 0 0 1px #60a5fa'
+        : base.boxShadow,
+      '&:hover': {
+        borderColor: hasError ? '#f87171' : '#60a5fa',
+      },
+    }),
+  });
 
   return (
     <div className='min-h-screen flex flex-col bg-gray-50'>
@@ -647,7 +680,7 @@ const UserManagement = () => {
             <div className='border-b px-6 py-4'>
               <h2 className='text-2xl font-bold text-gray-800'>
                 {currentUser ? 'Edit User' : 'Add User'}
-                {errorMessage && (
+                {errorMessage && Object.keys(validationErrors).length === 0 && (
                   <div className='mt-3 p-3 bg-red-100 text-red-700 rounded text-sm text-center'>
                     {errorMessage}
                   </div>
@@ -671,9 +704,19 @@ const UserManagement = () => {
                     name='fullName'
                     value={formData.fullName}
                     onChange={handleInputChange}
-                    className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
+                    className={`block w-full rounded-md shadow-sm
+                        ${
+                          validationErrors.fullName
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                            : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+                        }`}
                     placeholder='Enter full name...'
                   />
+                  {validationErrors.fullName && (
+                    <div className='mt-1 text-sm text-red-600'>
+                      {validationErrors.fullName[0]}
+                    </div>
+                  )}
                 </div>
                 {/* Username */}
                 <div>
@@ -683,9 +726,19 @@ const UserManagement = () => {
                     name='userName'
                     value={formData.userName}
                     onChange={handleInputChange}
-                    className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
+                    className={`block w-full rounded-md shadow-sm
+                        ${
+                          validationErrors.userName
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                            : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+                        }`}
                     placeholder='Enter username...'
                   />
+                  {validationErrors.userName && (
+                    <div className='mt-1 text-sm text-red-600'>
+                      {validationErrors.userName[0]}
+                    </div>
+                  )}
                 </div>
                 {/* Email */}
                 <div>
@@ -695,10 +748,21 @@ const UserManagement = () => {
                     name='email'
                     value={formData.email}
                     onChange={handleInputChange}
-                    className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
+                    className={`block w-full rounded-md shadow-sm
+                        ${
+                          validationErrors.email
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                            : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+                        }`}
                     placeholder='example@mail.com'
                   />
+                  {validationErrors.email && (
+                    <p className='mt-1 text-sm text-red-600'>
+                      {validationErrors.email[0]}
+                    </p>
+                  )}
                 </div>
+
                 {/* Phone */}
                 <div>
                   <label className={requiredLabel}>Phone:</label>
@@ -707,9 +771,19 @@ const UserManagement = () => {
                     name='phoneNumber'
                     value={formData.phoneNumber}
                     onChange={handleInputChange}
-                    className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
+                    className={`block w-full rounded-md shadow-sm
+                        ${
+                          validationErrors.phoneNumber
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                            : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+                        }`}
                     placeholder='Enter phone number...'
                   />
+                  {validationErrors.phoneNumber && (
+                    <p className='mt-1 text-sm text-red-600'>
+                      {validationErrors.phoneNumber[0]}
+                    </p>
+                  )}
                 </div>
                 {/* Department */}
                 <div>
@@ -720,8 +794,18 @@ const UserManagement = () => {
                     value={formData.department}
                     onChange={handleInputChange}
                     placeholder='e.g. Software Development'
-                    className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400'
+                    className={`block w-full rounded-md shadow-sm
+                        ${
+                          validationErrors.department
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                            : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+                        }`}
                   />
+                  {validationErrors.department && (
+                    <p className='mt-1 text-sm text-red-600'>
+                      {validationErrors.department[0]}
+                    </p>
+                  )}
                 </div>
                 {/* Group */}
                 <div>
@@ -747,7 +831,13 @@ const UserManagement = () => {
                       }));
                     }}
                     className='block w-full'
+                    styles={getSelectStyles(!!validationErrors.group)}
                   />
+                  {validationErrors.group && (
+                    <p className='mt-1 text-sm text-red-600'>
+                      {validationErrors.group[0]}
+                    </p>
+                  )}
                 </div>
               </div>
               {/* Container for Position and Password */}
@@ -776,7 +866,13 @@ const UserManagement = () => {
                       }));
                     }}
                     className='block w-full'
+                    styles={getSelectStyles(!!validationErrors.position)}
                   />
+                  {validationErrors.position?.[0] && (
+                    <p className='mt-1 text-sm text-red-600'>
+                      {validationErrors.position[0]}
+                    </p>
+                  )}
                 </div>
 
                 {/* Password */}
@@ -790,7 +886,12 @@ const UserManagement = () => {
                       name='password'
                       value={formData.password}
                       onChange={handleInputChange}
-                      className='block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-400 pr-10'
+                      className={`block w-full rounded-md shadow-sm
+                        ${
+                          validationErrors.password
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                            : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+                        }`}
                       placeholder={
                         currentUser
                           ? 'Enter password to change'
@@ -805,6 +906,11 @@ const UserManagement = () => {
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
+                  {validationErrors.password && (
+                    <p className='mt-1 text-sm text-red-600'>
+                      {validationErrors.password[0]}
+                    </p>
+                  )}
                 </div>
               </div>
               {/* Toggle for Enabled */}
@@ -843,7 +949,6 @@ const UserManagement = () => {
                   </span>
                 </span>
               </div>
-              {/* Role */}
               <div className='mt-4'>
                 <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
                   Role:
@@ -860,7 +965,7 @@ const UserManagement = () => {
                         }))
                       }
                       className={`px-3 py-1 rounded-full text-sm border transition-all ${
-                        formData.roles && formData.roles[0] === role.roleName
+                        formData.roles.includes(role.roleName)
                           ? 'bg-blue-500 text-white border-blue-500'
                           : 'border-gray-300 text-gray-600 hover:bg-gray-100'
                       }`}
@@ -869,7 +974,13 @@ const UserManagement = () => {
                     </button>
                   ))}
                 </div>
+                {validationErrors.roles && (
+                  <p className='mt-1 text-sm text-red-600'>
+                    {validationErrors.roles[0]}
+                  </p>
+                )}
               </div>
+
               <div className='flex justify-end mt-6'>
                 <button
                   type='submit'

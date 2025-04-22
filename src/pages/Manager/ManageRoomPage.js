@@ -191,7 +191,6 @@ export default function ManageRoomPage() {
     payload.imageFiles?.forEach((file) => {
       if (file instanceof File) formData.append('files', file, file.name);
     });
-
     try {
       const res = await fetch(`${API_BASE_URL}/room`, {
         method: 'POST',
@@ -199,16 +198,14 @@ export default function ManageRoomPage() {
         body: formData,
       });
       const result = await res.json();
+
       if (result.success) {
         toast.success('Room added successfully!');
         fetchRooms(currentPage);
-      } else {
-        toast.error(result.error?.message || 'Error adding room');
       }
       return result;
     } catch (err) {
       console.error(err);
-      toast.error(err.message);
       return { success: false, error: { message: err.message } };
     }
   };
@@ -231,11 +228,9 @@ export default function ManageRoomPage() {
       'room',
       new Blob([JSON.stringify(roomBody)], { type: 'application/json' }),
     );
-    // chỉ append files mới
     payload.imageFiles?.forEach((file) => {
       if (file instanceof File) formData.append('files', file, file.name);
     });
-
     try {
       const res = await fetch(`${API_BASE_URL}/room/${roomId}`, {
         method: 'PUT',
@@ -243,16 +238,14 @@ export default function ManageRoomPage() {
         body: formData,
       });
       const result = await res.json();
+
       if (result.success) {
         toast.success('Room updated successfully!');
         fetchRooms(currentPage);
-      } else {
-        toast.error(result.error?.message || 'Error updating room');
       }
       return result;
     } catch (err) {
       console.error(err);
-      toast.error(err.message);
       return { success: false, error: { message: err.message } };
     }
   };
