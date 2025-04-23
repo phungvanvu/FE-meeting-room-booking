@@ -278,11 +278,6 @@ const ManageEquipmentPage = () => {
               </button>
             </div>
           )}
-          {setFormErrorMessage && (
-            <div className='mt-2 text-red-600 text-sm'>
-              {setFormErrorMessage}
-            </div>
-          )}
         </div>
       </div>
 

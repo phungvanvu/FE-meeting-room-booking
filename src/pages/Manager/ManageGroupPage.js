@@ -16,7 +16,8 @@ const ManageGroupPage = () => {
   });
   const [editingGroup, setEditingGroup] = useState(null);
   const [showGroupForm, setShowGroupForm] = useState(false);
-  const [groupFormErrors, setGroupFormErrors] = useState('');
+  const [groupFieldErrors, setGroupFieldErrors] = useState({}); // { groupName: [...], location: [...], division: [...] }
+  const [groupErrorMessage, setGroupErrorMessage] = useState(''); // data.error.message
   const [groupSearchTerm, setGroupSearchTerm] = useState('');
   const [groupCurrentPage, setGroupCurrentPage] = useState(1);
   const [groupTotalPages, setGroupTotalPages] = useState(0);
@@ -61,7 +62,7 @@ const ManageGroupPage = () => {
 
   const handleGroupFormSubmit = (e) => {
     e.preventDefault();
-    setGroupFormErrors('');
+    setGroupErrorMessage('');
     const method = editingGroup ? 'PUT' : 'POST';
     const url = editingGroup
       ? `${API_BASE_URL}/group/${editingGroup.groupName}`
@@ -84,13 +85,16 @@ const ManageGroupPage = () => {
           setGroupFormData({ groupName: '', location: '', division: '' });
           setEditingGroup(null);
         } else {
-          setGroupFormErrors(data.error?.message || 'Error saving group');
-          toast.error('Group operation failed');
+          if (data.data && typeof data.data === 'object') {
+            setGroupFieldErrors(data.data);
+          }
+          setGroupErrorMessage(
+            data.error?.message || 'Validation error occurred.',
+          );
         }
       })
       .catch((err) => {
-        setGroupFormErrors(err.message || 'Server connection error');
-        toast.error('Group operation failed');
+        setGroupErrorMessage(err.message || 'Server connection error');
       });
   };
 
@@ -101,7 +105,7 @@ const ManageGroupPage = () => {
       location: group.location,
       division: group.division,
     });
-    setGroupFormErrors('');
+    setGroupErrorMessage('');
     setShowGroupForm(true);
   };
 
@@ -170,7 +174,7 @@ const ManageGroupPage = () => {
                     location: '',
                     division: '',
                   });
-                  setGroupFormErrors('');
+                  setGroupErrorMessage('');
                 }}
                 className='bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl shadow transition'
               >
@@ -274,9 +278,6 @@ const ManageGroupPage = () => {
               </button>
             </div>
           )}
-          {groupFormErrors && (
-            <div className='mt-2 text-red-600 text-sm'>{groupFormErrors}</div>
-          )}
         </div>
       </div>
 
@@ -304,15 +305,27 @@ const ManageGroupPage = () => {
                     type='text'
                     name='groupName'
                     value={groupFormData.groupName}
-                    onChange={(e) =>
-                      setGroupFormData({
-                        ...groupFormData,
+                    onChange={(e) => {
+                      setGroupFieldErrors((prev) => ({
+                        ...prev,
+                        groupName: undefined,
+                      }));
+                      setGroupFormData((prev) => ({
+                        ...prev,
                         groupName: e.target.value,
-                      })
-                    }
-                    className='w-full border rounded px-3 py-2'
-                    required
+                      }));
+                    }}
+                    className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
+                      groupFieldErrors.groupName
+                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+                    }`}
                   />
+                  {groupFieldErrors.groupName && (
+                    <p className='mt-1 text-sm text-red-600'>
+                      {groupFieldErrors.groupName.join(' ')}
+                    </p>
+                  )}
                 </div>
               )}
               <div className='mb-4'>
@@ -321,14 +334,27 @@ const ManageGroupPage = () => {
                   type='text'
                   name='location'
                   value={groupFormData.location}
-                  onChange={(e) =>
-                    setGroupFormData({
-                      ...groupFormData,
+                  onChange={(e) => {
+                    setGroupFieldErrors((prev) => ({
+                      ...prev,
+                      location: undefined,
+                    }));
+                    setGroupFormData((prev) => ({
+                      ...prev,
                       location: e.target.value,
-                    })
-                  }
-                  className='w-full border rounded px-3 py-2'
+                    }));
+                  }}
+                  className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
+                    groupFieldErrors.location
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                      : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+                  }`}
                 />
+                {groupFieldErrors.location && (
+                  <p className='mt-1 text-sm text-red-600'>
+                    {groupFieldErrors.location.join(' ')}
+                  </p>
+                )}
               </div>
               <div className='mb-4'>
                 <label className='block text-gray-700'>Division</label>
@@ -336,20 +362,28 @@ const ManageGroupPage = () => {
                   type='text'
                   name='division'
                   value={groupFormData.division}
-                  onChange={(e) =>
-                    setGroupFormData({
-                      ...groupFormData,
+                  onChange={(e) => {
+                    setGroupFieldErrors((prev) => ({
+                      ...prev,
+                      division: undefined,
+                    }));
+                    setGroupFormData((prev) => ({
+                      ...prev,
                       division: e.target.value,
-                    })
-                  }
-                  className='w-full border rounded px-3 py-2'
+                    }));
+                  }}
+                  className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
+                    groupFieldErrors.division
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                      : 'border-gray-300 focus:border-blue-400 focus:ring-blue-400'
+                  }`}
                 />
+                {groupFieldErrors.division && (
+                  <p className='mt-1 text-sm text-red-600'>
+                    {groupFieldErrors.division.join(' ')}
+                  </p>
+                )}
               </div>
-              {groupFormErrors && (
-                <div className='mb-4 text-red-600 text-sm'>
-                  {groupFormErrors}
-                </div>
-              )}
               <div className='flex justify-end'>
                 <button
                   type='button'

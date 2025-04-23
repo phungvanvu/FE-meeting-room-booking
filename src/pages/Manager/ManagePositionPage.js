@@ -15,13 +15,16 @@ const ManagePositionPage = () => {
   });
   const [editingPosition, setEditingPosition] = useState(null);
   const [showPositionForm, setShowPositionForm] = useState(false);
-  const [positionFormErrors, setPositionFormErrors] = useState('');
+  // Field-level errors and global message state
+  const [positionFieldErrors, setPositionFieldErrors] = useState({});
+  const [positionErrorMessage, setPositionErrorMessage] = useState('');
+
   const [positionSearchTerm, setPositionSearchTerm] = useState('');
   const [positionCurrentPage, setPositionCurrentPage] = useState(1);
   const [positionTotalPages, setPositionTotalPages] = useState(0);
   const positionsPerPage = 5;
 
-  // State cho modal confirm delete cho Position
+  // State for delete modal
   const [showPositionDeleteModal, setShowPositionDeleteModal] = useState(false);
   const [positionToDelete, setPositionToDelete] = useState(null);
 
@@ -35,12 +38,12 @@ const ManagePositionPage = () => {
 
   const fetchPositions = () => {
     let url = `${API_BASE_URL}/position/search?`;
-    if (positionSearchTerm) {
+    if (positionSearchTerm)
       url += `positionName=${encodeURIComponent(positionSearchTerm)}&`;
-    }
     url += `page=${
       positionCurrentPage - 1
     }&size=${positionsPerPage}&sortBy=positionName&sortDirection=ASC`;
+
     fetch(url, { headers: getAuthHeaders() })
       .then((res) => res.json())
       .then((data) => {
@@ -60,11 +63,15 @@ const ManagePositionPage = () => {
 
   const handlePositionFormSubmit = (e) => {
     e.preventDefault();
-    setPositionFormErrors('');
+    // clear previous errors
+    setPositionFieldErrors({});
+    setPositionErrorMessage('');
+
     const method = editingPosition ? 'PUT' : 'POST';
     const url = editingPosition
       ? `${API_BASE_URL}/position/${editingPosition.positionName}`
       : `${API_BASE_URL}/position`;
+
     fetch(url, {
       method,
       headers: getAuthHeaders(),
@@ -83,13 +90,18 @@ const ManagePositionPage = () => {
           setPositionFormData({ positionName: '', description: '' });
           setEditingPosition(null);
         } else {
-          setPositionFormErrors(data.error?.message || 'Error saving position');
-          toast.error('Position operation failed');
+          // display field errors
+          if (data.data && typeof data.data === 'object') {
+            setPositionFieldErrors(data.data);
+          }
+          // global error message only when no field errors
+          setPositionErrorMessage(
+            data.error?.message || 'Validation error occurred.',
+          );
         }
       })
       .catch((err) => {
-        setPositionFormErrors(err.message || 'Server connection error');
-        toast.error('Position operation failed');
+        setPositionErrorMessage(err.message || 'Server connection error');
       });
   };
 
@@ -99,11 +111,11 @@ const ManagePositionPage = () => {
       positionName: position.positionName,
       description: position.description,
     });
-    setPositionFormErrors('');
+    setPositionFieldErrors({});
+    setPositionErrorMessage('');
     setShowPositionForm(true);
   };
 
-  // Thay window.confirm bằng modal cho Position
   const initiateDeletePosition = (position) => {
     setPositionToDelete(position);
     setShowPositionDeleteModal(true);
@@ -128,7 +140,7 @@ const ManagePositionPage = () => {
           toast.error('Position deletion failed');
         }
       })
-      .catch((err) => toast.error('Position deletion failed'))
+      .catch(() => toast.error('Position deletion failed'))
       .finally(() => {
         setShowPositionDeleteModal(false);
         setPositionToDelete(null);
@@ -166,7 +178,8 @@ const ManagePositionPage = () => {
                   setShowPositionForm(true);
                   setEditingPosition(null);
                   setPositionFormData({ positionName: '', description: '' });
-                  setPositionFormErrors('');
+                  setPositionFieldErrors({});
+                  setPositionErrorMessage('');
                 }}
                 className='bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl shadow transition'
               >
@@ -190,32 +203,31 @@ const ManagePositionPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {Array.isArray(positions) &&
-                  positions.map((position) => (
-                    <tr
-                      key={position.positionName}
-                      className='border-b hover:bg-gray-50'
-                    >
-                      <td className='py-2 px-4'>{position.positionName}</td>
-                      <td className='py-2 px-4'>{position.description}</td>
-                      <td className='py-2 px-4'>
-                        <div className='flex justify-center items-center gap-2'>
-                          <button
-                            onClick={() => handleEditPosition(position)}
-                            className='text-blue-500 hover:text-blue-700 transition text-sm font-medium'
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => initiateDeletePosition(position)}
-                            className='text-red-500 hover:text-red-700 transition text-sm font-medium'
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                {positions.map((position) => (
+                  <tr
+                    key={position.positionName}
+                    className='border-b hover:bg-gray-50'
+                  >
+                    <td className='py-2 px-4'>{position.positionName}</td>
+                    <td className='py-2 px-4'>{position.description}</td>
+                    <td className='py-2 px-4'>
+                      <div className='flex justify-center items-center gap-2'>
+                        <button
+                          onClick={() => handleEditPosition(position)}
+                          className='text-blue-500 hover:text-blue-700 transition text-sm font-medium'
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => initiateDeletePosition(position)}
+                          className='text-red-500 hover:text-red-700 transition text-sm font-medium'
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -266,11 +278,6 @@ const ManagePositionPage = () => {
               </button>
             </div>
           )}
-          {positionFormErrors && (
-            <div className='mt-2 text-red-600 text-sm'>
-              {positionFormErrors}
-            </div>
-          )}
         </div>
       </div>
 
@@ -282,53 +289,83 @@ const ManagePositionPage = () => {
               {editingPosition ? 'Edit Position' : 'Add Position'}
             </h2>
             <form onSubmit={handlePositionFormSubmit}>
-              {editingPosition ? (
-                <div className='mb-4'>
-                  <label className='block text-gray-700'>Position Name</label>
+              {/* Global error message only when no field errors */}
+              {positionErrorMessage &&
+                !Object.keys(positionFieldErrors).length && (
+                  <div className='mb-4 text-red-600 text-sm'>
+                    {positionErrorMessage}
+                  </div>
+                )}
+
+              {/* Position Name input */}
+              <div className='mb-4'>
+                <label className='block text-sm font-medium text-gray-700 mb-1 after:content-"*" after:ml-0.5 after:text-red-500'>
+                  Position Name
+                </label>
+                {editingPosition ? (
                   <span className='block bg-gray-100 p-2 rounded'>
                     {editingPosition.positionName}
                   </span>
-                </div>
-              ) : (
-                <div className='mb-4'>
-                  <label className='block text-sm font-medium text-gray-700 mb-1 after:content-["*"] after:ml-0.5 after:text-red-500 after:text-base'>
-                    Position Name
-                  </label>
+                ) : (
                   <input
                     type='text'
                     name='positionName'
                     value={positionFormData.positionName}
-                    onChange={(e) =>
-                      setPositionFormData({
-                        ...positionFormData,
+                    onChange={(e) => {
+                      setPositionFieldErrors((prev) => ({
+                        ...prev,
+                        positionName: undefined,
+                      }));
+                      setPositionFormData((prev) => ({
+                        ...prev,
                         positionName: e.target.value,
-                      })
-                    }
-                    className='w-full border rounded px-3 py-2'
-                    required
+                      }));
+                    }}
+                    className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
+                      positionFieldErrors.positionName
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:ring-blue-400'
+                    }`}
                   />
-                </div>
-              )}
+                )}
+                {positionFieldErrors.positionName && (
+                  <p className='mt-1 text-sm text-red-600'>
+                    {positionFieldErrors.positionName.join(' ')}
+                  </p>
+                )}
+              </div>
+
+              {/* Description textarea */}
               <div className='mb-4'>
-                <label className='block text-gray-700'>Description</label>
+                <label className='block text-gray-700 mb-1'>Description</label>
                 <textarea
                   name='description'
                   value={positionFormData.description}
-                  onChange={(e) =>
-                    setPositionFormData({
-                      ...positionFormData,
+                  onChange={(e) => {
+                    setPositionFieldErrors((prev) => ({
+                      ...prev,
+                      description: undefined,
+                    }));
+                    setPositionFormData((prev) => ({
+                      ...prev,
                       description: e.target.value,
-                    })
-                  }
-                  className='w-full border rounded px-3 py-2'
+                    }));
+                  }}
+                  className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
+                    positionFieldErrors.description
+                      ? 'border-red-500 focus:ring-red-500'
+                      : 'border-gray-300 focus:ring-blue-400'
+                  }`}
                   rows='3'
                 ></textarea>
+                {positionFieldErrors.description && (
+                  <p className='mt-1 text-sm text-red-600'>
+                    {positionFieldErrors.description.join(' ')}
+                  </p>
+                )}
               </div>
-              {positionFormErrors && (
-                <div className='mb-4 text-red-600 text-sm'>
-                  {positionFormErrors}
-                </div>
-              )}
+
+              {/* Form actions */}
               <div className='flex justify-end'>
                 <button
                   type='button'
