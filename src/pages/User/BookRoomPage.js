@@ -366,9 +366,9 @@ export default function BookRoomPage() {
                 key={room.roomId}
                 className={`border rounded-xl shadow-lg overflow-hidden bg-white hover:shadow-xl transition-shadow ${
                   viewMode === 'list'
-                    ? 'flex flex-row items-stretch h-64'
+                    ? 'flex flex-row items-center h-auto'
                     : 'flex flex-col'
-                } hover:shadow-xl transition-shadow`}
+                }`}
               >
                 {/* Hình ảnh */}
                 {Array.isArray(room.imageUrls) && room.imageUrls.length > 0 ? (

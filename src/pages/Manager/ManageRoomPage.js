@@ -158,7 +158,7 @@ export default function ManageRoomPage() {
           capacity: room.capacity || null,
           status: room.available ? 'Available' : 'Unavailable',
           facilities: room.equipments || [],
-          imageUrls: room.imageUrls || '',
+          imageUrls: room.imageUrls || [],
         }));
         setRoomsData(formattedRooms);
         setTotalPages(result.data.totalPages);
@@ -592,12 +592,12 @@ export default function ManageRoomPage() {
           >
             {roomsData.map((room) => (
               <div
-                key={room.roomId}
+                key={room.id}
                 className={`border rounded-xl shadow-lg overflow-hidden bg-white hover:shadow-xl transition-shadow ${
                   viewMode === 'list'
-                    ? 'flex flex-row items-stretch h-64'
+                    ? 'flex flex-row items-stretch h-auto'
                     : 'flex flex-col'
-                } border rounded-xl shadow-lg overflow-hidden bg-white hover:shadow-xl transition-shadow`}
+                }`}
               >
                 {/* Hình ảnh */}
                 {Array.isArray(room.imageUrls) && room.imageUrls.length > 0 ? (
@@ -646,7 +646,7 @@ export default function ManageRoomPage() {
                   </div>
                 )}
                 <div className='p-5 flex flex-col flex-grow'>
-                  <h3 className='font-semibold text-xl text-gray-800 truncate'>
+                  <h3 className='font-semibold text-xl text-gray-800'>
                     {room.name}
                   </h3>
                   <div className='mt-2'>
