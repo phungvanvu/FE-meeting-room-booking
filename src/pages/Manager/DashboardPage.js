@@ -98,7 +98,6 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
   const [topUsers, setTopUsers] = useState(null);
-  const [currentMonthBookings, setCurrentMonthBookings] = useState(null);
   const [monthlyBookings, setMonthlyBookings] = useState(null);
   const [weeklyBookings, setWeeklyBookings] = useState(null);
   const [quarterlyBookings, setQuarterlyBookings] = useState(null);
@@ -122,10 +121,6 @@ const Dashboard = () => {
       { url: `${API_BASE_URL}/statistical/statistics`, setter: setStats },
       { url: `${API_BASE_URL}/statistical/top-users/5`, setter: setTopUsers },
       {
-        url: `${API_BASE_URL}/statistical/current-month-bookings`,
-        setter: setCurrentMonthBookings,
-      },
-      {
         url: `${API_BASE_URL}/statistical/monthly-bookings`,
         setter: setMonthlyBookings,
       },
@@ -142,38 +137,99 @@ const Dashboard = () => {
         setter: setMostBookedRoom,
       },
     ];
-
     Promise.all(
       endpoints.map(async ({ url, setter }) => {
         try {
-          const response = await fetch(url, fetchOptions);
-          const result = await response.json();
-          setter(result.success ? result.data : null);
-        } catch (error) {
-          console.error('Error fetching from', url, error);
+          const res = await fetch(url, fetchOptions);
+          const json = await res.json();
+          setter(json.success ? json.data : null);
+        } catch {
           setter(null);
         }
       }),
     ).finally(() => setLoading(false));
   }, []);
 
-  const formatChartData = (data, labelPrefix) => ({
-    labels:
-      data && data.length > 0
-        ? data.map((item) => `${labelPrefix} ${item.period}`)
-        : [],
-    datasets: [
-      {
-        label: 'Number of bookings',
-        data: data && data.length > 0 ? data.map((item) => item.bookings) : [],
-        backgroundColor: 'rgba(54, 162, 235, 0.7)',
-      },
-    ],
-  });
+  // Cập nhật formatChartData để hỗ trợ mảng màu
+  const formatChartData = (
+    data,
+    labelPrefix,
+    bgColor,
+    borderColor,
+    isPie = false,
+  ) => {
+    const labels = data?.map((item) => `${labelPrefix} ${item.period}`) || [];
+    const values = data?.map((item) => item.bookings) || [];
+    let backgroundColor;
+    let borderColors;
 
-  const monthlyChartData = formatChartData(monthlyBookings, 'Month');
-  const weeklyChartData = formatChartData(weeklyBookings, 'Week');
-  const quarterlyChartData = formatChartData(quarterlyBookings, 'Quarter');
+    if (Array.isArray(bgColor)) {
+      backgroundColor = bgColor.slice(0, labels.length);
+    } else if (isPie) {
+      backgroundColor = labels.map(() => bgColor);
+    } else {
+      backgroundColor = labels.map(() => bgColor);
+    }
+    if (Array.isArray(borderColor)) {
+      borderColors = borderColor.slice(0, labels.length);
+    } else {
+      borderColors = labels.map(() => borderColor);
+    }
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: 'Number of bookings',
+          data: values,
+          backgroundColor,
+          borderColor: borderColors,
+          borderWidth: 1,
+          fill: !isPie,
+        },
+      ],
+    };
+  };
+
+  // Định nghĩa bảng màu cho từng điểm dữ liệu
+  const monthColors = [
+    'rgba(77, 201, 254, 0.7)', // light sky blue
+    'rgba(255, 159, 243, 0.7)', // pastel pink
+    'rgba(255, 205, 86, 0.7)', // pastel yellow
+    'rgba(169, 92, 255, 0.7)', // soft violet
+    'rgba(102, 255, 179, 0.7)', // mint green
+    'rgba(255, 99, 132, 0.7)', // soft red
+  ];
+  const monthBorders = monthColors.map((c) => c.replace(/0\.7/, '1'));
+
+  const quarterColors = [
+    'rgba(77, 201, 254, 0.7)', // light sky blue
+    'rgba(255, 159, 243, 0.7)', // pastel pink
+    'rgba(169, 92, 255, 0.7)', // soft violet
+    'rgba(255, 205, 86, 0.7)', // pastel yellow
+  ];
+  const quarterBorders = quarterColors.map((c) => c.replace(/0\.7/, '1'));
+
+  // Tạo dữ liệu chart với mảng màu
+  const monthlyChartData = formatChartData(
+    monthlyBookings,
+    'Month',
+    monthColors,
+    monthBorders,
+  );
+  const weeklyChartData = formatChartData(
+    weeklyBookings,
+    'Week',
+    ['rgba(201, 203, 207, 0.7)'],
+    ['rgba(201,203,207,1)'],
+  );
+  const quarterlyChartData = formatChartData(
+    quarterlyBookings,
+    'Quarter',
+    quarterColors,
+    quarterBorders,
+    true,
+  );
   // Xử lý click vào từng thẻ thống kê
   const handleCardClick = (cardType) => {
     if (cardType === 'totalRooms') {
