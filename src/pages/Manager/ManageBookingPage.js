@@ -103,15 +103,8 @@ const ManageBookings = () => {
 
   useEffect(() => {
     fetchBookings();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    roomName,
-    fromTime,
-    toTime,
-    selectedStatus,
-    bookedByNameFilter,
-    currentPage,
-  ]);
+    setCurrentPage(1);
+  }, []);
 
   const handleSearch = () => {
     setCurrentPage(1);

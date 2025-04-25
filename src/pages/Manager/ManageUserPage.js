@@ -339,6 +339,30 @@ const UserManagement = () => {
     }),
   });
 
+  // Khi user chọn file
+  const handleImport = async (e) => {
+    const input = e.target;
+    const file = input.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch(`${API_BASE_URL}/user/import-users-excel`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${sessionStorage.getItem('accessToken')}`,
+      },
+      body: formData,
+    });
+    const data = await res.json();
+    if (data.success) {
+      toast.success(data.data || 'Imported successfully');
+      fetchUsers();
+    } else {
+      toast.error(data.error?.message || 'Import failed');
+    }
+    input.value = null;
+  };
+
   return (
     <div className='min-h-screen flex flex-col bg-gray-50'>
       <Header />
@@ -500,6 +524,19 @@ const UserManagement = () => {
               >
                 Export Excel
               </button>
+              <label
+                htmlFor='importExcel'
+                className='inline-block bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg cursor-pointer'
+              >
+                Import Excel
+              </label>
+              <input
+                id='importExcel'
+                type='file'
+                accept='.xlsx,.xls'
+                hidden
+                onChange={handleImport} // Hàm import ngay khi chọn file
+              />
             </div>
           </div>
           <div className='overflow-x-auto bg-white rounded-xl shadow-md'>
