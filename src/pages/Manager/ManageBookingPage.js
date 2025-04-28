@@ -103,8 +103,11 @@ const ManageBookings = () => {
 
   useEffect(() => {
     fetchBookings();
-    setCurrentPage(1);
   }, []);
+
+  useEffect(() => {
+    fetchBookings();
+  }, [currentPage]);
 
   const handleSearch = () => {
     setCurrentPage(1);
