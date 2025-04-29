@@ -64,7 +64,6 @@ export default function EventModal({ onBookingSuccess }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    // clear lỗi của field này khi user thay đổi
     setValidationErrors((prev) => ({ ...prev, [name]: undefined }));
     setError('');
     setEventData((prev) => ({ ...prev, [name]: value }));
@@ -87,12 +86,8 @@ export default function EventModal({ onBookingSuccess }) {
     const payload = {
       roomId: eventData.roomId || null,
       bookedById: eventData.bookedById || null,
-      startTime: eventData.startTime
-        ? new Date(eventData.startTime).toISOString()
-        : null,
-      endTime: eventData.endTime
-        ? new Date(eventData.endTime).toISOString()
-        : null,
+      startTime: eventData.startTime,
+      endTime: eventData.endTime,
       purpose: eventData.purpose || null,
       description: eventData.description || '',
     };
